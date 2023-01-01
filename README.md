@@ -7,4 +7,3 @@ A general purpose mod loader for GDScript based Godot Games.
 ### 🔥 Based on the work of this brilliant people 🔥
 
 - [Delta-V-Modding](https://gitlab.com/Delta-V-Modding/Mods)
-- [gdunzip](https://git.sr.ht/~jelle/gdunzip)
