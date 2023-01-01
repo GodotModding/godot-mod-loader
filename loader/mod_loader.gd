@@ -26,9 +26,6 @@ const REQUIRED_META_TAGS = [
 	"authors", 
 	"description",	
 ]
-
-var mod_zip_file_paths = []
-
 var mod_data = {}
 var mod_load_order = []
 #	var missing_dependencies = {
@@ -41,8 +38,7 @@ func _init():
 	if(!_check_cmd_line_arg("--enable-mods")):
 		return
 
-	_get_mod_zip_file_paths()
-	_unzip_mods()
+	_load_mod_zips()
 	mod_log("ModLoader: Unziped all Mods")
 
 	for mod_id in mod_data:
@@ -103,7 +99,7 @@ func mod_log(text:String, pretty:bool = false)->void:
 		log_file.store_string("\n" + str(date_time_string,'   ', text))
 	log_file.close()
 
-func _get_mod_zip_file_paths():
+func _load_mod_zips():
 	# Path to the games mod folder
 	var game_mod_folder_path = _get_mod_folder_dir()
 
@@ -117,30 +113,39 @@ func _get_mod_zip_file_paths():
 
 	# Get all zip folders inside the game mod folder
 	while true:
-		var mod_folder_name = dir.get_next()
-		if mod_folder_name == '':
+		# Get the next file in the directory
+		var mod_zip_file_name = dir.get_next()
+		# If there is no more file
+		if mod_zip_file_name == '':
+			# Stop loading mod zip files
 			break
+		
+		# If the current file is a directory
 		if dir.current_is_dir():
+			# Go to the next file
 			continue
-		var mod_folder_path = game_mod_folder_path.plus_file(mod_folder_name)
+		
+		var mod_folder_path = game_mod_folder_path.plus_file(mod_zip_file_name)
 		var mod_folder_global_path = ProjectSettings.globalize_path(mod_folder_path)
-		if !ProjectSettings.load_resource_pack(mod_folder_global_path, true):
-			mod_log("ModLoader: %s failed to load." % mod_folder_name)
+		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, true)
+		
+		# If there was an error loading the mod zip file
+		if !is_mod_loaded_success:
+			# Log the error and continue with the next file
+			mod_log(str("ModLoader: ", mod_zip_file_name, "failed to load."))
 			continue
-		mod_zip_file_paths.append(mod_folder_path)
-		mod_log("ModLoader: %s loaded." % mod_folder_name)
+		
+		# Mod successfully loaded!
+		mod_log(str("ModLoader: ", mod_zip_file_name, " loaded."))
+
+		# Init the mod data 
+		_init_mod_data(mod_folder_path)
+
 	dir.list_dir_end()
 
-	dev_log(str("ModLoader: Zip File Paths: ", mod_zip_file_paths))
-
-func _unzip_mods():
-	# Unzip each mod zip file
-	for mod_zip_file_path in mod_zip_file_paths:
-		var gdunzip = load('res://vendor/gdunzip.gd').new()
-		gdunzip.load(mod_zip_file_path)
-
+func _init_mod_data(mod_folder_path):
 		# The file name should be a valid mod id
-		var mod_id = _get_file_name(mod_zip_file_path, false, true)
+		var mod_id = _get_file_name(mod_folder_path, false, true)
 		
 		mod_data[mod_id] = {}
 		mod_data[mod_id].file_paths = []
@@ -149,9 +154,8 @@ func _unzip_mods():
 		mod_data[mod_id].importance = 0
 		
 		# Get the mod file paths
-		for file in gdunzip.files:
-			if(file.get_file() != ''):
-				mod_data[mod_id].file_paths.append(file)
+		var local_mod_path = str("res://", mod_id)
+		mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
 
 # Make sure the required mod files are there
 func _check_mod_files(mod_id):
@@ -192,7 +196,7 @@ func _check_mod_files(mod_id):
 func _check_file_is_in_root(path, file_name):
 	var path_split = path.split("/")
 	
-	if(path_split[1].to_lower() == file_name):
+	if(path_split[3].to_lower() == file_name):
 		return true
 	else:
 		return false
@@ -287,9 +291,8 @@ func _compare_Importance(a, b):
 
 func _init_mod(mod):
 		var mod_main_path = mod.required_files_path.modmain
-		var mod_main_global_path = str("res://", mod_main_path)
-		dev_log(str("ModLoader: Loading script from -> ", mod_main_global_path))
-		var mod_main_script = ResourceLoader.load(mod_main_global_path)
+		dev_log(str("ModLoader: Loading script from -> ", mod_main_path))
+		var mod_main_script = ResourceLoader.load(mod_main_path)
 		dev_log(str("ModLoader: Loaded script -> ", mod_main_script))
 		var mod_main_instance = mod_main_script.new(self)
 		mod_main_instance.name = mod.meta_data.id
@@ -344,6 +347,53 @@ func _get_file_name(path, is_lower_case = true, is_no_extension = false):
 	# mod_log(str("ModLoader: return file name -> ", file_name))
 	return file_name
 
+# Source: https://gist.github.com/willnationsdev/00d97aa8339138fd7ef0d6bd42748f6e
+func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false):
+	var regex = null
+	if p_match_is_regex:
+		regex = RegEx.new()
+		regex.compile(p_match)
+		if not regex.is_valid():
+			return []
+
+	var dirs = [p_dir]
+	var first = true
+	var data = []
+	while not dirs.empty():
+		var dir = Directory.new()
+		var dir_name = dirs.back()
+		dirs.pop_back()
+
+		if dir.open(dir_name) == OK:
+			dir.list_dir_begin()
+			var file_name = dir.get_next()
+			while file_name != "":
+				if not dir_name == "res://":
+					first = false
+				# ignore hidden, temporary, or system content
+				if not file_name.begins_with(".") and not file_name.get_extension() in ["tmp", "import"]:
+					# If a directory, then add to list of directories to visit
+					if dir.current_is_dir():
+						dirs.push_back(dir.get_current_dir() + "/" + file_name)
+					# If a file, check if we already have a record for the same name
+					else:
+						var path = dir.get_current_dir() + ("/" if not first else "") + file_name
+						# grab all
+						if not p_match:
+							data.append(path)
+						# grab matching strings
+						elif not p_match_is_regex and file_name.find(p_match, 0) != -1:
+							data.append(path)
+						# grab matching regex
+						else:
+							var regex_match = regex.search(path)
+							if regex_match != null:
+								data.append(path)
+				# Move on to the next file in this directory
+				file_name = dir.get_next()
+			# We've exhausted all files in this directory. Close the iterator.
+			dir.list_dir_end()
+	return data
 
 
 #####################################################
