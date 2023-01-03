@@ -317,9 +317,16 @@ func _check_cmd_line_arg(argument) -> bool:
 
 func _get_mod_folder_dir():
 	var gameInstallDirectory = OS.get_executable_path().get_base_dir()
-	mod_log(str("gameInstallDirectory: ", gameInstallDirectory))
+
 	if OS.get_name() == "OSX":
 		gameInstallDirectory = gameInstallDirectory.get_base_dir().get_base_dir().get_base_dir()
+
+	# Fix for running the game through the Godot editor (as the EXE path would be
+	# the editor's own EXE, which won't have any mod ZIPs)
+	if OS.is_debug_build():
+		gameInstallDirectory = "res://"
+
+	mod_log(str("gameInstallDirectory: ", gameInstallDirectory))
 
 	return gameInstallDirectory.plus_file("mods")
 
