@@ -466,6 +466,11 @@ func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false
 # Note that your extender script doesn't have to follow the same directory path
 # as the vanilla file, but it's good practice to do so.
 func installScriptExtension(childScriptPath:String):
+	# Check path to file exists
+	if !File.new().file_exists(childScriptPath):
+		mod_log("ModLoader: ERROR - The child script path '%s' does not exist" % [childScriptPath])
+		return
+
 	var childScript = ResourceLoader.load(childScriptPath)
 
 	# Force Godot to compile the script now.
