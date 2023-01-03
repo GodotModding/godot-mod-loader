@@ -86,6 +86,8 @@ func _init():
 
 	# run dependency check after loading meta_data
 	for mod_id in mod_data:
+		if(!mod_data[mod_id].is_loadable):
+			continue
 		_check_dependencies(mod_id, mod_data[mod_id].meta_data.dependencies)
 
 	# Sort mod_load_order by the importance score of the mod
