@@ -35,6 +35,9 @@ var mod_load_order = []
 #	}
 var mod_missing_dependencies = {}
 
+# Things to keep to ensure they are not garbage collected (used by `saveScene`)
+var _savedObjects = []
+
 
 func _init():
 	# if mods are not enabled - don't load mods
@@ -475,9 +478,6 @@ func appendNodeInScene(modifiedScene, nodeName:String = "", nodeParent = null, i
 	else:
 		modifiedScene.add_child(newNode)
 		newNode.set_owner(modifiedScene)
-
-# Things to keep to ensure they are not garbage collected
-var _savedObjects = []
 
 
 func saveScene(modifiedScene, scenePath:String):
