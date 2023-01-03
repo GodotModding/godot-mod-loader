@@ -16,6 +16,10 @@
 
 extends Node
 
+
+# Vars
+# =============================================================================
+
 # Path to the mod log file
 # For Brotato, this file is here: %appdata%/Brotato/mods.log
 const MOD_LOG_PATH = "user://mods.log"
@@ -54,6 +58,10 @@ var mod_missing_dependencies = {}
 # Things to keep to ensure they are not garbage collected (used by `saveScene`)
 var _savedObjects = []
 
+
+
+# Main
+# =============================================================================
 
 func _init():
 	# if mods are not enabled - don't load mods
@@ -340,10 +348,8 @@ func _init_mod(mod):
 		add_child(mod_main_instance, true)
 
 
-
-#####################################################
-################# MOD LOADER UTILS ##################
-#####################################################
+# Utils (Mod Loader)
+# =============================================================================
 
 # Util functions used in the mod loading process
 
@@ -447,9 +453,9 @@ func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false
 	return data
 
 
-#####################################################
-################## MODDING HELPERS ##################
-#####################################################
+
+# Helpers
+# =============================================================================
 
 # Helper functions to build mods
 
