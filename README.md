@@ -33,7 +33,13 @@ Mods you create must have the following 2 files:
 
 #### Notes
 
-- ATOW, `compatible_game_version` is not checked in the code, and is only used for reference by yourself and your mod's users.
+Some properties in the JSON are not checke din the code (ATOW), and are only used for reference by yourself and your mod's users. These are:
+
+- `version`
+- `compatible_game_version`
+- `authors`
+- `description`
+- `website_url`
 
 
 ## Helper Methods
@@ -56,7 +62,7 @@ Note that your extender script doesn't have to follow the same directory path as
 
 Add a translation file, eg "mytranslation.en.translation". The translation file should have been created in Godot already: When you import a CSV, such a file will be created for you.
 
-Note that this function is exclusive to ModLoader, and departs from Delta-V's two functions `addTranslationsFromCSV` and `addTranslationsFromJSON`, which aren't available in ModLoader.
+Note that this function is exclusive to ModLoader, and departs from Delta-V's two functions [addTranslationsFromCSV](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md#addtranslationsfromcsv) and [addTranslationsFromJSON](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md#addtranslationsfromjson), which aren't available in ModLoader.
 
 ### appendNodeInScene
 
@@ -73,6 +79,6 @@ Save the scene as a PackedScene, overwriting Godot's cache if needed.
 
 ## Credits
 
-### 🔥 Based on the work of these brilliant people 🔥
+🔥 ModLoader is based on the work of these brilliant people 🔥
 
 - [Delta-V-Modding](https://gitlab.com/Delta-V-Modding/Mods)
