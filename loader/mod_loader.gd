@@ -19,12 +19,12 @@ extends Node
 const MOD_LOG_PATH = "user://mods.log"
 const REQUIRED_MOD_FILES = ["modmain.gd", "_meta.json"]
 const REQUIRED_META_TAGS = [
-	"id", 
-	"name", 
-	"version", 
-	"compatible_game_version", 
-	"authors", 
-	"description",	
+	"id",
+	"name",
+	"version",
+	"compatible_game_version",
+	"authors",
+	"description",
 ]
 var mod_data = {}
 var mod_load_order = []
@@ -43,24 +43,24 @@ func _init():
 
 	for mod_id in mod_data:
 		var mod = mod_data[mod_id]
-		
+
 		# verify files
 		_check_mod_files(mod_id)
 		if(!mod.is_loadable):
 			continue
-		
+
 		# load meta data into mod_data
 		_load_meta_data(mod_id)
 		if(!mod.is_loadable):
 			continue
-		
+
 	# run dependency check after loading meta_data
 	for mod_id in mod_data:
 		_check_dependencies(mod_id, mod_data[mod_id].meta_data.dependencies)
-	
+
 	# Sort mod_load_order by the importance score of the mod
 	_get_load_order()
-	
+
 	dev_log(str("ModLoader: mod_load_order -> ", JSON.print(mod_load_order, '   ')))
 
 	# Instance every mod and add it as a node to the Mod Loader
@@ -78,16 +78,16 @@ func dev_log(text:String, pretty:bool = false):
 func mod_log(text:String, pretty:bool = false)->void:
 	var date_time = Time.get_datetime_dict_from_system()
 	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', date_time.hour,':',date_time.minute,':',date_time.second)
-	
+
 	print(str(date_time_string,'   ', text))
-	
+
 	var log_file = File.new()
-	
+
 	if(!log_file.file_exists(MOD_LOG_PATH)):
 		log_file.open(MOD_LOG_PATH, File.WRITE)
 		log_file.store_string("\n" + str(date_time_string,'   ', 'Created mod.log!'))
 		log_file.close()
-	
+
 	var _error = log_file.open(MOD_LOG_PATH, File.READ_WRITE)
 	if(_error):
 		print(_error)
@@ -119,26 +119,26 @@ func _load_mod_zips():
 		if mod_zip_file_name == '':
 			# Stop loading mod zip files
 			break
-		
+
 		# If the current file is a directory
 		if dir.current_is_dir():
 			# Go to the next file
 			continue
-		
+
 		var mod_folder_path = game_mod_folder_path.plus_file(mod_zip_file_name)
 		var mod_folder_global_path = ProjectSettings.globalize_path(mod_folder_path)
 		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, true)
-		
+
 		# If there was an error loading the mod zip file
 		if !is_mod_loaded_success:
 			# Log the error and continue with the next file
 			mod_log(str("ModLoader: ", mod_zip_file_name, "failed to load."))
 			continue
-		
+
 		# Mod successfully loaded!
 		mod_log(str("ModLoader: ", mod_zip_file_name, " loaded."))
 
-		# Init the mod data 
+		# Init the mod data
 		_init_mod_data(mod_folder_path)
 
 	dir.list_dir_end()
@@ -146,13 +146,13 @@ func _load_mod_zips():
 func _init_mod_data(mod_folder_path):
 		# The file name should be a valid mod id
 		var mod_id = _get_file_name(mod_folder_path, false, true)
-		
+
 		mod_data[mod_id] = {}
 		mod_data[mod_id].file_paths = []
 		mod_data[mod_id].required_files_path = {}
 		mod_data[mod_id].is_loadable = true
 		mod_data[mod_id].importance = 0
-		
+
 		# Get the mod file paths
 		var local_mod_path = str("res://", mod_id)
 		mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
@@ -165,7 +165,7 @@ func _check_mod_files(mod_id):
 	# Get the file paths of the current mod
 	var mod = mod_data[mod_id]
 	var file_paths = mod.file_paths
-	
+
 	for file_path in file_paths:
 		var file_name = file_path.get_file().to_lower()
 
@@ -182,7 +182,7 @@ func _check_mod_files(mod_id):
 			found_files.append(file_name)
 			# Add a key to required files dict
 			mod.required_files_path[_get_file_name(file_path, true, true)] = file_path
-	
+
 	if(REQUIRED_MOD_FILES.size() == found_files.size()):
 		dev_log(str("ModLoader: ", mod_id, " all required Files found."))
 	else:
@@ -195,7 +195,7 @@ func _check_mod_files(mod_id):
 # TODO: Make it possible to have required files in different locations - not just the root
 func _check_file_is_in_root(path, file_name):
 	var path_split = path.split("/")
-	
+
 	if(path_split[3].to_lower() == file_name):
 		return true
 	else:
@@ -220,7 +220,7 @@ func _load_meta_data(mod_id):
 		mod.is_loadable = false
 		# Continue with the next mod
 		return
-	
+
 	# Add the meta data to the mod
 	mod.meta_data = meta_data
 
@@ -237,24 +237,24 @@ func _check_meta_file(meta_data):
 
 # Check if dependencies are there
 func _check_dependencies(mod_id:String, deps:Array):
-	dev_log(str("ModLoader: Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps))	
-	
+	dev_log(str("ModLoader: Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps))
+
 	# loop through each dependency
 	for dependency_id in deps:
 		var dependency = mod_data[dependency_id]
 		var dependency_meta_data = mod_data[dependency_id].meta_data
 
 		# Init the importance score if it's missing
-		
+
 		# check if dependency is missing
 		if(!mod_data.has(dependency_id)):
 			_handle_missing_dependency(mod_id, dependency_id)
 			continue
-		
+
 		# increase importance score by 1
 		dependency.importance = dependency.importance + 1
 		dev_log(str("ModLoader: Dependency -> ", dependency_id, " importance -> ", dependency.importance))
-		
+
 		# check if dependency has dependencies
 		if(dependency_meta_data.dependencies.size() > 0):
 			_check_dependencies(dependency_id, dependency_meta_data.dependencies)
@@ -265,7 +265,7 @@ func _handle_missing_dependency(mod_id, dependency_id):
 	if(!mod_missing_dependencies.has(mod_id)):
 		# add it
 		mod_missing_dependencies[mod_id] = []
-	
+
 	mod_missing_dependencies[mod_id].append(dependency_id)
 	# Flag the mod so it's not loaded later
 	mod_data[mod_id].is_loadable = false
@@ -277,7 +277,7 @@ func _get_load_order():
 	for mod in mod_data_array:
 		if(mod.is_loadable):
 			mod_load_order.append(mod)
-	
+
 	# Sort mods by the importance value
 	mod_load_order.sort_custom(self, "_compare_Importance")
 
@@ -303,7 +303,7 @@ func _init_mod(mod):
 
 #####################################################
 ################# MOD LOADER UTILS ##################
-##################################################### 
+#####################################################
 
 # Util functions used in the mod loading process
 
@@ -319,7 +319,7 @@ func _get_mod_folder_dir():
 	mod_log(str("gameInstallDirectory: ", gameInstallDirectory))
 	if OS.get_name() == "OSX":
 		gameInstallDirectory = gameInstallDirectory.get_base_dir().get_base_dir().get_base_dir()
-	
+
 	return gameInstallDirectory.plus_file("mods")
 
 # Parses JSON from a given file path and returns a dictionary
@@ -331,19 +331,19 @@ func _get_json_as_dict(path):
 
 	return JSON.parse(content).result
 
-func _get_file_name(path, is_lower_case = true, is_no_extension = false):	
+func _get_file_name(path, is_lower_case = true, is_no_extension = false):
 	# mod_log(str("ModLoader: Get file name from path -> ", path))
 	var file_name = path.get_file()
-	
+
 	if(is_lower_case):
 		# mod_log(str("ModLoader: Get file name in lower case"))
 		file_name = file_name.to_lower()
-	
+
 	if(is_no_extension):
 		# mod_log(str("ModLoader: Get file name without extension"))
 		var file_extension = file_name.get_extension()
 		file_name = file_name.replace(str(".",file_extension), '')
-	
+
 	# mod_log(str("ModLoader: return file name -> ", file_name))
 	return file_name
 
@@ -398,7 +398,7 @@ func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false
 
 #####################################################
 ################## MODDING HELPERS ##################
-##################################################### 
+#####################################################
 
 # Helper functions to build mods
 
