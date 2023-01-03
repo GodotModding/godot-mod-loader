@@ -72,9 +72,9 @@ func _init():
 
 	dev_log(str("ModLoader: mod_data: ", JSON.print(mod_data, '   ')))
 
-func dev_log(text:String, pretty:bool = false):
+func dev_log(text:String, mod_name:String = "", pretty:bool = false):
 	if(_check_cmd_line_arg("--mod-dev")):
-		mod_log(text, pretty)
+		mod_log(text, mod_name, pretty)
 
 
 # Log info for a mod. Accepts the mod name as the 2nd arg, which prefixes
