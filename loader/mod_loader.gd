@@ -111,7 +111,7 @@ func dev_log(text:String, mod_name:String = "", pretty:bool = false):
 func mod_log(text:String, mod_name:String = "", pretty:bool = false)->void:
 	# Prefix with "{mod_name}: "
 	if mod_name != "":
-		text = mod_name + ": "
+		text = mod_name + ": " + text
 
 	var date_time = Time.get_datetime_dict_from_system()
 	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', date_time.hour,':',date_time.minute,':',date_time.second)
