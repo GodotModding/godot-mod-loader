@@ -16,8 +16,16 @@
 
 extends Node
 
+# Path to the mod log file
+# For Brotato, this file is here: %appdata%/Brotato/mods.log
 const MOD_LOG_PATH = "user://mods.log"
+
+# These 2 files are always required by mods.
+# ModMain.gd = The main init file for the mod
+# _meta.json = Meta data for the mod, including its dependancies
 const REQUIRED_MOD_FILES = ["modmain.gd", "_meta.json"]
+
+# Required keys in a mod's _meta.json file
 const REQUIRED_META_TAGS = [
 	"id",
 	"name",
@@ -26,13 +34,21 @@ const REQUIRED_META_TAGS = [
 	"authors",
 	"description",
 ]
+
+# Set to true to require using "--enable-mods" to enable them
 const REQUIRE_CMD_LINE = false
+
+# PRefix for this file when using mod_log or dev_log
 const LOG_NAME = "ModLoader"
+
+# Stores data for every found/loaded mod
 var mod_data = {}
+
+# Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order = []
-#	var missing_dependencies = {
-#		"mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
-#	}
+
+# Any mods that are missing their dependancies are added to this
+# Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies = {}
 
 # Things to keep to ensure they are not garbage collected (used by `saveScene`)
