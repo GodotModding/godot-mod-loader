@@ -117,9 +117,11 @@ func dev_log(text:String, mod_name:String = "", pretty:bool = false):
 # Log info for a mod. Accepts the mod name as the 2nd arg, which prefixes
 # the logged string with "{mod_name}: "
 func mod_log(text:String, mod_name:String = "", pretty:bool = false)->void:
+	if mod_name == "":
+		mod_name = "Unknown-Mod"
+
 	# Prefix with "{mod_name}: "
-	if mod_name != "":
-		text = mod_name + ": " + text
+	text = mod_name + ": " + text
 
 	var date_time = Time.get_datetime_dict_from_system()
 	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', date_time.hour,':',date_time.minute,':',date_time.second)
