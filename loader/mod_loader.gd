@@ -26,6 +26,7 @@ const REQUIRED_META_TAGS = [
 	"authors",
 	"description",
 ]
+const REQUIRE_CMD_LINE = false
 var mod_data = {}
 var mod_load_order = []
 #	var missing_dependencies = {
@@ -35,7 +36,7 @@ var mod_missing_dependencies = {}
 
 func _init():
 	# if mods are not enabled - don't load mods
-	if(!_check_cmd_line_arg("--enable-mods")):
+	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
 
 	_load_mod_zips()
