@@ -35,6 +35,7 @@ var mod_load_order = []
 #	}
 var mod_missing_dependencies = {}
 
+
 func _init():
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
@@ -70,8 +71,8 @@ func _init():
 		mod_log(str("Initializing -> ", mod.meta_data.id), LOG_NAME)
 		_init_mod(mod)
 
-
 	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
+
 
 func dev_log(text:String, mod_name:String = "", pretty:bool = false):
 	if(_check_cmd_line_arg("--mod-dev")):
@@ -107,6 +108,7 @@ func mod_log(text:String, mod_name:String = "", pretty:bool = false)->void:
 	else:
 		log_file.store_string("\n" + str(date_time_string,'   ', text))
 	log_file.close()
+
 
 func _load_mod_zips():
 	# Path to the games mod folder
@@ -152,6 +154,7 @@ func _load_mod_zips():
 
 	dir.list_dir_end()
 
+
 func _init_mod_data(mod_folder_path):
 		# The file name should be a valid mod id
 		var mod_id = _get_file_name(mod_folder_path, false, true)
@@ -165,6 +168,7 @@ func _init_mod_data(mod_folder_path):
 		# Get the mod file paths
 		var local_mod_path = str("res://", mod_id)
 		mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
+
 
 # Make sure the required mod files are there
 func _check_mod_files(mod_id):
@@ -201,6 +205,7 @@ func _check_mod_files(mod_id):
 			mod.is_loadable = false
 			mod_log(str("ERROR - only found ", found_files, " but this files are required -> ", REQUIRED_MOD_FILES), LOG_NAME)
 
+
 # TODO: Make it possible to have required files in different locations - not just the root
 func _check_file_is_in_root(path, file_name):
 	var path_split = path.split("/")
@@ -209,6 +214,7 @@ func _check_file_is_in_root(path, file_name):
 		return true
 	else:
 		return false
+
 
 # Load meta data into mod_data
 func _load_meta_data(mod_id):
@@ -233,6 +239,7 @@ func _load_meta_data(mod_id):
 	# Add the meta data to the mod
 	mod.meta_data = meta_data
 
+
 # Make sure the meta file has all required fields
 func _check_meta_file(meta_data):
 	var missing_fields = REQUIRED_META_TAGS
@@ -243,6 +250,7 @@ func _check_meta_file(meta_data):
 			missing_fields.erase(key)
 
 	return missing_fields
+
 
 # Check if dependencies are there
 func _check_dependencies(mod_id:String, deps:Array):
@@ -268,6 +276,7 @@ func _check_dependencies(mod_id:String, deps:Array):
 		if(dependency_meta_data.dependencies.size() > 0):
 			_check_dependencies(dependency_id, dependency_meta_data.dependencies)
 
+
 func _handle_missing_dependency(mod_id, dependency_id):
 	mod_log(str("ERROR - missing dependency - mod_id -> ", mod_id, " dependency_id -> ", dependency_id), LOG_NAME)
 	# if mod is not present in the missing dependencies array
@@ -278,6 +287,7 @@ func _handle_missing_dependency(mod_id, dependency_id):
 	mod_missing_dependencies[mod_id].append(dependency_id)
 	# Flag the mod so it's not loaded later
 	mod_data[mod_id].is_loadable = false
+
 
 func _get_load_order():
 	var mod_data_array = mod_data.values()
@@ -290,6 +300,7 @@ func _get_load_order():
 	# Sort mods by the importance value
 	mod_load_order.sort_custom(self, "_compare_Importance")
 
+
 func _compare_Importance(a, b):
 	# if true a -> b
 	# if false b -> a
@@ -297,6 +308,7 @@ func _compare_Importance(a, b):
 		return true
 	else:
 		return false
+
 
 func _init_mod(mod):
 		var mod_main_path = mod.required_files_path.modmain
@@ -323,6 +335,7 @@ func _check_cmd_line_arg(argument) -> bool:
 
 	return false
 
+
 func _get_mod_folder_dir():
 	var gameInstallDirectory = OS.get_executable_path().get_base_dir()
 
@@ -338,6 +351,7 @@ func _get_mod_folder_dir():
 
 	return gameInstallDirectory.plus_file("mods")
 
+
 # Parses JSON from a given file path and returns a dictionary
 func _get_json_as_dict(path):
 	# mod_log(str("getting JSON as dict from path -> ", path), LOG_NAME)
@@ -346,6 +360,7 @@ func _get_json_as_dict(path):
 	var content = file.get_as_text()
 
 	return JSON.parse(content).result
+
 
 func _get_file_name(path, is_lower_case = true, is_no_extension = false):
 	# mod_log(str("Get file name from path -> ", path), LOG_NAME)
@@ -362,6 +377,7 @@ func _get_file_name(path, is_lower_case = true, is_no_extension = false):
 
 	# mod_log(str("return file name -> ", file_name), LOG_NAME)
 	return file_name
+
 
 # Source: https://gist.github.com/willnationsdev/00d97aa8339138fd7ef0d6bd42748f6e
 func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false):
@@ -441,6 +457,7 @@ func addTranslationFromResource(resourcePath: String):
 	TranslationServer.add_translation(translation_object)
 	mod_log("Added Translation from Resource", LOG_NAME)
 
+
 func appendNodeInScene(modifiedScene, nodeName:String = "", nodeParent = null, instancePath:String = "", isVisible:bool = true):
 	var newNode
 	if instancePath != "":
@@ -461,6 +478,7 @@ func appendNodeInScene(modifiedScene, nodeName:String = "", nodeParent = null, i
 
 # Things to keep to ensure they are not garbage collected
 var _savedObjects = []
+
 
 func saveScene(modifiedScene, scenePath:String):
 	var packed_scene = PackedScene.new()
