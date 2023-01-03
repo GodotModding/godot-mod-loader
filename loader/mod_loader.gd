@@ -298,15 +298,15 @@ func _check_dependencies(mod_id:String, deps:Array):
 
 	# loop through each dependency
 	for dependency_id in deps:
-		var dependency = mod_data[dependency_id]
-		var dependency_meta_data = mod_data[dependency_id].meta_data
-
-		# Init the importance score if it's missing
-
 		# check if dependency is missing
 		if(!mod_data.has(dependency_id)):
 			_handle_missing_dependency(mod_id, dependency_id)
 			continue
+
+		var dependency = mod_data[dependency_id]
+		var dependency_meta_data = mod_data[dependency_id].meta_data
+
+		# Init the importance score if it's missing
 
 		# increase importance score by 1
 		dependency.importance = dependency.importance + 1
