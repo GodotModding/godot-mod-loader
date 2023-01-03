@@ -21,7 +21,7 @@ extends Node
 # =============================================================================
 
 # Path to the mod log file
-# For Brotato, this file is here: %appdata%/Brotato/mods.log
+# Find this log here: %appdata%/GAMENAME/mods.log
 const MOD_LOG_PATH = "user://mods.log"
 
 # These 2 files are always required by mods.
