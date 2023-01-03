@@ -153,10 +153,15 @@ func _load_mod_zips():
 	while true:
 		# Get the next file in the directory
 		var mod_zip_file_name = dir.get_next()
+
 		# If there is no more file
 		if mod_zip_file_name == '':
 			# Stop loading mod zip files
 			break
+
+		# Ignore files that aren't ZIP or PCK
+		if mod_zip_file_name.get_extension() != "zip" && mod_zip_file_name.get_extension() != "pck":
+			continue
 
 		# If the current file is a directory
 		if dir.current_is_dir():
