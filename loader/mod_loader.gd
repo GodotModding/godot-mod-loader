@@ -196,18 +196,18 @@ func _load_mod_zips():
 
 
 func _init_mod_data(mod_folder_path):
-		# The file name should be a valid mod id
-		var mod_id = _get_file_name(mod_folder_path, false, true)
+	# The file name should be a valid mod id
+	var mod_id = _get_file_name(mod_folder_path, false, true)
 
-		mod_data[mod_id] = {}
-		mod_data[mod_id].file_paths = []
-		mod_data[mod_id].required_files_path = {}
-		mod_data[mod_id].is_loadable = true
-		mod_data[mod_id].importance = 0
+	mod_data[mod_id] = {}
+	mod_data[mod_id].file_paths = []
+	mod_data[mod_id].required_files_path = {}
+	mod_data[mod_id].is_loadable = true
+	mod_data[mod_id].importance = 0
 
-		# Get the mod file paths
-		var local_mod_path = str("res://", mod_id)
-		mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
+	# Get the mod file paths
+	var local_mod_path = str("res://", mod_id)
+	mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
 
 
 # Make sure the required mod files are there
