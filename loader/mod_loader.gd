@@ -45,6 +45,12 @@ const REQUIRE_CMD_LINE = false
 # PRefix for this file when using mod_log or dev_log
 const LOG_NAME = "ModLoader"
 
+# Enables logging messages made with dev_log. Usually these are enabled with the
+# command line arg `--mod-dev`, but you can also enable them this way if you're
+# debugging in the editor. Don't forget to set this back to `false` when
+# distrubuting compiled builds!
+const ENABLE_DEV_LOG = false
+
 # Stores data for every found/loaded mod
 var mod_data = {}
 
@@ -104,7 +110,7 @@ func _init():
 
 
 func dev_log(text:String, mod_name:String = "", pretty:bool = false):
-	if(_check_cmd_line_arg("--mod-dev")):
+	if ENABLE_DEV_LOG || (_check_cmd_line_arg("--mod-dev")):
 		mod_log(text, mod_name, pretty)
 
 
