@@ -459,6 +459,12 @@ func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false
 
 # Helper functions to build mods
 
+# Add a script that extends a vanilla script. `childScriptPath` should point
+# to your mod's extender script, eg "MOD/extensions/singletons/utils.gd".
+# Inside that extender script, it should include "extends {target}", where
+# {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
+# Note that your extender script doesn't have to follow the same directory path
+# as the vanilla file, but it's good practice to do so.
 func installScriptExtension(childScriptPath:String):
 	var childScript = ResourceLoader.load(childScriptPath)
 
