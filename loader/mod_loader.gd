@@ -170,7 +170,7 @@ func _load_mod_zips():
 		# If there was an error loading the mod zip file
 		if !is_mod_loaded_success:
 			# Log the error and continue with the next file
-			mod_log(str(mod_zip_file_name, "failed to load."), LOG_NAME)
+			mod_log(str(mod_zip_file_name, " failed to load."), LOG_NAME)
 			continue
 
 		# Mod successfully loaded!
