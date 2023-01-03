@@ -483,6 +483,9 @@ func installScriptExtension(childScriptPath:String):
 	childScript.take_over_path(parentScriptPath)
 
 
+# Add a translation file, eg "mytranslation.en.translation". The translation
+# file should have been created in Godot already: When you improt a CSV, such
+# a file will be created for you.
 func addTranslationFromResource(resourcePath: String):
 	var translation_object = load(resourcePath)
 	TranslationServer.add_translation(translation_object)
