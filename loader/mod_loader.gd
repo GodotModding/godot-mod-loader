@@ -27,6 +27,7 @@ const REQUIRED_META_TAGS = [
 	"description",
 ]
 const REQUIRE_CMD_LINE = false
+const LOG_NAME = "ModLoader"
 var mod_data = {}
 var mod_load_order = []
 #	var missing_dependencies = {
@@ -40,7 +41,7 @@ func _init():
 		return
 
 	_load_mod_zips()
-	mod_log("ModLoader: Unziped all Mods")
+	mod_log("Unziped all Mods", LOG_NAME)
 
 	for mod_id in mod_data:
 		var mod = mod_data[mod_id]
@@ -62,15 +63,15 @@ func _init():
 	# Sort mod_load_order by the importance score of the mod
 	_get_load_order()
 
-	dev_log(str("ModLoader: mod_load_order -> ", JSON.print(mod_load_order, '   ')))
+	dev_log(str("mod_load_order -> ", JSON.print(mod_load_order, '   ')), LOG_NAME)
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
-		mod_log(str("ModLoader: Initializing -> ", mod.meta_data.id))
+		mod_log(str("Initializing -> ", mod.meta_data.id), LOG_NAME)
 		_init_mod(mod)
 
 
-	dev_log(str("ModLoader: mod_data: ", JSON.print(mod_data, '   ')))
+	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
 
 func dev_log(text:String, mod_name:String = "", pretty:bool = false):
 	if(_check_cmd_line_arg("--mod-dev")):
@@ -113,10 +114,10 @@ func _load_mod_zips():
 
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
-		mod_log("ModLoader: Can't open mod folder %s." % game_mod_folder_path)
+		mod_log("Can't open mod folder %s." % game_mod_folder_path, LOG_NAME)
 		return
 	if dir.list_dir_begin() != OK:
-		mod_log("ModLoader: Can't read mod folder %s." % game_mod_folder_path)
+		mod_log("Can't read mod folder %s." % game_mod_folder_path, LOG_NAME)
 		return
 
 	# Get all zip folders inside the game mod folder
@@ -140,11 +141,11 @@ func _load_mod_zips():
 		# If there was an error loading the mod zip file
 		if !is_mod_loaded_success:
 			# Log the error and continue with the next file
-			mod_log(str("ModLoader: ", mod_zip_file_name, "failed to load."))
+			mod_log(str(mod_zip_file_name, "failed to load."), LOG_NAME)
 			continue
 
 		# Mod successfully loaded!
-		mod_log(str("ModLoader: ", mod_zip_file_name, " loaded."))
+		mod_log(str(mod_zip_file_name, " loaded."), LOG_NAME)
 
 		# Init the mod data
 		_init_mod_data(mod_folder_path)
@@ -181,7 +182,7 @@ func _check_mod_files(mod_id):
 		if(REQUIRED_MOD_FILES.has(file_name)):
 			# Check if it is not in the root of the mod folder
 			if(!_check_file_is_in_root(file_path, file_name)):
-				mod_log(str("ModLoader: ERROR - ", mod_id, " required file ", file_name, " is not at the root of the mod folder."))
+				mod_log(str("ERROR - ", mod_id, " required file ", file_name, " is not at the root of the mod folder."), LOG_NAME)
 				mod.is_loadable = false
 				# We can break the loop early if a required file is in the wrong location
 				break
@@ -192,13 +193,13 @@ func _check_mod_files(mod_id):
 			mod.required_files_path[_get_file_name(file_path, true, true)] = file_path
 
 	if(REQUIRED_MOD_FILES.size() == found_files.size()):
-		dev_log(str("ModLoader: ", mod_id, " all required Files found."))
+		dev_log(str(mod_id, " all required Files found."), LOG_NAME)
 	else:
 		# Don't show this error if the "required file not in root" error is shown before
 		if(!mod.has("is_loadable") || mod.is_loadable):
 			# Flag mods with missing files so they don't get loaded later
 			mod.is_loadable = false
-			mod_log(str("ModLoader: ERROR - only found ", found_files, " but this files are required -> ", REQUIRED_MOD_FILES))
+			mod_log(str("ERROR - only found ", found_files, " but this files are required -> ", REQUIRED_MOD_FILES), LOG_NAME)
 
 # TODO: Make it possible to have required files in different locations - not just the root
 func _check_file_is_in_root(path, file_name):
@@ -211,19 +212,19 @@ func _check_file_is_in_root(path, file_name):
 
 # Load meta data into mod_data
 func _load_meta_data(mod_id):
-	mod_log(str("ModLoader: Loading meta_data for -> ", mod_id))
+	mod_log(str("Loading meta_data for -> ", mod_id), LOG_NAME)
 	var mod = mod_data[mod_id]
 
 	# Load meta data file
 	var meta_path = str("res://",mod_id,"/_meta.json")
 	var meta_data = _get_json_as_dict(meta_path)
 
-	dev_log(str("ModLoader: ", mod_id, " loaded meta data -> ", meta_data))
+	dev_log(str(mod_id, " loaded meta data -> ", meta_data), LOG_NAME)
 
 	# Check if the meta data has all required fields
 	var missing_fields = _check_meta_file(meta_data)
 	if(missing_fields.size() > 0):
-		mod_log(str("ModLoader: ERROR - ", mod_id, " ", missing_fields, " are required in _meta.json."))
+		mod_log(str("ERROR - ", mod_id, " ", missing_fields, " are required in _meta.json."), LOG_NAME)
 		# Flag mod - so it's not loaded later
 		mod.is_loadable = false
 		# Continue with the next mod
@@ -245,7 +246,7 @@ func _check_meta_file(meta_data):
 
 # Check if dependencies are there
 func _check_dependencies(mod_id:String, deps:Array):
-	dev_log(str("ModLoader: Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps))
+	dev_log(str("Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps), LOG_NAME)
 
 	# loop through each dependency
 	for dependency_id in deps:
@@ -261,14 +262,14 @@ func _check_dependencies(mod_id:String, deps:Array):
 
 		# increase importance score by 1
 		dependency.importance = dependency.importance + 1
-		dev_log(str("ModLoader: Dependency -> ", dependency_id, " importance -> ", dependency.importance))
+		dev_log(str("Dependency -> ", dependency_id, " importance -> ", dependency.importance), LOG_NAME)
 
 		# check if dependency has dependencies
 		if(dependency_meta_data.dependencies.size() > 0):
 			_check_dependencies(dependency_id, dependency_meta_data.dependencies)
 
 func _handle_missing_dependency(mod_id, dependency_id):
-	mod_log(str("ModLoader: ERROR - missing dependency - mod_id -> ", mod_id, " dependency_id -> ", dependency_id))
+	mod_log(str("ERROR - missing dependency - mod_id -> ", mod_id, " dependency_id -> ", dependency_id), LOG_NAME)
 	# if mod is not present in the missing dependencies array
 	if(!mod_missing_dependencies.has(mod_id)):
 		# add it
@@ -299,12 +300,12 @@ func _compare_Importance(a, b):
 
 func _init_mod(mod):
 		var mod_main_path = mod.required_files_path.modmain
-		dev_log(str("ModLoader: Loading script from -> ", mod_main_path))
+		dev_log(str("Loading script from -> ", mod_main_path), LOG_NAME)
 		var mod_main_script = ResourceLoader.load(mod_main_path)
-		dev_log(str("ModLoader: Loaded script -> ", mod_main_script))
+		dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
 		var mod_main_instance = mod_main_script.new(self)
 		mod_main_instance.name = mod.meta_data.id
-		dev_log(str("modLoader: Adding child -> ", mod_main_instance))
+		dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
 		add_child(mod_main_instance, true)
 
 
@@ -339,7 +340,7 @@ func _get_mod_folder_dir():
 
 # Parses JSON from a given file path and returns a dictionary
 func _get_json_as_dict(path):
-	# mod_log(str("ModLoader: getting JSON as dict from path -> ", path))
+	# mod_log(str("getting JSON as dict from path -> ", path), LOG_NAME)
 	var file = File.new()
 	file.open(path, File.READ)
 	var content = file.get_as_text()
@@ -347,19 +348,19 @@ func _get_json_as_dict(path):
 	return JSON.parse(content).result
 
 func _get_file_name(path, is_lower_case = true, is_no_extension = false):
-	# mod_log(str("ModLoader: Get file name from path -> ", path))
+	# mod_log(str("Get file name from path -> ", path), LOG_NAME)
 	var file_name = path.get_file()
 
 	if(is_lower_case):
-		# mod_log(str("ModLoader: Get file name in lower case"))
+		# mod_log(str("Get file name in lower case"), LOG_NAME)
 		file_name = file_name.to_lower()
 
 	if(is_no_extension):
-		# mod_log(str("ModLoader: Get file name without extension"))
+		# mod_log(str("Get file name without extension"), LOG_NAME)
 		var file_extension = file_name.get_extension()
 		file_name = file_name.replace(str(".",file_extension), '')
 
-	# mod_log(str("ModLoader: return file name -> ", file_name))
+	# mod_log(str("return file name -> ", file_name), LOG_NAME)
 	return file_name
 
 # Source: https://gist.github.com/willnationsdev/00d97aa8339138fd7ef0d6bd42748f6e
@@ -431,14 +432,14 @@ func installScriptExtension(childScriptPath:String):
 
 	var parentScript = childScript.get_base_script()
 	var parentScriptPath = parentScript.resource_path
-	mod_log("ModLoader: Installing script extension: %s <- %s" % [parentScriptPath, childScriptPath])
+	mod_log("Installing script extension: %s <- %s" % [parentScriptPath, childScriptPath], LOG_NAME)
 	childScript.take_over_path(parentScriptPath)
 
 
 func addTranslationFromResource(resourcePath: String):
 	var translation_object = load(resourcePath)
 	TranslationServer.add_translation(translation_object)
-	mod_log("ModLoader: Added Translation from Resource")
+	mod_log("Added Translation from Resource", LOG_NAME)
 
 func appendNodeInScene(modifiedScene, nodeName:String = "", nodeParent = null, instancePath:String = "", isVisible:bool = true):
 	var newNode
@@ -464,7 +465,7 @@ var _savedObjects = []
 func saveScene(modifiedScene, scenePath:String):
 	var packed_scene = PackedScene.new()
 	packed_scene.pack(modifiedScene)
-	dev_log(str("ModLoader: packing scene -> ", packed_scene))
+	dev_log(str("packing scene -> ", packed_scene), LOG_NAME)
 	packed_scene.take_over_path(scenePath)
-	dev_log(str("ModLoader: saveScene - taking over path - new path -> ", packed_scene.resource_path))
+	dev_log(str("saveScene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
 	_savedObjects.append(packed_scene)
