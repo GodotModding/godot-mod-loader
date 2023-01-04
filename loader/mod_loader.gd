@@ -284,7 +284,8 @@ func _setup_mods():
 
 
 # Add a mod's data to mod_data.
-# The mod_folder_path is just the folder name that was added to UNPACKED_DIR.
+# The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
+# which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
 func _init_mod_data(mod_folder_path):
 	# The file name should be a valid mod id
 	var mod_id = _get_file_name(mod_folder_path, false, true)
