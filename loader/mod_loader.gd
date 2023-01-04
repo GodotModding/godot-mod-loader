@@ -303,7 +303,7 @@ func _init_mod_data(mod_folder_path):
 	if DEBUG_ENABLE_STORING_FILEPATHS:
 		# Get the mod file paths
 		# Note: This was needed in the original version of this script, but it's
-		# needed anymore. It can be useful when debugging, but it's also an expensive
+		# not needed anymore. It can be useful when debugging, but it's also an expensive
 		# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
 		# which has ~1,000 files). That's why it's disabled by default
 		mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
