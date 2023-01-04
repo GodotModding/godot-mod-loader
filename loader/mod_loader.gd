@@ -1,9 +1,12 @@
 # ModLoader - A mod loader for GDScript
 #
+# Version 2.0.0
+#
 # Written in 2021 by harrygiel <harrygiel@gmail.com>,
 # in 2021 by Mariusz Chwalba <mariusz@chwalba.net>,
 # in 2022 by Vladimir Panteleev <git@cy.md>
 # in 2023 by KANA <kai@kana.jetzt>
+# in 2023 by Darkly77
 #
 # To the extent possible under law, the author(s) have
 # dedicated all copyright and related and neighboring
@@ -17,17 +20,33 @@
 extends Node
 
 
-# Vars
+# Config
 # =============================================================================
+
+# Most of these settings should never need to change, aside from the DEBUG_*
+# options (which should be `false` when distributing compiled PCKs)
+
+# Enables logging messages made with dev_log. Usually these are enabled with the
+# command line arg `--mod-dev`, but you can also enable them this way if you're
+# debugging in the editor
+const DEBUG_ENABLE_DEV_LOG = false
+
+# If true, a complete array of filepaths is stored for each mod. This is
+# disabled by default because the operation can be very expensive, but may
+# be useful for debugging
+const DEBUG_ENABLE_STORING_FILEPATHS = false
 
 # Path to the mod log file
 # Find this log here: %appdata%/GAMENAME/mods.log
 const MOD_LOG_PATH = "user://mods.log"
 
+# This is where mod ZIPs are unpacked to
+const UNPACKED_DIR = "res://mods-unpacked/"
+
 # These 2 files are always required by mods.
 # ModMain.gd = The main init file for the mod
 # _meta.json = Meta data for the mod, including its dependancies
-const REQUIRED_MOD_FILES = ["modmain.gd", "_meta.json"]
+const REQUIRED_MOD_FILES = ["ModMain.gd", "_meta.json"]
 
 # Required keys in a mod's _meta.json file
 const REQUIRED_META_TAGS = [
@@ -42,14 +61,12 @@ const REQUIRED_META_TAGS = [
 # Set to true to require using "--enable-mods" to enable them
 const REQUIRE_CMD_LINE = false
 
-# PRefix for this file when using mod_log or dev_log
+# Prefix for this file when using mod_log or dev_log
 const LOG_NAME = "ModLoader"
 
-# Enables logging messages made with dev_log. Usually these are enabled with the
-# command line arg `--mod-dev`, but you can also enable them this way if you're
-# debugging in the editor. Don't forget to set this back to `false` when
-# distrubuting compiled builds!
-const ENABLE_DEV_LOG = false
+
+# Vars
+# =============================================================================
 
 # Stores data for every found/loaded mod
 var mod_data = {}
@@ -65,7 +82,6 @@ var mod_missing_dependencies = {}
 var _savedObjects = []
 
 
-
 # Main
 # =============================================================================
 
@@ -74,23 +90,36 @@ func _init():
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
 
+	# Loop over "res://mods" and add any mod zips to the unpacked virtual
+	# directory (UNPACKED_DIR)
 	_load_mod_zips()
-	mod_log("Unziped all Mods", LOG_NAME)
+	mod_log("DONE: Unziped all Mods", LOG_NAME)
 
+	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
+	# directory, which adds their data to mod_data.
+	_setup_mods()
+
+	# Loop over all loaded mods via their entry in mod_data. Verify that they
+	# have all the required files (REQUIRED_MOD_FILES), load their meta data
+	# (from their _meta.json file), and verify that the meta JSON has all
+	# required properties (REQUIRED_META_TAGS)
 	for mod_id in mod_data:
 		var mod = mod_data[mod_id]
 
-		# verify files
+		# Verify files
 		_check_mod_files(mod_id)
 		if(!mod.is_loadable):
 			continue
 
-		# load meta data into mod_data
+		# Load meta data into mod_data
 		_load_meta_data(mod_id)
 		if(!mod.is_loadable):
 			continue
 
-	# run dependency check after loading meta_data
+	mod_log("DONE: Loaded all meta data", LOG_NAME)
+
+	# Run dependency checks after loading meta_data. If a mod depends on another
+	# mod that hasn't been loaded, that dependent mod won't be loaded.
 	for mod_id in mod_data:
 		if(!mod_data[mod_id].is_loadable):
 			continue
@@ -108,25 +137,35 @@ func _init():
 
 	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
 
+	mod_log("DONE: Completely finished loading mods", LOG_NAME)
 
+
+# Log developer info. Has to be enabled, either with the command line arg
+# `--mod-dev--mod-dev`, or by temporarily enabling DEBUG_ENABLE_DEV_LOG
 func dev_log(text:String, mod_name:String = "", pretty:bool = false):
-	if ENABLE_DEV_LOG || (_check_cmd_line_arg("--mod-dev")):
+	if DEBUG_ENABLE_DEV_LOG || (_check_cmd_line_arg("--mod-dev")):
 		mod_log(text, mod_name, pretty)
 
 
 # Log info for a mod. Accepts the mod name as the 2nd arg, which prefixes
 # the logged string with "{mod_name}: "
-func mod_log(text:String, mod_name:String = "", pretty:bool = false)->void:
-	if mod_name == "":
-		mod_name = "Unknown-Mod"
-
+func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)->void:
 	# Prefix with "{mod_name}: "
-	text = mod_name + ": " + text
+	var prefix = mod_name + ": "
 
 	var date_time = Time.get_datetime_dict_from_system()
-	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', date_time.hour,':',date_time.minute,':',date_time.second)
 
-	print(str(date_time_string,'   ', text))
+	# Add leading zeroes if needed
+	var hour = date_time.hour
+	var mins = date_time.minute
+	var secs = date_time.second
+	hour = hour if str(hour).length() > 1 else str("0", hour)
+	mins = mins if str(mins).length() > 1 else str("0", mins)
+	secs = secs if str(secs).length() > 1 else str("0", secs)
+
+	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', hour,':',mins,':',secs)
+
+	print(str(date_time_string,'   ', prefix, text))
 
 	var log_file = File.new()
 
@@ -141,9 +180,9 @@ func mod_log(text:String, mod_name:String = "", pretty:bool = false)->void:
 		return
 	log_file.seek_end()
 	if(pretty):
-		log_file.store_string("\n" + str(date_time_string,'   ', JSON.print(text, " ")))
+		log_file.store_string("\n" + str(date_time_string,'   ', prefix, JSON.print(text, " ")))
 	else:
-		log_file.store_string("\n" + str(date_time_string,'   ', text))
+		log_file.store_string("\n" + str(date_time_string,'   ', prefix, text))
 	log_file.close()
 
 
@@ -158,6 +197,8 @@ func _load_mod_zips():
 	if dir.list_dir_begin() != OK:
 		mod_log("Can't read mod folder %s." % game_mod_folder_path, LOG_NAME)
 		return
+
+	var has_shown_editor_warning = false
 
 	# Get all zip folders inside the game mod folder
 	while true:
@@ -180,7 +221,20 @@ func _load_mod_zips():
 
 		var mod_folder_path = game_mod_folder_path.plus_file(mod_zip_file_name)
 		var mod_folder_global_path = ProjectSettings.globalize_path(mod_folder_path)
-		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, true)
+		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, false)
+
+		# Notifies developer of an issue with Godot, where using `load_resource_pack`
+		# in the editor WIPES the entire res:// directory the first time you use it:
+		# https://github.com/godotengine/godot/issues/19815
+		# https://github.com/godotengine/godot/issues/16798
+		if OS.has_feature("editor") && !has_shown_editor_warning:
+			mod_log(str(
+				"WARNING: Loading files with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
+				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
+				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
+			has_shown_editor_warning = true
+
+		dev_log(str("Found mod ZIP: ", mod_folder_global_path), LOG_NAME)
 
 		# If there was an error loading the mod zip file
 		if !is_mod_loaded_success:
@@ -191,80 +245,100 @@ func _load_mod_zips():
 		# Mod successfully loaded!
 		mod_log(str(mod_zip_file_name, " loaded."), LOG_NAME)
 
+	dir.list_dir_end()
+
+
+func _setup_mods():
+	# Path to the unpacked mods folder
+	var unpacked_mods_path = UNPACKED_DIR
+
+	var dir = Directory.new()
+	if dir.open(unpacked_mods_path) != OK:
+		mod_log("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
+		return
+	if dir.list_dir_begin() != OK:
+		mod_log("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
+		return
+
+	# Get all unpacked mod dirs
+	while true:
+		# Get the next file in the directory
+		var mod_dir_name = dir.get_next()
+
+		# If there is no more file
+		if mod_dir_name == '':
+			# Stop loading mod zip files
+			break
+
+		# Only check directories
+		if !dir.current_is_dir():
+			continue
+
+		if mod_dir_name == "." || mod_dir_name == "..":
+			continue
+
 		# Init the mod data
-		_init_mod_data(mod_folder_path)
+		_init_mod_data(mod_dir_name)
 
 	dir.list_dir_end()
 
 
+# Add a mod's data to mod_data.
+# The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
+# which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
 func _init_mod_data(mod_folder_path):
 	# The file name should be a valid mod id
 	var mod_id = _get_file_name(mod_folder_path, false, true)
+
+	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
+	var local_mod_path = str(UNPACKED_DIR, mod_id)
 
 	mod_data[mod_id] = {}
 	mod_data[mod_id].file_paths = []
 	mod_data[mod_id].required_files_path = {}
 	mod_data[mod_id].is_loadable = true
 	mod_data[mod_id].importance = 0
+	mod_data[mod_id].dir = local_mod_path
 
-	# Get the mod file paths
-	var local_mod_path = str("res://", mod_id)
-	mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
+	if DEBUG_ENABLE_STORING_FILEPATHS:
+		# Get the mod file paths
+		# Note: This was needed in the original version of this script, but it's
+		# not needed anymore. It can be useful when debugging, but it's also an expensive
+		# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
+		# which has ~1,000 files). That's why it's disabled by default
+		mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
+
+	for required_filename in REQUIRED_MOD_FILES:
+		# Eg:
+		# "modmain.gd": local_mod_path + "/ModMain.gd",
+		# "_meta.json": local_mod_path + "/_meta.json"
+		mod_data[mod_id].required_files_path[required_filename] = local_mod_path + "/" + required_filename
 
 
 # Make sure the required mod files are there
 func _check_mod_files(mod_id):
-	# Loop through each mod
-	var found_files =  []
 
-	# Get the file paths of the current mod
+	var file_check = File.new()
 	var mod = mod_data[mod_id]
-	var file_paths = mod.file_paths
 
-	for file_path in file_paths:
-		var file_name = file_path.get_file().to_lower()
+	for required_filename in REQUIRED_MOD_FILES:
+		var filepath = mod_data[mod_id].required_files_path[required_filename]
 
-		# Check if it is in the required_files array
-		if(REQUIRED_MOD_FILES.has(file_name)):
-			# Check if it is not in the root of the mod folder
-			if(!_check_file_is_in_root(file_path, file_name)):
-				mod_log(str("ERROR - ", mod_id, " required file ", file_name, " is not at the root of the mod folder."), LOG_NAME)
-				mod.is_loadable = false
-				# We can break the loop early if a required file is in the wrong location
-				break
-
-			# If the file is required add it to found files
-			found_files.append(file_name)
-			# Add a key to required files dict
-			mod.required_files_path[_get_file_name(file_path, true, true)] = file_path
-
-	if(REQUIRED_MOD_FILES.size() == found_files.size()):
-		dev_log(str(mod_id, " all required Files found."), LOG_NAME)
-	else:
-		# Don't show this error if the "required file not in root" error is shown before
-		if(!mod.has("is_loadable") || mod.is_loadable):
-			# Flag mods with missing files so they don't get loaded later
+		if !file_check.file_exists(filepath):
+			mod_log(str("ERROR - ", mod_id, " is missing a required file: ", required_filename), LOG_NAME)
 			mod.is_loadable = false
-			mod_log(str("ERROR - only found ", found_files, " but this files are required -> ", REQUIRED_MOD_FILES), LOG_NAME)
+
+	if !mod.is_loadable:
+		mod_log(str("ERROR - ", mod_id, " cannot be loaded due to missing required files"), LOG_NAME)
 
 
-# TODO: Make it possible to have required files in different locations - not just the root
-func _check_file_is_in_root(path, file_name):
-	var path_split = path.split("/")
-
-	if(path_split[3].to_lower() == file_name):
-		return true
-	else:
-		return false
-
-
-# Load meta data into mod_data
+# Load meta data into mod_data, from a mod's _meta.json file
 func _load_meta_data(mod_id):
 	mod_log(str("Loading meta_data for -> ", mod_id), LOG_NAME)
 	var mod = mod_data[mod_id]
 
 	# Load meta data file
-	var meta_path = str("res://",mod_id,"/_meta.json")
+	var meta_path = mod.required_files_path["_meta.json"]
 	var meta_data = _get_json_as_dict(meta_path)
 
 	dev_log(str(mod_id, " loaded meta data -> ", meta_data), LOG_NAME)
@@ -294,7 +368,9 @@ func _check_meta_file(meta_data):
 	return missing_fields
 
 
-# Check if dependencies are there
+# Run dependency checks on a mod, checking any dependencies it lists in its
+# meta_data (ie. its _meta.json file). If a mod depends on another mod that
+# hasn't been loaded, the dependent mod won't be loaded.
 func _check_dependencies(mod_id:String, deps:Array):
 	dev_log(str("Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps), LOG_NAME)
 
@@ -319,6 +395,7 @@ func _check_dependencies(mod_id:String, deps:Array):
 			_check_dependencies(dependency_id, dependency_meta_data.dependencies)
 
 
+# Handle missing dependencies: Sets `is_loadable` to false and logs an error
 func _handle_missing_dependency(mod_id, dependency_id):
 	mod_log(str("ERROR - missing dependency - mod_id -> ", mod_id, " dependency_id -> ", dependency_id), LOG_NAME)
 	# if mod is not present in the missing dependencies array
@@ -331,6 +408,7 @@ func _handle_missing_dependency(mod_id, dependency_id):
 	mod_data[mod_id].is_loadable = false
 
 
+# Get the load order of mods, using a custom sorter
 func _get_load_order():
 	var mod_data_array = mod_data.values()
 
@@ -343,6 +421,7 @@ func _get_load_order():
 	mod_load_order.sort_custom(self, "_compare_Importance")
 
 
+# Custom sorter that orders mods by important
 func _compare_Importance(a, b):
 	# if true a -> b
 	# if false b -> a
@@ -352,15 +431,18 @@ func _compare_Importance(a, b):
 		return false
 
 
+# Instance every mod and add it as a node to the Mod Loader.
+# Runs mods in the order stored in mod_load_order.
 func _init_mod(mod):
-		var mod_main_path = mod.required_files_path.modmain
-		dev_log(str("Loading script from -> ", mod_main_path), LOG_NAME)
-		var mod_main_script = ResourceLoader.load(mod_main_path)
-		dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
-		var mod_main_instance = mod_main_script.new(self)
-		mod_main_instance.name = mod.meta_data.id
-		dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
-		add_child(mod_main_instance, true)
+	var mod_main_path = mod.required_files_path["ModMain.gd"]
+	dev_log(str("Loading script from -> ", mod_main_path), LOG_NAME)
+	var mod_main_script = ResourceLoader.load(mod_main_path)
+	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
+	var mod_main_instance = mod_main_script.new(self)
+	mod_main_instance.name = mod.meta_data.id
+	dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
+	add_child(mod_main_instance, true)
+
 
 
 # Utils (Mod Loader)
@@ -368,6 +450,7 @@ func _init_mod(mod):
 
 # Util functions used in the mod loading process
 
+# Check if the provided command line argument was present when launching the game
 func _check_cmd_line_arg(argument) -> bool:
 	for arg in OS.get_cmdline_args():
 		if arg == argument:
@@ -376,6 +459,7 @@ func _check_cmd_line_arg(argument) -> bool:
 	return false
 
 
+# Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
 func _get_mod_folder_dir():
 	var gameInstallDirectory = OS.get_executable_path().get_base_dir()
 
@@ -384,10 +468,11 @@ func _get_mod_folder_dir():
 
 	# Fix for running the game through the Godot editor (as the EXE path would be
 	# the editor's own EXE, which won't have any mod ZIPs)
-	if OS.is_debug_build():
+	# if OS.is_debug_build():
+	if OS.has_feature("editor"):
 		gameInstallDirectory = "res://"
 
-	mod_log(str("gameInstallDirectory: ", gameInstallDirectory))
+	mod_log(str("gameInstallDirectory: ", gameInstallDirectory), LOG_NAME)
 
 	return gameInstallDirectory.plus_file("mods")
 
@@ -419,6 +504,9 @@ func _get_file_name(path, is_lower_case = true, is_no_extension = false):
 	return file_name
 
 
+# Get a flat array of all files in the target directory. This was needed in the
+# original version of this script, before becoming deprecated. It may still be
+# used if DEBUG_ENABLE_STORING_FILEPATHS is true.
 # Source: https://gist.github.com/willnationsdev/00d97aa8339138fd7ef0d6bd42748f6e
 func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false):
 	var regex = null

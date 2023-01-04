@@ -6,12 +6,34 @@ For detailed info, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V
 
 ## Mod Setup
 
+### Structure
+
+Mod ZIPs should have the structure shown below. The name of the ZIP is arbitrary.
+
+```
+yourmod.zip
+├───.import
+└───mods-unpacked
+    └───Author-ModName
+        ├───ModMain.gd
+        └───_meta.json
+```
+
+#### Notes on .import
+
+Adding the .import directory is only needed when your mod adds content such as PNGs and sound files. In these cases, your mod's .import folder should **only** included your custom assets, and should not include any vanilla files.
+
+You can copy your custom assets from your project's .import directory. They can be easily identified by sorting by date. To clean up unused files, it's helpful to delete everything in .import that's not vanilla, then run the game again, which will re-create only the files that are actually used.
+
+
+### Required Files
+
 Mods you create must have the following 2 files:
 
 - **ModMain.gd** - The init file for your mod.
 - **_meta.json** - Meta data for your mod (see below).
 
-### Example _meta.json
+#### Example _meta.json
 
 ```json
 {
@@ -31,9 +53,9 @@ Mods you create must have the following 2 files:
 }
 ```
 
-#### Notes
+#### Notes on meta.json
 
-Some properties in the JSON are not checke din the code (ATOW), and are only used for reference by yourself and your mod's users. These are:
+Some properties in the JSON are not checked in the code, and are only used for reference by yourself and your mod's users. These are:
 
 - `version`
 - `compatible_game_version`
@@ -54,7 +76,24 @@ Add a script that extends a vanilla script. `childScriptPath` is the path to you
 
 Inside that extender script, it should include `extends {target}`, where {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 
-Note that your extender script doesn't have to follow the same directory path as the vanilla file, but it's good practice to do so.
+Your extender scripts don't have to follow the same directory path as the vanilla file, but it's good practice to do so.
+
+One approach to organising your extender scripts is to put them in a dedicated folder named "extensions", eg:
+
+```
+yourmod.zip
+├───.import
+└───mods-unpacked
+    └───Author-ModName
+        ├───ModMain.gd
+        ├───_meta.json
+        └───extensions
+            └───Any files that extend vanilla code can go here, eg:
+            ├───main.gd
+            └───singletons
+                ├───item_service.gd
+                └───debug_service.gd
+```
 
 ### addTranslationFromResource
 
