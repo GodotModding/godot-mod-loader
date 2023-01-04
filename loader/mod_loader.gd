@@ -151,7 +151,7 @@ func dev_log(text:String, mod_name:String = "", pretty:bool = false):
 # the logged string with "{mod_name}: "
 func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)->void:
 	# Prefix with "{mod_name}: "
-	text = mod_name + ": " + text
+	var prefix = mod_name + ": "
 
 	var date_time = Time.get_datetime_dict_from_system()
 
@@ -165,7 +165,7 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 
 	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', hour,':',mins,':',secs)
 
-	print(str(date_time_string,'   ', text))
+	print(str(date_time_string,'   ', prefix, text))
 
 	var log_file = File.new()
 
@@ -180,9 +180,9 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 		return
 	log_file.seek_end()
 	if(pretty):
-		log_file.store_string("\n" + str(date_time_string,'   ', JSON.print(text, " ")))
+		log_file.store_string("\n" + str(date_time_string,'   ', prefix, JSON.print(text, " ")))
 	else:
-		log_file.store_string("\n" + str(date_time_string,'   ', text))
+		log_file.store_string("\n" + str(date_time_string,'   ', prefix, text))
 	log_file.close()
 
 
