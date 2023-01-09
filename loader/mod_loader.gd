@@ -571,7 +571,7 @@ func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false
 func installScriptExtension(childScriptPath:String):
 	# Check path to file exists
 	if !File.new().file_exists(childScriptPath):
-		mod_log("ModLoader: ERROR - The child script path '%s' does not exist" % [childScriptPath])
+		mod_log("ERROR - The child script path '%s' does not exist" % [childScriptPath], LOG_NAME)
 		return
 
 	var childScript = ResourceLoader.load(childScriptPath)
