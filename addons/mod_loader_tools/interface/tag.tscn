@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://addons/mod_loader_tools/interface/font/font_annotation.tres" type="DynamicFont" id=1]
+
+[sub_resource type="StyleBoxFlat" id=174]
+content_margin_left = 1.0
+content_margin_right = 1.0
+content_margin_top = 1.0
+content_margin_bottom = 1.0
+bg_color = Color( 0.14902, 0.172549, 0.231373, 1 )
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color( 0.125, 0.14375, 0.19375, 1 )
+
+[node name="Tag" type="PanelContainer"]
+margin_right = 38.0
+margin_bottom = 22.0
+custom_styles/panel = SubResource( 174 )
+
+[node name="Label" type="Label" parent="."]
+margin_left = 1.0
+margin_top = 9.0
+margin_right = 37.0
+margin_bottom = 13.0
+custom_fonts/font = ExtResource( 1 )
+text = "Tag"

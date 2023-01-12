@@ -1,0 +1,150 @@
+extends SceneTree
+
+
+# IMPORTANT: use the ModLoaderHelper through this in this script! Otherwise
+# script compilation will break on first load since the class is not defined
+# just use the normal one with autocomplete and then lowercase it
+var modloaderhelper: Node = load("res://addons/mod_loader_tools/mod_loader_helper.gd").new()
+
+var allow_interrupt := false
+var interrupt_attempt := 0
+var skip_mod_selection: bool = modloaderhelper.should_skip_mod_selection()
+
+
+func _init() -> void:
+	var autoloads := {}
+	for prop in ProjectSettings.get_property_list():
+		var name: String = prop.name
+		if name.begins_with("autoload/"):
+			var value: String = ProjectSettings.get_setting(name)
+			autoloads[name] = value
+	print(autoloads)
+
+	try_setup_modloader()
+
+	if modloaderhelper.are_mods_enabled():
+		allow_interrupt = true
+	else:
+		change_scene_to_mod_selection()
+
+
+func _idle(delta: float) -> bool:
+	if not allow_interrupt:
+		return false # keep main loop running
+
+	# first Input.is_key_pressed() is always false for some reason
+	# so we check at least three times
+	if interrupt_attempt > 3:
+		allow_interrupt = false
+		if skip_mod_selection:
+			change_scene_to_game_main()
+		else:
+			change_scene_to_mod_selection()
+
+	interrupt_attempt += 1
+	if Input.is_key_pressed(KEY_ALT):
+		allow_interrupt = false
+		if skip_mod_selection:
+			change_scene_to_mod_selection()
+		else:
+			change_scene_to_game_main()
+
+	return false
+
+
+func change_scene_to_mod_selection() -> void:
+	set_screen_stretch(
+		SceneTree.STRETCH_MODE_DISABLED,
+		SceneTree.STRETCH_ASPECT_IGNORE,
+		Vector2(1920, 1080)
+	)
+	change_scene(ProjectSettings.get_setting(modloaderhelper.settings.MOD_SELECTION_SCENE))
+
+
+func change_scene_to_game_main() -> void:
+	set_screen_stretch(
+		get("STRETCH_MODE_%s" % ProjectSettings.get_setting("display/window/stretch/mode").to_upper()),
+		get("STRETCH_ASPECT_%s" % ProjectSettings.get_setting("display/window/stretch/aspect").to_upper()),
+		Vector2(
+			ProjectSettings.get_setting("display/window/size/width"),
+			ProjectSettings.get_setting("display/window/size/height")
+		)
+	)
+	change_scene(ProjectSettings.get_setting(modloaderhelper.settings.GAME_MAIN_SCENE))
+
+
+func try_setup_modloader() -> void:
+	# no more setup needed if the game is already modded
+	if modloaderhelper.are_mods_enabled():
+		print("Mods are enabled.")
+		return
+
+	# game needs to be restarted before mods can be loaded
+	# if initialized and not mods enabled yet,
+	# prompt the user to quit and restart in the selector scene
+	if modloaderhelper.is_loader_initialized() and not modloaderhelper.are_mods_enabled():
+		ProjectSettings.set_setting(modloaderhelper.settings.MODS_ENABLED, true)
+		ProjectSettings.save_custom(modloaderhelper.get_override_path())
+		return
+
+	setup_modloader()
+
+
+func setup_modloader() -> void:
+	print("Setting up ModLoader...")
+
+	# register all new helper classes as global
+	var classes: Array = ProjectSettings.get_setting(modloaderhelper.settings.GLOBAL_SCRIPT_CLASSES)
+	var class_icons: Dictionary = ProjectSettings.get_setting(modloaderhelper.settings.GLOBAL_SCRIPT_CLASS_ICONS)
+
+	for new_class in modloaderhelper.new_global_classes:
+		var class_exists := false
+		for old_class in classes:
+			if new_class.class == old_class.class:
+				class_exists = true
+				break
+		if not class_exists:
+			classes.append(new_class)
+			class_icons[new_class.class] = "" # empty icon, does not matter
+
+	ProjectSettings.set_setting(modloaderhelper.settings.GLOBAL_SCRIPT_CLASSES, classes)
+	ProjectSettings.set_setting(modloaderhelper.settings.GLOBAL_SCRIPT_CLASS_ICONS, class_icons)
+
+
+	# get all the old values
+	var original_name: String = ProjectSettings.get_setting(modloaderhelper.settings.APPLICATION_NAME)
+	var original_autoloads := {}
+	for prop in ProjectSettings.get_property_list():
+		var name: String = prop.name
+		if name.begins_with("autoload/"):
+			var value: String = ProjectSettings.get_setting(name)
+			original_autoloads[name] = value
+
+	# rename application to make the changes clear to the user
+	ProjectSettings.set_setting(modloaderhelper.settings.APPLICATION_NAME, original_name + " (Modded)")
+
+	# save the mod selection scene for global access
+	ProjectSettings.set_setting(modloaderhelper.settings.MOD_SELECTION_SCENE, modloaderhelper.mod_selection_scene)
+
+	# removing and adding autoloads back does not work apparently
+	# even autoloads that are removed in the override are loaded
+	# result -> the loader autoload is still last :/
+	# remove all existing autoloads
+	for autoload in original_autoloads.keys():
+		ProjectSettings.set_setting(autoload, null)
+
+	ProjectSettings.save_custom(modloaderhelper.get_override_path())
+
+	# add ModLoader as first autoload (the * marks the path as autoload)
+	ProjectSettings.set_setting(modloaderhelper.settings.MOD_LOADER_AUTOLOAD, "*" + modloaderhelper.mod_loader_script)
+
+	# add all previous autoloads back again
+	for autoload in original_autoloads.keys():
+		ProjectSettings.set_setting(autoload, original_autoloads[autoload])
+	ProjectSettings.set_setting(modloaderhelper.settings.AUTOLOAD_AVAILABLE, true)
+	ProjectSettings.set_setting(modloaderhelper.settings.MODS_ENABLED, false)
+
+	ProjectSettings.save_custom(modloaderhelper.get_override_path())
+
+	print("Done setting up ModLoader.")
+

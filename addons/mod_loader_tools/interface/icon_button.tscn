@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://addons/mod_loader_tools/interface/font/font_icon.tres" type="DynamicFont" id=1]
+
+[sub_resource type="StyleBoxEmpty" id=164]
+content_margin_left = 4.0
+content_margin_right = 4.0
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxEmpty" id=166]
+content_margin_left = 6.0
+content_margin_right = 6.0
+content_margin_top = 6.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id=167]
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.415686, 0.615686, 0.921569, 1 )
+
+[sub_resource type="StyleBoxFlat" id=168]
+content_margin_left = 4.0
+content_margin_right = 4.0
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxEmpty" id=165]
+
+[node name="IconButton" type="Button"]
+margin_right = 50.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 50, 50 )
+custom_fonts/font = ExtResource( 1 )
+custom_styles/hover = SubResource( 164 )
+custom_styles/pressed = SubResource( 166 )
+custom_styles/focus = SubResource( 167 )
+custom_styles/disabled = SubResource( 168 )
+custom_styles/normal = SubResource( 165 )
+text = ""

@@ -1,0 +1,153 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://addons/mod_loader_tools/interface/font/font_h2.tres" type="DynamicFont" id=1]
+[ext_resource path="res://addons/mod_loader_tools/interface/tag.tscn" type="PackedScene" id=2]
+[ext_resource path="res://addons/mod_loader_tools/interface/font/font_annotation.tres" type="DynamicFont" id=3]
+[ext_resource path="res://icon.png" type="Texture" id=4]
+[ext_resource path="res://addons/mod_loader_tools/interface/mod_details_popup.gd" type="Script" id=5]
+[ext_resource path="res://addons/mod_loader_tools/interface/theme.tres" type="Theme" id=6]
+
+[sub_resource type="StyleBoxFlat" id=174]
+content_margin_left = 1.0
+content_margin_right = 1.0
+content_margin_top = 1.0
+content_margin_bottom = 1.0
+bg_color = Color( 0.14902, 0.172549, 0.231373, 1 )
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color( 0.125, 0.14375, 0.19375, 1 )
+
+[sub_resource type="StyleBoxEmpty" id=175]
+content_margin_left = 8.0
+content_margin_right = 8.0
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[node name="DetailsPopup" type="Panel"]
+self_modulate = Color( 1, 1, 1, 0.75 )
+margin_right = 1920.0
+margin_bottom = 1080.0
+theme = ExtResource( 6 )
+script = ExtResource( 5 )
+
+[node name="ModDetails" type="PanelContainer" parent="."]
+anchor_left = 0.3
+anchor_top = 0.1
+anchor_right = 0.7
+anchor_bottom = 0.9
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.33
+
+[node name="Margin" type="MarginContainer" parent="ModDetails"]
+margin_left = 12.0
+margin_top = 12.0
+margin_right = 756.0
+margin_bottom = 852.0
+custom_constants/margin_right = 10
+custom_constants/margin_top = 10
+custom_constants/margin_left = 10
+custom_constants/margin_bottom = 10
+
+[node name="HBox" type="HBoxContainer" parent="ModDetails/Margin"]
+margin_left = 10.0
+margin_top = 10.0
+margin_right = 734.0
+margin_bottom = 830.0
+custom_constants/separation = 20
+
+[node name="Image" type="TextureRect" parent="ModDetails/Margin/HBox"]
+margin_right = 281.0
+margin_bottom = 820.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.4
+texture = ExtResource( 4 )
+expand = true
+stretch_mode = 5
+
+[node name="VBox" type="VBoxContainer" parent="ModDetails/Margin/HBox"]
+margin_left = 301.0
+margin_right = 724.0
+margin_bottom = 820.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.6
+custom_constants/separation = 0
+
+[node name="Title" type="Label" parent="ModDetails/Margin/HBox/VBox"]
+margin_right = 423.0
+margin_bottom = 39.0
+custom_fonts/font = ExtResource( 1 )
+text = "Mod Title"
+
+[node name="Author" type="Label" parent="ModDetails/Margin/HBox/VBox"]
+margin_top = 39.0
+margin_right = 423.0
+margin_bottom = 72.0
+text = "by Author, Author, Author"
+
+[node name="MetaInfo" type="HBoxContainer" parent="ModDetails/Margin/HBox/VBox"]
+margin_top = 72.0
+margin_right = 423.0
+margin_bottom = 94.0
+
+[node name="Version" type="Label" parent="ModDetails/Margin/HBox/VBox/MetaInfo"]
+margin_top = 1.0
+margin_right = 39.0
+margin_bottom = 21.0
+custom_fonts/font = ExtResource( 3 )
+text = "v0.0.0"
+
+[node name="Tag" parent="ModDetails/Margin/HBox/VBox/MetaInfo" instance=ExtResource( 2 )]
+margin_left = 47.0
+margin_right = 77.0
+custom_styles/panel = SubResource( 174 )
+
+[node name="Scroll" type="ScrollContainer" parent="ModDetails/Margin/HBox/VBox"]
+margin_top = 94.0
+margin_right = 423.0
+margin_bottom = 820.0
+rect_min_size = Vector2( 0, 200 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+scroll_horizontal_enabled = false
+
+[node name="Description" type="RichTextLabel" parent="ModDetails/Margin/HBox/VBox/Scroll"]
+margin_right = 423.0
+margin_bottom = 484.0
+size_flags_horizontal = 3
+custom_styles/normal = SubResource( 175 )
+bbcode_enabled = true
+bbcode_text = "[b]Rich[/b] Description text [i]Lorem ipsum[/i] dolor sit amet. 
+Check out this link:  [url=https://example.com]Mod Website[/url]
+Icons? [font=res://addons/mod_loader_tools/interface/font/font_icon_inline.tres][/font] yep.
+Lorem ipsum dolor sit amet!
+
+[font=res://addons/mod_loader_tools/interface/font/font_icon_inline.tres][/font] one feature
+[font=res://addons/mod_loader_tools/interface/font/font_icon_inline.tres][/font] another feature
+[font=res://addons/mod_loader_tools/interface/font/font_icon_inline.tres][/font] crazy feature
+
+Consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. 
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam.
+
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam."
+text = "Rich Description text Lorem ipsum dolor sit amet. 
+Check out this link:  Mod Website
+Icons?  yep.
+Lorem ipsum dolor sit amet!
+
+ one feature
+ another feature
+ crazy feature
+
+Consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. 
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam.
+
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam."
+fit_content_height = true
+
+[connection signal="gui_input" from="." to="." method="_on_background_gui_input"]
+[connection signal="meta_clicked" from="ModDetails/Margin/HBox/VBox/Scroll/Description" to="." method="_on_mod_description_meta_clicked"]
+[connection signal="meta_hover_ended" from="ModDetails/Margin/HBox/VBox/Scroll/Description" to="." method="_on_mod_description_meta_hover_ended"]
+[connection signal="meta_hover_started" from="ModDetails/Margin/HBox/VBox/Scroll/Description" to="." method="_on_mod_description_meta_hover_started"]

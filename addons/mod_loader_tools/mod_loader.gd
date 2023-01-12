@@ -7,6 +7,7 @@
 # in 2022 by Vladimir Panteleev <git@cy.md>
 # in 2023 by KANA <kai@kana.jetzt>
 # in 2023 by Darkly77
+# in 2023 by Qubus0 / Ste
 #
 # To the extent possible under law, the author(s) have
 # dedicated all copyright and related and neighboring
@@ -149,21 +150,20 @@ func dev_log(text:String, mod_name:String = "", pretty:bool = false):
 
 # Log info for a mod. Accepts the mod name as the 2nd arg, which prefixes
 # the logged string with "{mod_name}: "
-func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)->void:
+static func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)->void:
 	# Prefix with "{mod_name}: "
 	var prefix = mod_name + ": "
 
-	var date_time = Time.get_datetime_dict_from_system()
+
+	# not using 3.5 Time for 3.4 compatibility
+	var date_time := OS.get_datetime()
 
 	# Add leading zeroes if needed
-	var hour = date_time.hour
-	var mins = date_time.minute
-	var secs = date_time.second
-	hour = hour if str(hour).length() > 1 else str("0", hour)
-	mins = mins if str(mins).length() > 1 else str("0", mins)
-	secs = secs if str(secs).length() > 1 else str("0", secs)
+	var hour: String = str(date_time.hour).pad_zeros(2)
+	var mins: String = str(date_time.minute).pad_zeros(2)
+	var secs: String = str(date_time.second).pad_zeros(2)
 
-	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', hour,':',mins,':',secs)
+	var date_time_string = str(date_time.day, '.', date_time.month, '.', date_time.year, ' - ', hour, ':', mins, ':', secs)
 
 	print(str(date_time_string,'   ', prefix, text))
 
