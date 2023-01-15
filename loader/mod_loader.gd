@@ -129,8 +129,8 @@ func _init():
 	_get_load_order()
 
 	# Log mod order
+	var mod_i = 1
 	for mod in mod_load_order: # mod === mod_data
-		var mod_i = 1
 		dev_log(str("mod_load_order -> ", mod_i, ") ", mod.dir), LOG_NAME)
 		mod_i += 1
 
