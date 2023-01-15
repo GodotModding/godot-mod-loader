@@ -128,7 +128,11 @@ func _init():
 	# Sort mod_load_order by the importance score of the mod
 	_get_load_order()
 
-	dev_log(str("mod_load_order -> ", JSON.print(mod_load_order, '   ')), LOG_NAME)
+	# Log mod order
+	for mod in mod_load_order: # mod === mod_data
+		var mod_i = 1
+		dev_log(str("mod_load_order -> ", mod_i, ") ", mod.dir), LOG_NAME)
+		mod_i += 1
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
