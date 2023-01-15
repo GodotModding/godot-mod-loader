@@ -273,14 +273,14 @@ func _load_mod_zips():
 
 func _setup_mods():
 	# Path to the unpacked mods folder
-	var unpacked_os_mods_path_override = UNPACKED_DIR
+	var unpacked_mods_path = UNPACKED_DIR
 
 	var dir = Directory.new()
-	if dir.open(unpacked_os_mods_path_override) != OK:
-		mod_log("Can't open unpacked mods folder %s." % unpacked_os_mods_path_override, LOG_NAME)
+	if dir.open(unpacked_mods_path) != OK:
+		mod_log("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return
 	if dir.list_dir_begin() != OK:
-		mod_log("Can't read unpacked mods folder %s." % unpacked_os_mods_path_override, LOG_NAME)
+		mod_log("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return
 
 	# Get all unpacked mod dirs
