@@ -83,6 +83,9 @@ var mod_data = {}
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order = []
 
+# Path provided if cli arguments are added
+var mods_path = ""
+
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies = {}
@@ -98,7 +101,12 @@ func _init():
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
-
+	
+	# check if we want to use a different mods path that is provided as a command line argument
+	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
+	if cmd_line_mod_path != "":
+		mods_path = cmd_line_mod_path
+	
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	_load_mod_zips()
@@ -485,6 +493,15 @@ func _check_cmd_line_arg(argument) -> bool:
 
 	return false
 
+# Get the command line argument value if present when launching the game
+func _get_cmd_line_arg(argument) -> String:
+	for arg in OS.get_cmdline_args():
+		if arg == argument:
+			if arg.find("=") > -1:
+				var key_value = arg.split("=")
+				return key_value[1]
+
+	return ""
 
 # Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
 func _get_mod_folder_dir():
@@ -492,6 +509,9 @@ func _get_mod_folder_dir():
 
 	if OS.get_name() == "OSX":
 		gameInstallDirectory = gameInstallDirectory.get_base_dir().get_base_dir().get_base_dir()
+	
+	if (mods_path != ""):
+		gameInstallDirectory = mods_path
 
 	# Fix for running the game through the Godot editor (as the EXE path would be
 	# the editor's own EXE, which won't have any mod ZIPs)
