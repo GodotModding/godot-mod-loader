@@ -726,10 +726,10 @@ func installScriptExtension(childScriptPath:String):
 # Add a translation file, eg "mytranslation.en.translation". The translation
 # file should have been created in Godot already: When you improt a CSV, such
 # a file will be created for you.
-func addTranslationFromResource(resourcePath: String):
-	var translation_object = load(resourcePath)
+func add_translation_from_resource(resource_path: String):
+	var translation_object = load(resource_path)
 	TranslationServer.add_translation(translation_object)
-	mod_log("Added Translation from Resource", LOG_NAME)
+	mod_log(str("Added Translation from Resource -> ", resource_path), LOG_NAME)
 
 
 func appendNodeInScene(modifiedScene, nodeName:String = "", nodeParent = null, instancePath:String = "", isVisible:bool = true):
