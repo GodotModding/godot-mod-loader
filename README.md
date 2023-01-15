@@ -15,8 +15,8 @@ yourmod.zip
 ├───.import
 └───mods-unpacked
     └───Author-ModName
-        ├───ModMain.gd
-        └───_meta.json
+        ├───mod_main.gd
+        └───manifest.json
 ```
 
 #### Notes on .import
@@ -30,10 +30,10 @@ You can copy your custom assets from your project's .import directory. They can 
 
 Mods you create must have the following 2 files:
 
-- **ModMain.gd** - The init file for your mod.
-- **_meta.json** - Meta data for your mod (see below).
+- **mod_main.gd** - The init file for your mod.
+- **manifest.json** - Meta data for your mod (see below).
 
-#### Example _meta.json
+#### Example manifest.json
 
 ```json
 {
@@ -85,8 +85,8 @@ yourmod.zip
 ├───.import
 └───mods-unpacked
     └───Author-ModName
-        ├───ModMain.gd
-        ├───_meta.json
+        ├───mod_main.gd
+        ├───manifest.json
         └───extensions
             └───Any files that extend vanilla code can go here, eg:
             ├───main.gd

@@ -44,11 +44,11 @@ const MOD_LOG_PATH = "user://mods.log"
 const UNPACKED_DIR = "res://mods-unpacked/"
 
 # These 2 files are always required by mods.
-# ModMain.gd = The main init file for the mod
-# _meta.json = Meta data for the mod, including its dependancies
-const REQUIRED_MOD_FILES = ["ModMain.gd", "_meta.json"]
+# mod_main.gd = The main init file for the mod
+# manifest.json = Meta data for the mod, including its dependancies
+const REQUIRED_MOD_FILES = ["mod_main.gd", "manifest.json"]
 
-# Required keys in a mod's _meta.json file
+# Required keys in a mod's manifest.json file
 const REQUIRED_META_TAGS = [
 	"id",
 	"name",
@@ -101,7 +101,7 @@ func _init():
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
-	# (from their _meta.json file), and verify that the meta JSON has all
+	# (from their manifest.json file), and verify that the meta JSON has all
 	# required properties (REQUIRED_META_TAGS)
 	for mod_id in mod_data:
 		var mod = mod_data[mod_id]
@@ -314,8 +314,8 @@ func _init_mod_data(mod_folder_path):
 
 	for required_filename in REQUIRED_MOD_FILES:
 		# Eg:
-		# "modmain.gd": local_mod_path + "/ModMain.gd",
-		# "_meta.json": local_mod_path + "/_meta.json"
+		# "mod_main.gd": local_mod_path + "/mod_main.gd",
+		# "manifest.json": local_mod_path + "/manifest.json"
 		mod_data[mod_id].required_files_path[required_filename] = local_mod_path + "/" + required_filename
 
 
@@ -336,13 +336,13 @@ func _check_mod_files(mod_id):
 		mod_log(str("ERROR - ", mod_id, " cannot be loaded due to missing required files"), LOG_NAME)
 
 
-# Load meta data into mod_data, from a mod's _meta.json file
+# Load meta data into mod_data, from a mod's manifest.json file
 func _load_meta_data(mod_id):
 	mod_log(str("Loading meta_data for -> ", mod_id), LOG_NAME)
 	var mod = mod_data[mod_id]
 
 	# Load meta data file
-	var meta_path = mod.required_files_path["_meta.json"]
+	var meta_path = mod.required_files_path["manifest.json"]
 	var meta_data = _get_json_as_dict(meta_path)
 
 	dev_log(str(mod_id, " loaded meta data -> ", meta_data), LOG_NAME)
@@ -350,7 +350,7 @@ func _load_meta_data(mod_id):
 	# Check if the meta data has all required fields
 	var missing_fields = _check_meta_file(meta_data)
 	if(missing_fields.size() > 0):
-		mod_log(str("ERROR - ", mod_id, " ", missing_fields, " are required in _meta.json."), LOG_NAME)
+		mod_log(str("ERROR - ", mod_id, " ", missing_fields, " are required in manifest.json."), LOG_NAME)
 		# Flag mod - so it's not loaded later
 		mod.is_loadable = false
 		# Continue with the next mod
@@ -373,7 +373,7 @@ func _check_meta_file(meta_data):
 
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
-# meta_data (ie. its _meta.json file). If a mod depends on another mod that
+# meta_data (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded.
 func _check_dependencies(mod_id:String, deps:Array):
 	dev_log(str("Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps), LOG_NAME)
@@ -438,7 +438,7 @@ func _compare_Importance(a, b):
 # Instance every mod and add it as a node to the Mod Loader.
 # Runs mods in the order stored in mod_load_order.
 func _init_mod(mod):
-	var mod_main_path = mod.required_files_path["ModMain.gd"]
+	var mod_main_path = mod.required_files_path["mod_main.gd"]
 	dev_log(str("Loading script from -> ", mod_main_path), LOG_NAME)
 	var mod_main_script = ResourceLoader.load(mod_main_path)
 	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
