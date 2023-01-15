@@ -57,17 +57,6 @@ Mods you create must have the following 2 files:
 }
 ```
 
-#### Notes on meta.json
-
-Some properties in the JSON are not checked in the code, and are only used for reference by yourself and your mod's users. These are:
-
-- `version`
-- `compatible_game_version`
-- `authors`
-- `description`
-- `website_url`
-
-
 ## Helper Methods
 
 Use these when creating your mods. As above, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md) for more details.
