@@ -74,6 +74,16 @@ See `get_mod_config` below for info on `config_defaults`.
 
 Use these when creating your mods. As above, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md) for more details.
 
+| Method | Description |
+| ------ | ----------- |
+| [mod_log](#mod_log) | Log data to *godot.log.* |
+| [dev_log](#dev_log) | Log verbose data to *godot.log.* Only shows if dev logging is enabled |
+| [install_script_extension](#install_script_extension) | Extend a vanilla script |
+| [add_translation_from_resource](#add_translation_from_resource) | Import a translation file (eg `mod_text.en.translation`) |
+| [append_node_in_scene](#append_node_in_scene) | Create and add a node to a instanced scene |
+| [save_scene](#save_scene) | Save the scene as a PackedScene, overwriting Godot's cache if needed |
+| [get_mod_config](#get_mod_config) | Get data from a mod's config JSON file |
+
 ### mod_log
 
 	func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)->void
@@ -90,7 +100,9 @@ Logs verbose info to *godot.log*, but only if developer logging is enabled, eith
 
 	func install_script_extension(child_script_path:String)
 
-Add a script that extends a vanilla script. `child_script_path` is the path to your mod's extender script path, eg `MOD/extensions/singletons/utils.gd`.
+Add a script that extends a vanilla script. This allows you to overwrite funcs, extend them, and add your own. See [Script Inheritance](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md#script-inheritance) in the Delta-V modding readme for more info on usage.
+
+`child_script_path` is the path to your mod's extender script path, eg `MOD/extensions/singletons/utils.gd`.
 
 Inside that extender script, it should include `extends "{target}"`, where `{target}` is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 
