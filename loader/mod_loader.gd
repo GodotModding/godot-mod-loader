@@ -82,6 +82,11 @@ var mod_data = {}
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order = []
 
+# Override for the path mods are loaded from. Only gets set if the CLI arg
+# --mods-path is used. This can be tested in the editor via:
+# Project Settings > Display> Editor > Main Run Args
+var os_mods_path_override = ""
+
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies = {}
@@ -97,6 +102,12 @@ func _init():
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
+
+	# check if we want to use a different mods path that is provided as a command line argument
+	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
+	if cmd_line_mod_path != "":
+		os_mods_path_override = cmd_line_mod_path
+		mod_log("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
 
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
@@ -484,6 +495,17 @@ func _check_cmd_line_arg(argument) -> bool:
 
 	return false
 
+# Get the command line argument value if present when launching the game
+func _get_cmd_line_arg(argument) -> String:
+	for arg in OS.get_cmdline_args():
+		if arg.find("=") > -1:
+			var key_value = arg.split("=")
+			# True if the checked argument matches a user-specified arg key
+			# (eg. checking `--mods-path` will match with `--mods-path="C://mods"`
+			if key_value[0] == argument:
+				return key_value[1]
+
+	return ""
 
 # Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
 func _get_mod_folder_dir():
@@ -497,6 +519,9 @@ func _get_mod_folder_dir():
 	# if OS.is_debug_build():
 	if OS.has_feature("editor"):
 		gameInstallDirectory = "res://"
+
+	if (os_mods_path_override != ""):
+		gameInstallDirectory = os_mods_path_override	
 
 	mod_log(str("gameInstallDirectory: ", gameInstallDirectory), LOG_NAME)
 
