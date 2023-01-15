@@ -173,7 +173,6 @@ margin_bottom = 1000.0
 text = "Quit"
 
 [node name="RestartPopup" type="Panel" parent="."]
-visible = false
 margin_right = 1920.0
 margin_bottom = 1080.0
 

@@ -13,10 +13,10 @@ A general purpose mod-loader for GDScript-based Godot Games.
     * [Structure](#structure)
     * [Required Files](#required-files)
     * [Helper Methods](#helper-methods)
-      * [installScriptExtension](#installscriptextension)
-      * [addTranslationFromResource](#addtranslationfromresource)
-      * [appendNodeInScene](#appendnodeinscene)
-      * [saveScene](#savescene)
+      * [installScriptExtension](#install_script_extension)
+      * [addTranslationFromResource](#add_translation_from_resource)
+      * [appendNodeInScene](#append_node_in_scene)
+      * [saveScene](#save_scene)
   * [For Game Developers](#for-game-developers)
     * [How to integrate the ModLoader into a game](#how-to-integrate-the-modloader-into-a-game)
   * [For Mod Loader Developers](#for-mod-loader-developers)
@@ -295,7 +295,7 @@ can stay in the directory you cloned them into.
 
 Right-click the game on steam > press `manage` > press `browse local files`. You should be within a folder with the same name as the game.
 
-(for MacOS the actual executable is in `/Contents/MacOS` within that folder, but you are still at the right place, 
+(for macOS the actual executable is in `/Contents/MacOS` within that folder, but you are still at the right place, 
 only the override needs to be placed there, everything else goes right here)
 
 

@@ -27,6 +27,24 @@ const new_global_classes := [
 	{ "base": "PanelContainer", "class": "ModCard", "language": "GDScript", "path": "res://addons/mod_loader_tools/interface/mod_card.gd" },
 ]
 
+# Required keys in a mod's manifest.json file
+const REQUIRED_MANIFEST_KEYS_ROOT = [
+	"name",
+	"version_number",
+	"website_url",
+	"description",
+	"dependencies",
+	"extra",
+]
+
+# Required keys in manifest's `json.extra.godot`
+const REQUIRED_MANIFEST_KEYS_EXTRA = [
+	"id",
+	"incompatibilities",
+	"authors",
+	"compatible_game_version",
+]
+
 
 static func get_override_path() -> String:
 	var base_path := ""

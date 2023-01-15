@@ -179,7 +179,7 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 	# Prefix with "{mod_name}: "
 	var prefix = mod_name + ": "
 
-	var date_time = Time.get_datetime_dict_from_system()
+	var date_time = OS.get_datetime() #Time.get_datetime_dict_from_system()
 
 	# Add leading zeroes if needed
 	var hour := (date_time.hour as String).pad_zeros(2)

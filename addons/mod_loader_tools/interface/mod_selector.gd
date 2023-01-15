@@ -11,39 +11,42 @@ const settings := {
 # script compilation will break on first load since the class is not defined
 # just use the normal one with autocomplete and then lowercase it
 var modloaderhelper: Node = preload("res://addons/mod_loader_tools/mod_loader_helper.gd").new()
-
+var moddetails: Resource = load("res://addons/mod_loader_tools/mod_details.gd")
 
 func _ready():
 	if not modloaderhelper.are_mods_enabled():
-		$RestartPopup.show()
 		$RestartPopup/RestartGame.popup_centered()
 		$RestartPopup/RestartGame.get_ok().grab_focus()
 		return
+	$RestartPopup.hide()
 
 	$Margin/HBox/LoaderInfoSection/SkipModSelectionToggle.pressed = modloaderhelper.should_skip_mod_selection()
-
 	fill_mod_lists()
+
+
+func get_mod_loader() -> Node:
+	return get_node("/root/ModLoader")
 
 
 func fill_mod_lists() -> void:
 	var details_list := []
-	for data in ModLoader.mod_data:
-		if (ModLoader.mod_data[data].is_loadable):
-			var mod_data: Dictionary = ModLoader.mod_data[data].meta_data
-			var mod_details := ModDetails.new(mod_data)
+	for data in get_mod_loader().mod_data:
+		if (get_mod_loader().mod_data[data].is_loadable):
+			var mod_data: Dictionary = get_mod_loader().mod_data[data].meta_data
+			var mod_details = moddetails.new(mod_data)
 			details_list.append(mod_details)
 
-	var disabled_list: ModList = $Margin/HBox/ModListDisabled
+	var disabled_list := $Margin/HBox/ModListDisabled
 	disabled_list.populate(details_list)
 
-	var enabled_list: ModList = $Margin/HBox/ModListEnabled
+	var enabled_list := $Margin/HBox/ModListEnabled
 	enabled_list.populate(details_list)
 
 
-func mod_changed_state(mod_card: ModCard) -> void:
-	var disabled_list: ModList = $Margin/HBox/ModListDisabled
-	var enabled_list: ModList = $Margin/HBox/ModListEnabled
-	if ModLoaderHelper.is_mod_enabled(mod_card.mod_details.id):
+func mod_changed_state(mod_card) -> void:
+	var disabled_list := $Margin/HBox/ModListDisabled
+	var enabled_list := $Margin/HBox/ModListEnabled
+	if modloaderhelper.is_mod_enabled(mod_card.mod_details.id):
 		disabled_list.remove_mod_card(mod_card)
 		enabled_list.add_mod_card(mod_card)
 	else:
@@ -86,7 +89,7 @@ func _on_reset_mod_loader_pressed() -> void:
 
 
 func _on_start_game_pressed() -> void:
-	ModLoader.init_mods()
+	get_mod_loader().init_mods()
 	get_tree().set_screen_stretch(
 		get_tree().get("STRETCH_MODE_%s" % ProjectSettings.get_setting("display/window/stretch/mode").to_upper()),
 		get_tree().get("STRETCH_ASPECT_%s" % ProjectSettings.get_setting("display/window/stretch/aspect").to_upper()),
@@ -117,4 +120,3 @@ func _on_mod_selection_toggle_toggled(button_pressed: bool) -> void:
 func _on_mod_selector_item_rect_changed() -> void:
 	var new_scale := rect_size.x / 2500 # somewhat arbitrary :/
 	scale_font_size(new_scale)
-

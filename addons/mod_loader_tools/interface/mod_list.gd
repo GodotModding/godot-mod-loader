@@ -1,5 +1,4 @@
 extends VBoxContainer
-class_name ModList
 
 export var is_enabled_list := true
 

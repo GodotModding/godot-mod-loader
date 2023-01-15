@@ -17,7 +17,7 @@ var image: StreamTexture
 
 
 func _init(meta_data: Dictionary) -> void:
-	if not dict_has_fields(meta_data, ModLoader.REQUIRED_MANIFEST_KEYS_ROOT):
+	if not dict_has_fields(meta_data, ModLoaderHelper.REQUIRED_MANIFEST_KEYS_ROOT):
 		return
 
 	var 	godot_details: Dictionary = meta_data.extra.godot
@@ -25,7 +25,7 @@ func _init(meta_data: Dictionary) -> void:
 		assert(false, "Extra details for Godot are missing")
 		return
 
-	if not dict_has_fields(godot_details, ModLoader.REQUIRED_MANIFEST_KEYS_EXTRA):
+	if not dict_has_fields(godot_details, ModLoaderHelper.REQUIRED_MANIFEST_KEYS_EXTRA):
 		return
 
 	id = godot_details.id
