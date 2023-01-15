@@ -38,6 +38,7 @@ Mods you create must have the following 2 files:
 ```json
 {
 	"name": "ModName",
+    "namespace": "AuthorName",
 	"version_number": "1.0.0",
 	"description": "Mod description goes here",
 	"website_url": "https://github.com/example/repo",
