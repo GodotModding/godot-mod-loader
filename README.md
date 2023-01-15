@@ -110,18 +110,30 @@ Save the scene as a PackedScene, overwriting Godot's cache if needed.
 
 ### get_mod_config
 
-    get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
+    get_mod_config(mod_id:String = "", key:String = "", default_value = null)->Dictionary:
 
 Get data from a mod's config JSON file. Configs are added to a folder named "configs" (`res://configs`), and are named by the mod ID (eg. `AuthorName-ModName.json`).
 
-Returns a dictionary with two keys: `error` and `data`:
+Returns a dictionary with two keys: `error` and `data`.
 
-- Data (`data`) is either the full config, or data from a specific key if one was specified.
-- Error (`error`) is `0` if there were no errors, or `> 0` if the setting could not be retrieved:
-  - `0` = No errors
-  - `1` = Invalid mod ID
-  - `2` = No config data available, the JSON file probably doesn't exist
-  - `3` = Invalid key, although config data does exists
+#### Data
+
+Data (`data`) is either the full config, or data from a specific key if one was specified. If an error occured, `data` is an empty dictionary (`{}`).
+
+#### Error
+
+Error (`error`) is `0` if there were no errors, or `> 0` if the setting could not be retrieved:
+
+| #   | Description |
+| --- | ----------- |
+| `0` | No errors |
+| `1` | Invalid mod ID |
+| `2` | No config data available, the JSON file probably doesn't exist |
+| `3` | Invalid key, although config data does exists |
+
+#### Defaults
+
+If `default_value` is provided and an error occurs, `data` will be `default_value`. This is most useful when getting a setting by key, as it saves you needing to add checks for errors. You could also pass a dictionary of default values.
 
 
 ## Credits

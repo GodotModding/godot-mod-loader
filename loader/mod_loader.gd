@@ -759,12 +759,12 @@ func saveScene(modifiedScene, scenePath:String):
 
 # Get the config data for a specific mod. Always returns a dictionary with two
 # keys: `error` and `data`.
-# Data (`data`) is either the full config, or data fro a specific key if one was specified.
+# Data (`data`) is either the full config, or data from a specific key if one was specified.
 # Error (`error`) is 0 if there were no errors, or > 0 if the setting could not be retrieved:
 # 1 = Invalid mod ID
 # 2 = No config data available, the JSON file probably doesn't exist
 # 3 = Invalid key, although config data does exists
-func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
+func get_mod_config(mod_id:String = "", key:String = "", default_value = null)->Dictionary:
 	var error_num = 0
 	var error_msg = ""
 	var data = {}
@@ -792,6 +792,8 @@ func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
 
 	if error_num != 0:
 		dev_log(str("Config: ", error_msg), mod_id)
+		if default_value != null:
+			data = default_value
 
 	return {
 		"error": error_num,
