@@ -148,7 +148,7 @@ If no custom JSON file exists, your mod's default settings will be returned as `
 Default settings are set in your *manifest.json* file, via `extra.godot.config_defaults`.
 
 
-### Config Options
+## Config Options
 
 A user's custom config file can use a special setting, `load_from`. If specified, their config is loaded from the specified file, instead of the file named after the mod ID.
 
@@ -161,6 +161,19 @@ The `load_from` JSON file should be in the same directory, and include the file 
 ```
 
 This allows users to multiple config files for a single mod and switch between them quickly. This settings is ignord if the filename matches the mod ID, or is empty.
+
+
+## CLI Args
+
+ModLoader supports the following command line arguments:
+
+| Arg | Info |
+| --- | ---- |
+| `--mods-path`    | Override the path to the mod ZIPs dir. Default path is `res://mods` |
+| `--configs-path` | Override the path to the config JSONs dir. Default path is `res://configs` |
+| `--mod-dev`      | Enable developer logging. This is more verbose and can be used with the func `dev_log`. |
+
+You can use these in the Godot editor via *Project > Project Settings > Display > Editor > Main Run Args*
 
 
 ## Credits
