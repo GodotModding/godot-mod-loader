@@ -4,10 +4,10 @@ A general purpose mod-loader for GDScript-based Godot Games.
 
 For detailed info, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md), upon which ModLoader is based. The docs there cover mod setup and helper functions in much greater detail.
 
-- [Mod Setup](mod-setup)
-- [Helper Methods](helper-methods)
-- [Config JSON](config-json)
-- [CLI Args](cli-args)
+- [Mod Setup](#mod-setup)
+- [Helper Methods](#helper-methods)
+- [Config JSON](#config-json)
+- [CLI Args](#cli-args)
 
 
 ## Mod Setup
