@@ -137,19 +137,21 @@ Get data from a mod's config JSON file. Returns a dictionary with three keys: `d
 
 #### Data
 
-Data (`data`) is either the full config, or data from a specific key if one was specified. If an error occured, `data` is an empty dictionary (`{}`).
+Data (`data`) is either the full config, or data from a specific key if one was specified.
+
+If no user config JSON exists, `data` uses the defaults set in the mod's *manifest.json* (see [Config JSON](#config-json) below). Returns an empty dictionary (`{}`) if either a) the mod's *manifest.json* has no defaults, or b) the specified `key` doesn't exist.
 
 #### Error
 
 Error (`error`) is `0` if there were no errors, or `> 0` if the setting could not be retrieved:
 
-| #   | Description |
-| --- | ----------- |
-| `0` | No errors |
-| `1` | Invalid mod ID |
-| `2` | No custom JSON (file probably does not exist). Defaults will be used |
-| `3` | No custom JSON, and `key` was not present in your mod's defaults |
-| `4` | Invalid `key`, although config data does exists |
+| #   | Description | Data |
+| --- | ----------- | ---- |
+| `0` | No errors   | *As requested* |
+| `1` | Invalid `mod_id` | `{}` |
+| `2` | No custom JSON exists | Defaults from *manifest.json* |
+| `3` | Invalid `key`. Custom JSON does not exist | `{}` |
+| `4` | Invalid `key`. Custom JSON *does* exist | `{}` |
 
 #### Error Msg
 
