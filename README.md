@@ -4,6 +4,8 @@ A general purpose mod-loader for GDScript-based Godot Games.
 
 For detailed info, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md), upon which ModLoader is based. The docs there cover mod setup and helper functions in much greater detail.
 
+
+
 ## Mod Setup
 
 ### Structure
@@ -62,9 +64,23 @@ Mods you create must have the following 2 files:
 
 See `get_mod_config` below for info on `config_defaults`.
 
+
+
 ## Helper Methods
 
 Use these when creating your mods. As above, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md) for more details.
+
+### mod_log
+
+	func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)->void
+
+Log data to *godot.log.*. The mod ID should be provided as the 2nd arg.
+
+### dev_log
+
+	func dev_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)
+
+Logs verbose info to *godot.log*, but only if developer logging is enabled, either via the CLI arg `--log-dev` or by temporarily changing the `DEBUG_ENABLE_DEV_LOG` to `true`.
 
 ### install_script_extension
 
@@ -139,6 +155,8 @@ Error (`error`) is `0` if there were no errors, or `> 0` if the setting could no
 
 Text representation of the error that occured, intended to make debugging easier.
 
+
+
 ## Config JSON
 
 ModLoader supports config files in the JSON format. Custom configs can be added by users, to a folder named *configs* (`res://configs`). They are named by the mod ID (eg. `AuthorName-ModName.json`).
@@ -164,6 +182,7 @@ The `load_from` JSON file should be in the same directory, and include the file 
 This allows users to multiple config files for a single mod and switch between them quickly. This settings is ignord if the filename matches the mod ID, or is empty.
 
 
+
 ## CLI Args
 
 ModLoader supports the following command line arguments:
@@ -175,6 +194,7 @@ ModLoader supports the following command line arguments:
 | `--log-dev`      | Enable developer logging. This is more verbose and can be used with the func `dev_log`. |
 
 You can use these in the Godot editor via *Project > Project Settings > Display > Editor > Main Run Args*
+
 
 
 ## Credits
