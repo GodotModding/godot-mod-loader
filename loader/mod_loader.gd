@@ -92,7 +92,7 @@ var os_mods_path_override = ""
 var mod_missing_dependencies = {}
 
 # Things to keep to ensure they are not garbage collected (used by `saveScene`)
-var _savedObjects = []
+var _saved_objects = []
 
 
 # Main
@@ -679,4 +679,4 @@ func save_scene(modified_scene, scenePath:String):
 	dev_log(str("packing scene -> ", packed_scene), LOG_NAME)
 	packed_scene.take_over_path(scenePath)
 	dev_log(str("saveScene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
-	_savedObjects.append(packed_scene)
+	_saved_objects.append(packed_scene)
