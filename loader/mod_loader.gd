@@ -144,7 +144,7 @@ func _init():
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
-		mod_log(str("Initializing -> ", mod.meta_data.id), LOG_NAME)
+		mod_log(str("Initializing -> ", mod.meta_data.extra.godot.id), LOG_NAME)
 		_init_mod(mod)
 
 	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
@@ -380,7 +380,7 @@ func _check_meta_file(meta_data):
 			missing_keys_root.erase(key)
 
 	if meta_data.has("extra") && meta_data.extra.has("godot"):
-		for godot_key in meta_data:
+		for godot_key in meta_data.extra.godot:
 			if(REQUIRED_MANIFEST_KEYS_EXTRA.has(godot_key)):
 				missing_keys_extra.erase(godot_key)
 
@@ -465,7 +465,7 @@ func _init_mod(mod):
 	var mod_main_script = ResourceLoader.load(mod_main_path)
 	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
 	var mod_main_instance = mod_main_script.new(self)
-	mod_main_instance.name = mod.meta_data.id
+	mod_main_instance.name = mod.meta_data.extra.godot.id
 	dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
 	add_child(mod_main_instance, true)
 
