@@ -113,7 +113,7 @@ func _init():
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	_load_mod_zips()
-	mod_log("DONE: Unziped all Mods", LOG_NAME)
+	mod_log("DONE: Loaded all mod files", LOG_NAME)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
@@ -145,6 +145,8 @@ func _init():
 			continue
 		_check_dependencies(mod_id, mod_data[mod_id].meta_data.dependencies)
 
+
+func init_mods():
 	# Sort mod_load_order by the importance score of the mod
 	_get_load_order()
 
@@ -173,20 +175,18 @@ func dev_log(text:String, mod_name:String = "", pretty:bool = false):
 
 # Log info for a mod. Accepts the mod name as the 2nd arg, which prefixes
 # the logged string with "{mod_name}: "
-static func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)->void:
+func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)->void:
 	# Prefix with "{mod_name}: "
 	var prefix = mod_name + ": "
 
-
-	# not using 3.5 Time for 3.4 compatibility
-	var date_time := OS.get_datetime()
+	var date_time = OS.get_datetime() #Time.get_datetime_dict_from_system()
 
 	# Add leading zeroes if needed
-	var hour: String = str(date_time.hour).pad_zeros(2)
-	var mins: String = str(date_time.minute).pad_zeros(2)
-	var secs: String = str(date_time.second).pad_zeros(2)
+	var hour := (date_time.hour as String).pad_zeros(2)
+	var mins := (date_time.minute as String).pad_zeros(2)
+	var secs := (date_time.second as String).pad_zeros(2)
 
-	var date_time_string = str(date_time.day, '.', date_time.month, '.', date_time.year, ' - ', hour, ':', mins, ':', secs)
+	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', hour,':',mins,':',secs)
 
 	print(str(date_time_string,'   ', prefix, text))
 
@@ -194,12 +194,12 @@ static func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = 
 
 	if(!log_file.file_exists(MOD_LOG_PATH)):
 		log_file.open(MOD_LOG_PATH, File.WRITE)
-		log_file.store_string("\n" + str(date_time_string,'   ', 'Created mod.log!'))
+		log_file.store_string("\n%s	Created mod.log!" % date_time_string)
 		log_file.close()
 
 	var _error = log_file.open(MOD_LOG_PATH, File.READ_WRITE)
 	if(_error):
-		print(_error)
+		printerr(_error)
 		return
 	log_file.seek_end()
 	if(pretty):
@@ -211,7 +211,7 @@ static func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = 
 
 func _load_mod_zips():
 	# Path to the games mod folder
-	var game_mod_folder_path = _get_mod_folder_dir()
+	var game_mod_folder_path = _get_mods_dir()
 
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
@@ -258,6 +258,7 @@ func _load_mod_zips():
 			has_shown_editor_warning = true
 
 		dev_log(str("Found mod ZIP: ", mod_folder_global_path), LOG_NAME)
+
 
 		# If there was an error loading the mod zip file
 		if !is_mod_loaded_success:
@@ -451,7 +452,7 @@ func _get_load_order():
 
 	# Add loadable mods to the mod load order array
 	for mod in mod_data_array:
-		if(mod.is_loadable):
+		if mod.is_loadable and ModLoaderHelper.is_mod_enabled(mod.meta_data.extra.godot.id):
 			mod_load_order.append(mod)
 
 	# Sort mods by the importance value
@@ -508,11 +509,11 @@ func _get_cmd_line_arg(argument) -> String:
 	return ""
 
 # Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
-func _get_mod_folder_dir():
+func _get_mods_dir() -> String:
 	var gameInstallDirectory = OS.get_executable_path().get_base_dir()
 
-	if OS.get_name() == "OSX":
-		gameInstallDirectory = gameInstallDirectory.get_base_dir().get_base_dir().get_base_dir()
+	if OS.has_feature("OSX"):
+		gameInstallDirectory = gameInstallDirectory.get_base_dir().get_base_dir()
 
 	# Fix for running the game through the Godot editor (as the EXE path would be
 	# the editor's own EXE, which won't have any mod ZIPs)
@@ -521,7 +522,7 @@ func _get_mod_folder_dir():
 		gameInstallDirectory = "res://"
 
 	if (os_mods_path_override != ""):
-		gameInstallDirectory = os_mods_path_override	
+		gameInstallDirectory = os_mods_path_override
 
 	mod_log(str("gameInstallDirectory: ", gameInstallDirectory), LOG_NAME)
 

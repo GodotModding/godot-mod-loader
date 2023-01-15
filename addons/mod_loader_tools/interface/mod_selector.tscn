@@ -60,11 +60,11 @@ custom_constants/separation = 25
 
 [node name="ModListDisabled" parent="Margin/HBox" instance=ExtResource( 11 )]
 margin_right = 745.0
+is_enabled_list = false
 
 [node name="ModListEnabled" parent="Margin/HBox" instance=ExtResource( 11 )]
 margin_left = 770.0
 margin_right = 1516.0
-list_disabled_mods = false
 
 [node name="LoaderInfoSection" type="VBoxContainer" parent="Margin/HBox"]
 margin_left = 1541.0
@@ -101,7 +101,7 @@ custom_fonts/font = ExtResource( 8 )
 shortcut = SubResource( 171 )
 text = "Start Game"
 
-[node name="ModSelectionToggle" type="CheckBox" parent="Margin/HBox/LoaderInfoSection"]
+[node name="SkipModSelectionToggle" type="CheckBox" parent="Margin/HBox/LoaderInfoSection"]
 margin_top = 159.0
 margin_right = 299.0
 margin_bottom = 192.0
@@ -267,8 +267,9 @@ margin_right = 1920.0
 margin_bottom = 562.0
 custom_fonts/font = ExtResource( 7 )
 
+[connection signal="item_rect_changed" from="." to="." method="_on_mod_selector_item_rect_changed"]
 [connection signal="pressed" from="Margin/HBox/LoaderInfoSection/StartGame" to="." method="_on_start_game_pressed"]
-[connection signal="toggled" from="Margin/HBox/LoaderInfoSection/ModSelectionToggle" to="." method="_on_mod_selection_toggle_toggled"]
+[connection signal="toggled" from="Margin/HBox/LoaderInfoSection/SkipModSelectionToggle" to="." method="_on_mod_selection_toggle_toggled"]
 [connection signal="meta_clicked" from="Margin/HBox/LoaderInfoSection/InfoText" to="." method="_on_loader_info_meta_clicked"]
 [connection signal="meta_hover_ended" from="Margin/HBox/LoaderInfoSection/InfoText" to="." method="_on_loader_info_meta_hover_ended"]
 [connection signal="meta_hover_started" from="Margin/HBox/LoaderInfoSection/InfoText" to="." method="_on_loader_info_meta_hover_started"]

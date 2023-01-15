@@ -1,6 +1,5 @@
 extends SceneTree
 
-
 # IMPORTANT: use the ModLoaderHelper through this in this script! Otherwise
 # script compilation will break on first load since the class is not defined
 # just use the normal one with autocomplete and then lowercase it
@@ -12,14 +11,6 @@ var skip_mod_selection: bool = modloaderhelper.should_skip_mod_selection()
 
 
 func _init() -> void:
-	var autoloads := {}
-	for prop in ProjectSettings.get_property_list():
-		var name: String = prop.name
-		if name.begins_with("autoload/"):
-			var value: String = ProjectSettings.get_setting(name)
-			autoloads[name] = value
-	print(autoloads)
-
 	try_setup_modloader()
 
 	if modloaderhelper.are_mods_enabled():
@@ -110,9 +101,11 @@ func setup_modloader() -> void:
 	ProjectSettings.set_setting(modloaderhelper.settings.GLOBAL_SCRIPT_CLASSES, classes)
 	ProjectSettings.set_setting(modloaderhelper.settings.GLOBAL_SCRIPT_CLASS_ICONS, class_icons)
 
-
-	# get all the old values
+	# rename application to make it clear to the user that they are playing modded
+	# godot also creates a new user:// folder for logs (and other things using user:// for saves etc.)
 	var original_name: String = ProjectSettings.get_setting(modloaderhelper.settings.APPLICATION_NAME)
+	ProjectSettings.set_setting(modloaderhelper.settings.APPLICATION_NAME, original_name + " (Modded)")
+
 	var original_autoloads := {}
 	for prop in ProjectSettings.get_property_list():
 		var name: String = prop.name
@@ -120,8 +113,6 @@ func setup_modloader() -> void:
 			var value: String = ProjectSettings.get_setting(name)
 			original_autoloads[name] = value
 
-	# rename application to make the changes clear to the user
-	ProjectSettings.set_setting(modloaderhelper.settings.APPLICATION_NAME, original_name + " (Modded)")
 
 	# save the mod selection scene for global access
 	ProjectSettings.set_setting(modloaderhelper.settings.MOD_SELECTION_SCENE, modloaderhelper.mod_selection_scene)
@@ -133,17 +124,15 @@ func setup_modloader() -> void:
 	for autoload in original_autoloads.keys():
 		ProjectSettings.set_setting(autoload, null)
 
-	ProjectSettings.save_custom(modloaderhelper.get_override_path())
-
-	# add ModLoader as first autoload (the * marks the path as autoload)
+	# add ModLoader autoload (the * marks the path as autoload)
 	ProjectSettings.set_setting(modloaderhelper.settings.MOD_LOADER_AUTOLOAD, "*" + modloaderhelper.mod_loader_script)
+	ProjectSettings.set_setting(modloaderhelper.settings.AUTOLOAD_AVAILABLE, true)
 
 	# add all previous autoloads back again
 	for autoload in original_autoloads.keys():
 		ProjectSettings.set_setting(autoload, original_autoloads[autoload])
-	ProjectSettings.set_setting(modloaderhelper.settings.AUTOLOAD_AVAILABLE, true)
-	ProjectSettings.set_setting(modloaderhelper.settings.MODS_ENABLED, false)
 
+	ProjectSettings.set_setting(modloaderhelper.settings.MODS_ENABLED, false)
 	ProjectSettings.save_custom(modloaderhelper.get_override_path())
 
 	print("Done setting up ModLoader.")

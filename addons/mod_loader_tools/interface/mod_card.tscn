@@ -1,11 +1,10 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://addons/mod_loader_tools/interface/font/font_annotation.tres" type="DynamicFont" id=1]
 [ext_resource path="res://addons/mod_loader_tools/interface/icon_button.tscn" type="PackedScene" id=2]
 [ext_resource path="res://addons/mod_loader_tools/interface/font/font_h2.tres" type="DynamicFont" id=3]
 [ext_resource path="res://icon.png" type="Texture" id=4]
 [ext_resource path="res://addons/mod_loader_tools/interface/theme.tres" type="Theme" id=5]
-[ext_resource path="res://addons/mod_loader_tools/interface/tag.tscn" type="PackedScene" id=6]
 [ext_resource path="res://addons/mod_loader_tools/interface/mod_card.gd" type="Script" id=7]
 
 [sub_resource type="StyleBoxEmpty" id=174]
@@ -56,10 +55,12 @@ text = "Mod Title"
 [node name="Autors" type="Label" parent="HBox/VBox/HBox"]
 margin_left = 94.0
 margin_top = 9.0
-margin_right = 207.0
+margin_right = 487.0
 margin_bottom = 29.0
+size_flags_horizontal = 3
 custom_fonts/font = ExtResource( 1 )
 text = "by Author, Author, Author"
+autowrap = true
 
 [node name="Description" type="RichTextLabel" parent="HBox/VBox"]
 margin_top = 47.0
@@ -73,25 +74,14 @@ fit_content_height = true
 [node name="MetaInfo" type="HBoxContainer" parent="HBox/VBox"]
 margin_top = 91.0
 margin_right = 487.0
-margin_bottom = 113.0
+margin_bottom = 111.0
 mouse_filter = 2
 
 [node name="Version" type="Label" parent="HBox/VBox/MetaInfo"]
-margin_top = 1.0
 margin_right = 39.0
-margin_bottom = 21.0
+margin_bottom = 20.0
 custom_fonts/font = ExtResource( 1 )
 text = "v0.0.0"
-
-[node name="Tag" parent="HBox/VBox/MetaInfo" instance=ExtResource( 6 )]
-margin_left = 47.0
-margin_right = 77.0
-mouse_filter = 2
-
-[node name="Tag2" parent="HBox/VBox/MetaInfo" instance=ExtResource( 6 )]
-margin_left = 85.0
-margin_right = 115.0
-mouse_filter = 2
 
 [node name="AspectRatioContainer" type="AspectRatioContainer" parent="HBox"]
 margin_left = 631.0
@@ -99,8 +89,9 @@ margin_right = 681.0
 margin_bottom = 128.0
 mouse_filter = 2
 
-[node name="ToggleAction" parent="HBox/AspectRatioContainer" instance=ExtResource( 2 )]
+[node name="ChangeState" parent="HBox/AspectRatioContainer" instance=ExtResource( 2 )]
 margin_top = 39.0
 margin_bottom = 89.0
 
 [connection signal="gui_input" from="." to="." method="_on_mod_card_gui_input"]
+[connection signal="pressed" from="HBox/AspectRatioContainer/ChangeState" to="." method="_on_change_state_pressed"]

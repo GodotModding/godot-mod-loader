@@ -6,6 +6,7 @@ A general purpose mod-loader for GDScript-based Godot Games.
 <!-- TOC -->
 * [For Mod Users](#for-mod-users)
   * [Mod Loader Setup](#mod-loader-setup)
+  * [Installing mods](#installing-mods)
   * [For Mod Developers](#for-mod-developers)
     * [Development Setup](#development-setup)
     * [Developing a Mod](#developing-a-mod)
@@ -52,6 +53,23 @@ Use this flag to skip the mod selection screen (or tick the box in the selection
 Holding <kbd>ALT</kbd> during startup will invert the behavior: 
 skip selection screen without the skip flag and show it with the skip flag
 
+### Installing mods
+First, you will have to download a mod for your game. When downloading a mod always keep the basics in mind: 
+1. always confirm your sources are trustworthy 
+   - (yes, even your friends, it could be someone else using their account) 
+2. check the mod sources yourself or have someone else check for obvious bad stuff, for example:
+   - random executables
+   - a mod using the OS class (has access to your computer system)
+   - something that's not an asset 
+   - something that's not game code (not .gd)
+3. if unsure, better ask the community!
+
+Sources to download from are -
+Steam workshop, for officially supported Steam games
+Thunderstore, for unsupported and non-Steam games
+Official Discord communities (be careful)
+
+Have a mod? Good. Don't unzip it and place it inside the `mods` folder alongside the game (see [Folder locations](#folder-locations))
 
 ## For Mod Developers
 
@@ -85,23 +103,36 @@ Select the `project.godot` file and press `open and edit`.
 > For us, that isn't relevant, but it will cause errors. 
 > There are two ways to get around them which depend on personal preference.
 > 1. Use a special version of Godot (download: https://godotsteam.com/) or
->    2. just comment the code away.
->    You will have to run the game a bunch of times and every time it crashes, 
->    comment it out. If you have to remove a full function, instead if removing it and having 
->    to track where it is called, you can just use the keyword `pass` to make it do nothing.
+> 2. just comment the code away.
+> You will have to run the game a bunch of times and every time it crashes, 
+> comment it out. If you have to remove a full function, instead if removing it and having 
+> to track where it is called, you can just use the keyword `pass` to make it do nothing.
 > 
 > ```gdscript
 > func _ready():
 > 	load_save()
 > #	Steam.connect("overlay_toggled", self, "steam_overlay_toggled")
 > 
-> func _on_ResetAchievementsButton_pressed():
+> func _on_reset_achievements_button_pressed():
 > 	pass
 > #	Steam.resetAllStats(true)
 > ```
 
 
 ### Developing a Mod
+
+First off, if the game you want to mod does not have this ModLoader installed already, consider bringing it up to the developer for them to consider. 
+Second off, there are some limitations if that's the case. There is no way to modify autoload (singleton) behavior, since the load order of 
+them can't be overridden due to some strange behavior in Godot's way of overriding them.
+
+#### Where to start?
+
+Download the starterkit mod fitting your game from this repository [Starter Kit Mods]()
+place it inside the `mods-unpacked` directory alongside the game executable (see [Folder locations](#folder-locations))
+
+> `Note:`
+> Due to packs overriding stuff when loaded in the editor, you will have to unzip and place all mods that you want to have active during 
+> development (dependencies and so on) in `/mods-unpacked` 
 
 ### Structure
 
@@ -132,7 +163,7 @@ yourmod.zip
 Mods you create must have the following 2 files:
 
 - `mod_main.gd` - The init file for your mod.
-- `manifest.json` - Meta data for your mod (see below).
+- `manifest.json` - Metadata for your mod (see below).
 
 **Example `manifest.json`**
 
@@ -152,21 +183,21 @@ Mods you create must have the following 2 files:
 				"Add IDs of other mods here, if your mod conflicts with them"
 			],
             "authors": ["AuthorName"],
-            "compatible_game_version": ["0.6.1.6"],
+            "compatible_game_version": ["0.6.1.6"]
         }
     }
 }
 ```
 
-> `Notes on meta.json`
+> `Notes`
 > 
 > Some properties in the JSON are not checked in the code, and are only used for reference by yourself and your mod's users. These are:
 > 
 > - `version`
->   - `compatible_game_version`
->   - `authors`
->   - `description`
->   - `website_url`
+> - `compatible_game_version`
+> - `authors`
+> - `description`
+> - `website_url`
 
 
 ### Helper Methods
@@ -262,7 +293,10 @@ can stay in the directory you cloned them into.
 
 **Game Executable:**
 
-Right-click the game on steam > press `manage` > press `browse local files`
+Right-click the game on steam > press `manage` > press `browse local files`. You should be within a folder with the same name as the game.
+
+(for MacOS the actual executable is in `/Contents/MacOS` within that folder, but you are still at the right place, 
+only the override needs to be placed there, everything else goes right here)
 
 
 **User Data:**
@@ -283,3 +317,5 @@ Right-click the game on steam > press `manage` > press `browse local files`
 🔥 ModLoader is based on the work of these brilliant people 🔥
 
 - [Delta-V-Modding](https://gitlab.com/Delta-V-Modding/Mods)
+
+

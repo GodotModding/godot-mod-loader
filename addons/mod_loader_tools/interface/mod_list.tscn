@@ -1,10 +1,9 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://addons/mod_loader_tools/interface/font/font_h2.tres" type="DynamicFont" id=1]
 [ext_resource path="res://addons/mod_loader_tools/interface/icon_button.tscn" type="PackedScene" id=2]
 [ext_resource path="res://addons/mod_loader_tools/interface/mod_list.gd" type="Script" id=3]
 [ext_resource path="res://addons/mod_loader_tools/interface/theme.tres" type="Theme" id=4]
-[ext_resource path="res://addons/mod_loader_tools/interface/mod_card.tscn" type="PackedScene" id=5]
 
 [sub_resource type="StyleBoxFlat" id=161]
 content_margin_left = 20.0
@@ -39,7 +38,7 @@ custom_fonts/font = ExtResource( 1 )
 text = "Enabled"
 valign = 2
 
-[node name="AllActionLabel" type="Label" parent="Bar"]
+[node name="ChangeStateAllLabel" type="Label" parent="Bar"]
 margin_left = 613.0
 margin_top = 8.0
 margin_right = 688.0
@@ -47,7 +46,7 @@ margin_bottom = 41.0
 text = "Disable All"
 valign = 2
 
-[node name="AllAction" parent="Bar" instance=ExtResource( 2 )]
+[node name="ChangeStateAll" parent="Bar" instance=ExtResource( 2 )]
 margin_left = 696.0
 margin_right = 746.0
 
@@ -64,8 +63,7 @@ scroll_horizontal_enabled = false
 margin_left = 20.0
 margin_top = 20.0
 margin_right = 726.0
-margin_bottom = 172.0
+margin_bottom = 20.0
 size_flags_horizontal = 3
 
-[node name="ModCard" parent="Scroll/ModList" instance=ExtResource( 5 )]
-margin_right = 706.0
+[connection signal="pressed" from="Bar/ChangeStateAll" to="." method="_on_change_state_all_pressed"]

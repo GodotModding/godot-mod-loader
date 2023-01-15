@@ -10,8 +10,11 @@ const settings := {
 	"APPLICATION_NAME": "application/config/name",
 	"GAME_MAIN_SCENE": "application/run/main_scene",
 	"MOD_LOADER_AUTOLOAD": "autoload/ModLoader",
+
 	"GLOBAL_SCRIPT_CLASSES": "_global_script_classes",
 	"GLOBAL_SCRIPT_CLASS_ICONS": "_global_script_class_icons",
+
+	"MOD_ENABLED_STATE_DICT": "application/run/mod_enabled_state_dict",
 }
 
 const mod_selection_scene := "res://addons/mod_loader_tools/interface/mod_selector.tscn"
@@ -19,7 +22,9 @@ const mod_loader_script := "res://addons/mod_loader_tools/mod_loader.gd"
 
 const new_global_classes := [
 	{ "base": "Resource", "class": "ModDetails", "language": "GDScript", "path": "res://addons/mod_loader_tools/mod_details.gd" },
-	{ "base": "Node", "class": "ModLoaderHelper", "language": "GDScript", "path": "res://addons/mod_loader_tools/mod_loader_helper.gd" }
+	{ "base": "Node", "class": "ModLoaderHelper", "language": "GDScript", "path": "res://addons/mod_loader_tools/mod_loader_helper.gd" },
+	{ "base": "VBoxContainer", "class": "ModList", "language": "GDScript", "path": "res://addons/mod_loader_tools/interface/mod_list.gd" },
+	{ "base": "PanelContainer", "class": "ModCard", "language": "GDScript", "path": "res://addons/mod_loader_tools/interface/mod_card.gd" },
 ]
 
 
@@ -36,19 +41,16 @@ static func get_override_path() -> String:
 
 
 static func are_mods_enabled() -> bool:
-	return ProjectSettings.has_setting(settings.MODS_ENABLED) and\
-		ProjectSettings.get_setting(settings.MODS_ENABLED)
+	return is_project_setting_true(settings.MODS_ENABLED)
 
 
 static func is_loader_initialized() -> bool:
-	return ProjectSettings.has_setting(settings.AUTOLOAD_AVAILABLE) and\
-		ProjectSettings.get_setting(settings.AUTOLOAD_AVAILABLE)
+	return is_project_setting_true(settings.AUTOLOAD_AVAILABLE)
 
 
 static func should_skip_mod_selection() -> bool:
 	return cmd_line_arg_exists("--skip-mod-selection") or\
-		ProjectSettings.has_setting(settings.SKIP_MOD_SELECTION) and\
-		ProjectSettings.get_setting(settings.SKIP_MOD_SELECTION)
+		is_project_setting_true(settings.SKIP_MOD_SELECTION)
 
 
 static func is_project_setting_true(project_setting: String) -> bool:
@@ -63,10 +65,30 @@ static func cmd_line_arg_exists(argument: String) -> bool:
 	return false
 
 
-# because 3.x does not support ligatures used in the icon font
+static func get_enabled_state_dict() -> Dictionary:
+	if not ProjectSettings.has_setting(settings.MOD_ENABLED_STATE_DICT):
+		return {}
+	return ProjectSettings.get_setting(settings.MOD_ENABLED_STATE_DICT)
+
+
+static func is_mod_enabled(mod_id: String) -> bool:
+	var mod_enabled_state_dict: Dictionary = get_enabled_state_dict()
+	if not mod_enabled_state_dict.has(mod_id):
+		return false
+	return bool(mod_enabled_state_dict[mod_id])
+
+
+static func toggle_mod_enabled_state(mod_id: String) -> void:
+	var mod_enabled_state_dict: Dictionary = get_enabled_state_dict()
+	mod_enabled_state_dict[mod_id] = not is_mod_enabled(mod_id)
+	ProjectSettings.set_setting(settings.MOD_ENABLED_STATE_DICT, mod_enabled_state_dict)
+	ProjectSettings.save_custom(get_override_path())
+
+
+# 3.x does not support ligatures (eg. "tag" being replaced by the glyph)
 # so the glyph is used directly (but it's invisible in the code editor :/ )
 # the name is the same as used in font awesome
-# refer to https://fontawesome.com/icons/angles-right?s=solid&f=classic
+# refer to https://fontawesome.com/search?o=r&m=free&s=solid&f=classic
 static func get_font_icon(icon_name: String) -> String:
 	match icon_name:
 		"angles-left": return ""
@@ -79,3 +101,5 @@ static func get_font_icon(icon_name: String) -> String:
 		"tag": return ""
 		_: push_error("icon '%s' not found" % icon_name)
 	return ""
+
+
