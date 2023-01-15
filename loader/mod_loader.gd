@@ -92,7 +92,7 @@ var os_mods_path_override = ""
 var mod_missing_dependencies = {}
 
 # Things to keep to ensure they are not garbage collected (used by `saveScene`)
-var _savedObjects = []
+var _saved_objects = []
 
 
 # Main
@@ -329,7 +329,7 @@ func _init_mod_data(mod_folder_path):
 		# not needed anymore. It can be useful when debugging, but it's also an expensive
 		# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
 		# which has ~1,000 files). That's why it's disabled by default
-		mod_data[mod_id].file_paths = get_flat_view_dict(local_mod_path)
+		mod_data[mod_id].file_paths = _get_flat_view_dict(local_mod_path)
 
 	for required_filename in REQUIRED_MOD_FILES:
 		# Eg:
@@ -455,11 +455,11 @@ func _get_load_order():
 			mod_load_order.append(mod)
 
 	# Sort mods by the importance value
-	mod_load_order.sort_custom(self, "_compare_Importance")
+	mod_load_order.sort_custom(self, "_compare_importance")
 
 
 # Custom sorter that orders mods by important
-func _compare_Importance(a, b):
+func _compare_importance(a, b):
 	# if true a -> b
 	# if false b -> a
 	if(a.importance > b.importance):
@@ -472,11 +472,14 @@ func _compare_Importance(a, b):
 # Runs mods in the order stored in mod_load_order.
 func _init_mod(mod):
 	var mod_main_path = mod.required_files_path["mod_main.gd"]
+
 	dev_log(str("Loading script from -> ", mod_main_path), LOG_NAME)
 	var mod_main_script = ResourceLoader.load(mod_main_path)
 	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
+
 	var mod_main_instance = mod_main_script.new(self)
 	mod_main_instance.name = mod.meta_data.extra.godot.id
+
 	dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
 	add_child(mod_main_instance, true)
 
@@ -509,23 +512,23 @@ func _get_cmd_line_arg(argument) -> String:
 
 # Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
 func _get_mod_folder_dir():
-	var gameInstallDirectory = OS.get_executable_path().get_base_dir()
+	var game_install_directory = OS.get_executable_path().get_base_dir()
 
 	if OS.get_name() == "OSX":
-		gameInstallDirectory = gameInstallDirectory.get_base_dir().get_base_dir().get_base_dir()
+		game_install_directory = game_install_directory.get_base_dir().get_base_dir().get_base_dir()
 
 	# Fix for running the game through the Godot editor (as the EXE path would be
 	# the editor's own EXE, which won't have any mod ZIPs)
 	# if OS.is_debug_build():
 	if OS.has_feature("editor"):
-		gameInstallDirectory = "res://"
+		game_install_directory = "res://"
 
 	if (os_mods_path_override != ""):
-		gameInstallDirectory = os_mods_path_override	
+		game_install_directory = os_mods_path_override
 
-	mod_log(str("gameInstallDirectory: ", gameInstallDirectory), LOG_NAME)
+	mod_log(str("game_install_directory: ", game_install_directory), LOG_NAME)
 
-	return gameInstallDirectory.plus_file("mods")
+	return game_install_directory.plus_file("mods")
 
 
 # Parses JSON from a given file path and returns a dictionary
@@ -559,7 +562,7 @@ func _get_file_name(path, is_lower_case = true, is_no_extension = false):
 # original version of this script, before becoming deprecated. It may still be
 # used if DEBUG_ENABLE_STORING_FILEPATHS is true.
 # Source: https://gist.github.com/willnationsdev/00d97aa8339138fd7ef0d6bd42748f6e
-func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false):
+func _get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false):
 	var regex = null
 	if p_match_is_regex:
 		regex = RegEx.new()
@@ -613,19 +616,19 @@ func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false
 
 # Helper functions to build mods
 
-# Add a script that extends a vanilla script. `childScriptPath` should point
+# Add a script that extends a vanilla script. `child_script_path` should point
 # to your mod's extender script, eg "MOD/extensions/singletons/utils.gd".
 # Inside that extender script, it should include "extends {target}", where
 # {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 # Note that your extender script doesn't have to follow the same directory path
 # as the vanilla file, but it's good practice to do so.
-func installScriptExtension(childScriptPath:String):
+func install_script_extension(child_script_path:String):
 	# Check path to file exists
-	if !File.new().file_exists(childScriptPath):
-		mod_log("ERROR - The child script path '%s' does not exist" % [childScriptPath], LOG_NAME)
+	if !File.new().file_exists(child_script_path):
+		mod_log("ERROR - The child script path '%s' does not exist" % [child_script_path], LOG_NAME)
 		return
 
-	var childScript = ResourceLoader.load(childScriptPath)
+	var child_script = ResourceLoader.load(child_script_path)
 
 	# Force Godot to compile the script now.
 	# We need to do this here to ensure that the inheritance chain is
@@ -634,46 +637,46 @@ func installScriptExtension(childScriptPath:String):
 	# This is also needed to make Godot instantiate the extended class
 	# when creating singletons.
 	# The actual instance is thrown away.
-	childScript.new()
+	child_script.new()
 
-	var parentScript = childScript.get_base_script()
-	var parentScriptPath = parentScript.resource_path
-	mod_log("Installing script extension: %s <- %s" % [parentScriptPath, childScriptPath], LOG_NAME)
-	childScript.take_over_path(parentScriptPath)
+	var parent_script = child_script.get_base_script()
+	var parent_script_path = parent_script.resource_path
+	mod_log("Installing script extension: %s <- %s" % [parent_script_path, child_script_path], LOG_NAME)
+	child_script.take_over_path(parent_script_path)
 
 
 # Add a translation file, eg "mytranslation.en.translation". The translation
 # file should have been created in Godot already: When you improt a CSV, such
 # a file will be created for you.
-func addTranslationFromResource(resourcePath: String):
-	var translation_object = load(resourcePath)
+func add_translation_from_resource(resource_path: String):
+	var translation_object = load(resource_path)
 	TranslationServer.add_translation(translation_object)
 	mod_log("Added Translation from Resource", LOG_NAME)
 
 
-func appendNodeInScene(modifiedScene, nodeName:String = "", nodeParent = null, instancePath:String = "", isVisible:bool = true):
-	var newNode
-	if instancePath != "":
-		newNode = load(instancePath).instance()
+func append_node_in_scene(modified_scene, node_name:String = "", node_parent = null, instance_path:String = "", is_visible:bool = true):
+	var new_node
+	if instance_path != "":
+		new_node = load(instance_path).instance()
 	else:
-		newNode = Node.instance()
-	if nodeName != "":
-		newNode.name = nodeName
-	if isVisible == false:
-		newNode.visible = false
-	if nodeParent != null:
-		var tmpNode = modifiedScene.get_node(nodeParent)
-		tmpNode.add_child(newNode)
-		newNode.set_owner(modifiedScene)
+		new_node = Node.instance()
+	if node_name != "":
+		new_node.name = node_name
+	if is_visible == false:
+		new_node.visible = false
+	if node_parent != null:
+		var tmp_node = modified_scene.get_node(node_parent)
+		tmp_node.add_child(new_node)
+		new_node.set_owner(modified_scene)
 	else:
-		modifiedScene.add_child(newNode)
-		newNode.set_owner(modifiedScene)
+		modified_scene.add_child(new_node)
+		new_node.set_owner(modified_scene)
 
 
-func saveScene(modifiedScene, scenePath:String):
+func save_scene(modified_scene, scenePath:String):
 	var packed_scene = PackedScene.new()
-	packed_scene.pack(modifiedScene)
+	packed_scene.pack(modified_scene)
 	dev_log(str("packing scene -> ", packed_scene), LOG_NAME)
 	packed_scene.take_over_path(scenePath)
 	dev_log(str("saveScene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
-	_savedObjects.append(packed_scene)
+	_saved_objects.append(packed_scene)
