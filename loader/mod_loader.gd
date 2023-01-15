@@ -64,6 +64,7 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"incompatibilities",
 	"authors",
 	"compatible_game_version",
+	"config_defaults",
 ]
 
 # Set to true to require using "--enable-mods" to enable them
@@ -761,25 +762,44 @@ func saveScene(modifiedScene, scenePath:String):
 # keys: `error` and `data`.
 # Data (`data`) is either the full config, or data from a specific key if one was specified.
 # Error (`error`) is 0 if there were no errors, or > 0 if the setting could not be retrieved:
+# 0 = No errors
 # 1 = Invalid mod ID
-# 2 = No config data available, the JSON file probably doesn't exist
-# 3 = Invalid key, although config data does exists
-func get_mod_config(mod_id:String = "", key:String = "", default_value = null)->Dictionary:
+# 2 = No custom JSON. File probably does not exist. Defaults will be used if available
+# 3 = No custom JSON, and key was invalid when trying to get the default from your manifest defaults (`extra.godot.config_defaults`)
+# 4 = Invalid key, although config data does exists
+func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
 	var error_num = 0
 	var error_msg = ""
 	var data = {}
+	var defaults = null
 
+	# Invalid mod ID
 	if !mod_data.has(mod_id):
 		error_num = 1
 		error_msg = str("ERROR - Mod ID was invalid: ", mod_id)
 
+	# Mod ID is valid
 	if error_num == 0:
 		var config_data = mod_data[mod_id].config
+		defaults = mod_data[mod_id].meta_data.extra.godot.config_defaults
 
+		# No custom JSON file
 		if config_data.size() == 0:
 			error_num = 2
-			error_msg = str("WARNING - Config file exists for '", mod_id, ".json', but no config data was available")
+			error_msg = str("WARNING - No config file for ", mod_id, ".json. ")
+			if key == "":
+				data = defaults
+				error_msg += "Using defaults (extra.godot.config_defaults)"
+			else:
+				if defaults.has(key):
+					data = defaults[key]
+					error_msg += str("Using defaults for key '", key, "' (extra.godot.config_defaults.", key, ")")
+				else:
+					error_num = 3
+					# error_msg = str("WARNING - No config file for Invalid key '", key, "' for mod ID: ", mod_id)
+					error_msg += str("Requested key '", key, "' is not present in the defaults (extra.godot.config_defaults.", key, ")")
 
+		# JSON file exists
 		if error_num == 0:
 			if key == "":
 				data = config_data
@@ -787,15 +807,15 @@ func get_mod_config(mod_id:String = "", key:String = "", default_value = null)->
 				if config_data.has(key):
 					data = config_data[key]
 				else:
-					error_num = 3
+					error_num = 4
 					error_msg = str("WARNING - Invalid key '", key, "' for mod ID: ", mod_id)
 
+	# Log if any errors occured
 	if error_num != 0:
 		dev_log(str("Config: ", error_msg), mod_id)
-		if default_value != null:
-			data = default_value
 
 	return {
 		"error": error_num,
+		"error_msg": error_msg,
 		"data": data,
 	}

@@ -52,10 +52,13 @@ Mods you create must have the following 2 files:
 			],
 			"authors": ["AuthorName"],
 			"compatible_game_version": ["0.6.1.6"],
+            "config_defaults": {}
 		}
 	}
 }
 ```
+
+See `get_mod_config` below for info on `config_defaults`.
 
 ## Helper Methods
 
@@ -112,9 +115,9 @@ Save the scene as a PackedScene, overwriting Godot's cache if needed.
 
     get_mod_config(mod_id:String = "", key:String = "", default_value = null)->Dictionary:
 
-Get data from a mod's config JSON file. Configs are added to a folder named "configs" (`res://configs`), and are named by the mod ID (eg. `AuthorName-ModName.json`).
+Get data from a mod's config JSON file. Configs are added by users, to a folder named *configs* (`res://configs`). They are named by the mod ID (eg. `AuthorName-ModName.json`).
 
-Returns a dictionary with two keys: `error` and `data`.
+Returns a dictionary with three keys: `data`, `error`, and `error_msg`.
 
 #### Data
 
@@ -128,12 +131,34 @@ Error (`error`) is `0` if there were no errors, or `> 0` if the setting could no
 | --- | ----------- |
 | `0` | No errors |
 | `1` | Invalid mod ID |
-| `2` | No config data available, the JSON file probably doesn't exist |
-| `3` | Invalid key, although config data does exists |
+| `2` | No custom JSON (file probably does not exist). Defaults will be used |
+| `3` | No custom JSON, and `key` was not present in your mod's defaults |
+| `4` | Invalid `key`, although config data does exists |
 
-#### Defaults
+#### Error Msg
 
-If `default_value` is provided and an error occurs, `data` will be `default_value`. This is most useful when getting a setting by key, as it saves you needing to add checks for errors. You could also pass a dictionary of default values.
+Text representation of the error that occured, intended to make debugging easier.
+
+### Defaults
+
+If no custom JSON file exists, your mod's default settings will be returned as `data`. This only applies if you're not using a `key`, or the `key` you provide exists in your defaults.
+
+Default settings are set in your *manifest.json* file, via `extra.godot.config_defaults`.
+
+
+### Config Options
+
+A user's custom config file can use a special setting, `load_from`. If specified, their config is loaded from the specified file, instead of the file named after the mod ID.
+
+The `load_from` JSON file should be in the same directory, and include the file extension, eg:
+
+```json
+{
+    "load_from": "my-special-config.json"
+}
+```
+
+This allows users to multiple config files for a single mod and switch between them quickly. This settings is ignord if the filename matches the mod ID, or is empty.
 
 
 ## Credits
