@@ -55,6 +55,7 @@ Mods you create must have the following 2 files:
 		}
 	}
 }
+```
 
 #### Notes on meta.json
 
