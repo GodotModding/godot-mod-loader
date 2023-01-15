@@ -206,11 +206,11 @@ Use these when creating your mods.
 For detailed info, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md),
 upon which ModLoader is based. They cover mod setup and helper functions in much greater detail.
 
-#### installScriptExtension
+#### install_script_extension
 
-	installScriptExtension(childScriptPath:String)
+	func install_script_extension(child_script_path:String)
 
-Add a script that extends a vanilla script. `childScriptPath` is the path to your mod's extender script path, eg `MOD/extensions/singletons/utils.gd`.
+Add a script that extends a vanilla script. `child_script_path` is the path to your mod's extender script path, eg `MOD/extensions/singletons/utils.gd`.
 
 Inside that extender script, it should include `extends {target}`, where {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 
@@ -233,23 +233,23 @@ yourmod.zip
                 └───debug_service.gd
 ```
 
-#### addTranslationFromResource
+#### add_translation_from_resource
 
-	addTranslationFromResource(resourcePath: String)
+	add_translation_from_resource(resource_path: String)
 
 Add a translation file, eg "mytranslation.en.translation". The translation file should have been created in Godot already: When you import a CSV, such a file will be created for you.
 
 Note that this function is exclusive to ModLoader, and departs from Delta-V's two functions [addTranslationsFromCSV](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md#addtranslationsfromcsv) and [addTranslationsFromJSON](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md#addtranslationsfromjson), which aren't available in ModLoader.
 
-#### appendNodeInScene
+#### append_node_in_scene
 
-	appendNodeInScene(modifiedScene, nodeName:String = "", nodeParent = null, instancePath:String = "", isVisible:bool = true)
+	append_node_in_scene(modified_scene, node_name:String = "", node_parent = null, instance_path:String = "", is_visible:bool = true)
 
 Create and add a node to an instanced scene.
 
-#### saveScene
+#### save_scene
 
-	saveScene(modifiedScene, scenePath:String)
+	save_scene(modified_scene, scenePath:String)
 
 Save the scene as a PackedScene, overwriting Godot's cache if needed.
 
