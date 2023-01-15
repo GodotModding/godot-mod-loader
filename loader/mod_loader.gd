@@ -82,10 +82,18 @@ var mod_data = {}
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order = []
 
-# Override for the path mods are loaded from. Only gets set if the CLI arg
-# --mods-path is used. This can be tested in the editor via:
-# Project Settings > Display> Editor > Main Run Args
+# Override for the path mods are loaded from. Only set if the CLI arg is present.
+# Can be tested in the editor via: Project Settings > Display> Editor > Main Run Args
+# Default: "res://mods"
+# Set via: --mods-path
+# Example: --mods-path="C://path/mods"
 var os_mods_path_override = ""
+
+# Override for the path config JSONs are loaded from
+# Default: "res://configs"
+# Set via: --configs-path
+# Example: --configs-path="C://path/configs"
+var os_configs_path_override = ""
 
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
@@ -103,11 +111,20 @@ func _init():
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
 
+	# Log game install dir
+	mod_log(str("gameInstallDirectory: ", _get_local_folder_dir()), LOG_NAME)
+
 	# check if we want to use a different mods path that is provided as a command line argument
 	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
 	if cmd_line_mod_path != "":
 		os_mods_path_override = cmd_line_mod_path
 		mod_log("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
+
+	# Check for the CLI arg that overrides the configs path
+	var cmd_line_configs_path = _get_cmd_line_arg("--configs-path")
+	if cmd_line_configs_path != "":
+		os_configs_path_override = cmd_line_configs_path
+		mod_log("The path configs are loaded from has been changed via the CLI arg `--configs-path`, to: " + cmd_line_configs_path, LOG_NAME)
 
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
@@ -117,6 +134,10 @@ func _init():
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
 	_setup_mods()
+
+	# Set up mod configs. If a mod's JSON file is found, its data gets added
+	# to mod_data.{mod_id}.config
+	_load_mod_configs()
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
@@ -164,8 +185,8 @@ func _init():
 
 
 # Log developer info. Has to be enabled, either with the command line arg
-# `--mod-dev--mod-dev`, or by temporarily enabling DEBUG_ENABLE_DEV_LOG
-func dev_log(text:String, mod_name:String = "", pretty:bool = false):
+# `--mod-dev`, or by temporarily enabling DEBUG_ENABLE_DEV_LOG
+func dev_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false):
 	if DEBUG_ENABLE_DEV_LOG || (_check_cmd_line_arg("--mod-dev")):
 		mod_log(text, mod_name, pretty)
 
@@ -209,9 +230,15 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 	log_file.close()
 
 
+# Loop over "res://mods" and add any mod zips to the unpacked virtual directory
+# (UNPACKED_DIR)
 func _load_mod_zips():
 	# Path to the games mod folder
-	var game_mod_folder_path = _get_mod_folder_dir()
+	var game_mod_folder_path = _get_local_folder_dir("mods")
+
+	# CLI override
+	if (os_mods_path_override != ""):
+		game_mod_folder_path = os_mods_path_override
 
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
@@ -247,12 +274,15 @@ func _load_mod_zips():
 		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, false)
 
 		# Notifies developer of an issue with Godot, where using `load_resource_pack`
-		# in the editor WIPES the entire res:// directory the first time you use it:
+		# in the editor WIPES the entire virtual res:// directory the first time you
+		# use it. This means that unpacked mods are no longer accessible, because they
+		# no longer exist in the file system. So this warning basically says
+		# "don't use ZIPs with unpacked mods!"
 		# https://github.com/godotengine/godot/issues/19815
 		# https://github.com/godotengine/godot/issues/16798
 		if OS.has_feature("editor") && !has_shown_editor_warning:
 			mod_log(str(
-				"WARNING: Loading files with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
+				"WARNING: Loading ZIP files with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
 			has_shown_editor_warning = true
@@ -271,6 +301,8 @@ func _load_mod_zips():
 	dir.list_dir_end()
 
 
+# Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
+# which adds their data to mod_data.
 func _setup_mods():
 	# Path to the unpacked mods folder
 	var unpacked_mods_path = UNPACKED_DIR
@@ -306,6 +338,51 @@ func _setup_mods():
 	dir.list_dir_end()
 
 
+# Load mod config JSONs from res://configs
+func _load_mod_configs():
+	var found_1_config = false
+	var configs_path = _get_local_folder_dir("configs")
+
+	# CLI override, set with `--configs-path="C://path/configs"`
+	# (similar to os_mods_path_override)
+	if (os_configs_path_override != ""):
+		configs_path = os_configs_path_override
+
+	for mod_id in mod_data:
+		var json_path = configs_path.plus_file(mod_id + ".json")
+		var mod_config = _get_json_as_dict(json_path)
+
+		dev_log(str("Config JSON: Looking for config at path: ", json_path), LOG_NAME)
+
+		if mod_config.size() > 0:
+			found_1_config = true
+
+			mod_log(str("Config JSON: Found a config file: '", json_path, "'"), LOG_NAME)
+			dev_log(str("Config JSON: File data: ", JSON.print(mod_config)), LOG_NAME)
+
+			# Check `load_from` option. This lets you specify the name of a
+			# different JSON file to load your config from. Must be in the same
+			# dir. Means you can have multiple config files for a single mod
+			# and switch between them quickly. Should include ".json" extension.
+			# Ignored if the filename matches the mod ID, or is empty
+			if mod_config.has("load_from"):
+				var new_path = mod_config.load_from
+				if new_path != "" && new_path != str(mod_id, ".json"):
+					mod_log(str("Config JSON: Following load_from path: ", new_path), LOG_NAME)
+					var new_config = _get_json_as_dict(configs_path + new_path)
+					if new_config.size() > 0 != null:
+						mod_config = new_config
+						mod_log(str("Config JSON: Loaded from custom json: ", new_path), LOG_NAME)
+						dev_log(str("Config JSON: File data: ", JSON.print(mod_config)), LOG_NAME)
+					else:
+						mod_log(str("Config JSON: ERROR - Could not load data via `load_from` for ", mod_id, ", at path: ", new_path), LOG_NAME)
+
+			mod_data[mod_id].config = mod_config
+
+	if !found_1_config:
+		mod_log(str("Config JSON: No mod configs were found"), LOG_NAME)
+
+
 # Add a mod's data to mod_data.
 # The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
@@ -322,6 +399,7 @@ func _init_mod_data(mod_folder_path):
 	mod_data[mod_id].is_loadable = true
 	mod_data[mod_id].importance = 0
 	mod_data[mod_id].dir = local_mod_path
+	mod_data[mod_id].config = {} # updated in _load_mod_configs
 
 	if DEBUG_ENABLE_STORING_FILEPATHS:
 		# Get the mod file paths
@@ -481,7 +559,6 @@ func _init_mod(mod):
 	add_child(mod_main_instance, true)
 
 
-
 # Utils (Mod Loader)
 # =============================================================================
 
@@ -507,8 +584,9 @@ func _get_cmd_line_arg(argument) -> String:
 
 	return ""
 
-# Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
-func _get_mod_folder_dir():
+# Get the path to a local folder. Primarily used to get the  (packed) mods
+# folder, ie "res://mods" or the OS's equivalent, as well as the configs path
+func _get_local_folder_dir(subfolder:String = ""):
 	var gameInstallDirectory = OS.get_executable_path().get_base_dir()
 
 	if OS.get_name() == "OSX":
@@ -520,18 +598,19 @@ func _get_mod_folder_dir():
 	if OS.has_feature("editor"):
 		gameInstallDirectory = "res://"
 
-	if (os_mods_path_override != ""):
-		gameInstallDirectory = os_mods_path_override	
-
-	mod_log(str("gameInstallDirectory: ", gameInstallDirectory), LOG_NAME)
-
-	return gameInstallDirectory.plus_file("mods")
+	return gameInstallDirectory.plus_file(subfolder)
 
 
-# Parses JSON from a given file path and returns a dictionary
-func _get_json_as_dict(path):
+# Parses JSON from a given file path and returns a dictionary.
+# Returns an empty dictionary if no file exists (check with size() < 1)
+func _get_json_as_dict(path:String)->Dictionary:
 	# mod_log(str("getting JSON as dict from path -> ", path), LOG_NAME)
 	var file = File.new()
+
+	if !file.file_exists(path):
+		file.close()
+		return {}
+
 	file.open(path, File.READ)
 	var content = file.get_as_text()
 
@@ -607,7 +686,6 @@ func get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false
 	return data
 
 
-
 # Helpers
 # =============================================================================
 
@@ -677,3 +755,45 @@ func saveScene(modifiedScene, scenePath:String):
 	packed_scene.take_over_path(scenePath)
 	dev_log(str("saveScene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
 	_savedObjects.append(packed_scene)
+
+
+# Get the config data for a specific mod. Always returns a dictionary with two
+# keys: `error` and `data`.
+# Data (`data`) is either the full config, or data fro a specific key if one was specified.
+# Error (`error`) is 0 if there were no errors, or > 0 if the setting could not be retrieved:
+# 1 = Invalid mod ID
+# 2 = No config data available, the JSON file probably doesn't exist
+# 3 = Invalid key, although config data does exists
+func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
+	var error_num = 0
+	var error_msg = ""
+	var data = {}
+
+	if !mod_data.has(mod_id):
+		error_num = 1
+		error_msg = str("ERROR - Mod ID was invalid: ", mod_id)
+
+	if error_num == 0:
+		var config_data = mod_data[mod_id].config
+
+		if config_data.size() == 0:
+			error_num = 2
+			error_msg = str("WARNING - Config file exists for '", mod_id, ".json', but no config data was available")
+
+		if error_num == 0:
+			if key == "":
+				data = config_data
+			else:
+				if config_data.has(key):
+					data = config_data[key]
+				else:
+					error_num = 3
+					error_msg = str("WARNING - Invalid key '", key, "' for mod ID: ", mod_id)
+
+	if error_num != 0:
+		dev_log(str("Config: ", error_msg), mod_id)
+
+	return {
+		"error": error_num,
+		"data": data,
+	}

@@ -119,6 +119,21 @@ Create and add a node to a instanced scene.
 
 Save the scene as a PackedScene, overwriting Godot's cache if needed.
 
+### get_mod_config
+
+    get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
+
+Get data from a mod's config JSON file. Configs are added to a folder named "configs" (`res://configs`), and are named by the mod ID (eg. `AuthorName-ModName.json`).
+
+Returns a dictionary with two keys: `error` and `data`:
+
+- Data (`data`) is either the full config, or data from a specific key if one was specified.
+- Error (`error`) is `0` if there were no errors, or `> 0` if the setting could not be retrieved:
+  - `0` = No errors
+  - `1` = Invalid mod ID
+  - `2` = No config data available, the JSON file probably doesn't exist
+  - `3` = Invalid key, although config data does exists
+
 
 ## Credits
 
