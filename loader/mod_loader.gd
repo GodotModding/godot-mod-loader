@@ -49,13 +49,21 @@ const UNPACKED_DIR = "res://mods-unpacked/"
 const REQUIRED_MOD_FILES = ["ModMain.gd", "_meta.json"]
 
 # Required keys in a mod's _meta.json file
-const REQUIRED_META_TAGS = [
-	"id",
+const REQUIRED_MANIFEST_KEYS_ROOT = [
 	"name",
-	"version",
-	"compatible_game_version",
-	"authors",
+	"version_number",
+	"website_url",
 	"description",
+	"dependencies",
+	"extra",
+]
+
+# Required keys in manifest's `json.extra.godot`
+const REQUIRED_MANIFEST_KEYS_EXTRA = [
+	"id",
+	"incompatibilities",
+	"authors",
+	"compatible_game_version",
 ]
 
 # Set to true to require using "--enable-mods" to enable them
@@ -332,21 +340,22 @@ func _check_mod_files(mod_id):
 		mod_log(str("ERROR - ", mod_id, " cannot be loaded due to missing required files"), LOG_NAME)
 
 
-# Load meta data into mod_data, from a mod's _meta.json file
+# Load meta data into mod_data, from a mod's manifest.json file
 func _load_meta_data(mod_id):
-	mod_log(str("Loading meta_data for -> ", mod_id), LOG_NAME)
+	mod_log(str("Loading meta_data (manifest.json) for -> ", mod_id), LOG_NAME)
 	var mod = mod_data[mod_id]
 
 	# Load meta data file
-	var meta_path = mod.required_files_path["_meta.json"]
+	var meta_path = mod.required_files_path["manifest.json"]
 	var meta_data = _get_json_as_dict(meta_path)
 
-	dev_log(str(mod_id, " loaded meta data -> ", meta_data), LOG_NAME)
+	dev_log(str(mod_id, " loaded manifest data -> ", meta_data), LOG_NAME)
 
-	# Check if the meta data has all required fields
+	# Check if the manifest data has all required fields
 	var missing_fields = _check_meta_file(meta_data)
 	if(missing_fields.size() > 0):
-		mod_log(str("ERROR - ", mod_id, " ", missing_fields, " are required in _meta.json."), LOG_NAME)
+		for missing_field in missing_fields:
+			mod_log(str("ERROR - ", mod_id, " - Missing a required field in manifest.json: '", missing_field, "'"), LOG_NAME)
 		# Flag mod - so it's not loaded later
 		mod.is_loadable = false
 		# Continue with the next mod
@@ -356,14 +365,27 @@ func _load_meta_data(mod_id):
 	mod.meta_data = meta_data
 
 
-# Make sure the meta file has all required fields
+# Ensure manifest.json has all required keys
 func _check_meta_file(meta_data):
-	var missing_fields = REQUIRED_META_TAGS
+	var missing_keys_root = REQUIRED_MANIFEST_KEYS_ROOT.duplicate()
+	var missing_keys_extra = REQUIRED_MANIFEST_KEYS_EXTRA.duplicate()
 
 	for key in meta_data:
-		if(REQUIRED_META_TAGS.has(key)):
+		if(REQUIRED_MANIFEST_KEYS_ROOT.has(key)):
 			# remove the entry from missing fields if it is there
-			missing_fields.erase(key)
+			missing_keys_root.erase(key)
+
+	if meta_data.has("extra") && meta_data.extra.has("godot"):
+		for godot_key in meta_data:
+			if(REQUIRED_MANIFEST_KEYS_EXTRA.has(godot_key)):
+				missing_keys_extra.erase(godot_key)
+
+	# Combine both arrays, and reformat the "extra" keys
+	var missing_fields = missing_keys_root
+	if missing_keys_extra.size() > 0:
+		for godot_key in missing_keys_extra:
+			var formatted_key = str("extra.godot.", godot_key)
+			missing_fields.push_back(formatted_key)
 
 	return missing_fields
 
