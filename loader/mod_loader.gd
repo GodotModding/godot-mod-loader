@@ -115,7 +115,7 @@ func _init():
 		return
 
 	# Log game install dir
-	mod_log(str("gameInstallDirectory: ", _get_local_folder_dir()), LOG_NAME)
+	mod_log(str("game_install_directory: ", _get_local_folder_dir()), LOG_NAME)
 
 	# check if we want to use a different mods path that is provided as a command line argument
 	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
