@@ -44,12 +44,13 @@ const MOD_LOG_PATH = "user://mods.log"
 const UNPACKED_DIR = "res://mods-unpacked/"
 
 # These 2 files are always required by mods.
-# ModMain.gd = The main init file for the mod
-# _meta.json = Meta data for the mod, including its dependancies
-const REQUIRED_MOD_FILES = ["ModMain.gd", "_meta.json"]
+# mod_main.gd = The main init file for the mod
+# manifest.json = Meta data for the mod, including its dependancies
+const REQUIRED_MOD_FILES = ["mod_main.gd", "manifest.json"]
 
-# Required keys in a mod's _meta.json file
-const REQUIRED_MANIFEST_KEYS_ROOT = [
+# Required keys in a mod's manifest.json file
+const REQUIRED_META_TAGS = [
+	"id",
 	"name",
 	"version_number",
 	"website_url",
@@ -109,7 +110,7 @@ func _init():
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
-	# (from their _meta.json file), and verify that the meta JSON has all
+	# (from their manifest.json file), and verify that the meta JSON has all
 	# required properties (REQUIRED_META_TAGS)
 	for mod_id in mod_data:
 		var mod = mod_data[mod_id]
@@ -136,7 +137,11 @@ func _init():
 	# Sort mod_load_order by the importance score of the mod
 	_get_load_order()
 
-	dev_log(str("mod_load_order -> ", JSON.print(mod_load_order, '   ')), LOG_NAME)
+	# Log mod order
+	var mod_i = 1
+	for mod in mod_load_order: # mod === mod_data
+		dev_log(str("mod_load_order -> ", mod_i, ") ", mod.dir), LOG_NAME)
+		mod_i += 1
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
@@ -318,8 +323,8 @@ func _init_mod_data(mod_folder_path):
 
 	for required_filename in REQUIRED_MOD_FILES:
 		# Eg:
-		# "modmain.gd": local_mod_path + "/ModMain.gd",
-		# "_meta.json": local_mod_path + "/_meta.json"
+		# "mod_main.gd": local_mod_path + "/mod_main.gd",
+		# "manifest.json": local_mod_path + "/manifest.json"
 		mod_data[mod_id].required_files_path[required_filename] = local_mod_path + "/" + required_filename
 
 
@@ -391,7 +396,7 @@ func _check_meta_file(meta_data):
 
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
-# meta_data (ie. its _meta.json file). If a mod depends on another mod that
+# meta_data (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded.
 func _check_dependencies(mod_id:String, deps:Array):
 	dev_log(str("Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps), LOG_NAME)
@@ -456,7 +461,7 @@ func _compare_Importance(a, b):
 # Instance every mod and add it as a node to the Mod Loader.
 # Runs mods in the order stored in mod_load_order.
 func _init_mod(mod):
-	var mod_main_path = mod.required_files_path["ModMain.gd"]
+	var mod_main_path = mod.required_files_path["mod_main.gd"]
 	dev_log(str("Loading script from -> ", mod_main_path), LOG_NAME)
 	var mod_main_script = ResourceLoader.load(mod_main_path)
 	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
