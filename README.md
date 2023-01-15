@@ -14,9 +14,9 @@ Mod ZIPs should have the structure shown below. The name of the ZIP is arbitrary
 yourmod.zip
 ├───.import
 └───mods-unpacked
-	└───Author-ModName
-		├───mod_main.gd
-		└───manifest.json
+    └───Author-ModName
+        ├───mod_main.gd
+        └───manifest.json
 ```
 
 #### Notes on .import
@@ -82,15 +82,15 @@ One approach to organising your extender scripts is to put them in a dedicated f
 yourmod.zip
 ├───.import
 └───mods-unpacked
-	└───Author-ModName
-		├───mod_main.gd
-		├───manifest.json
-		└───extensions
-			└───Any files that extend vanilla code can go here, eg:
-			├───main.gd
-			└───singletons
-				├───item_service.gd
-				└───debug_service.gd
+    └───Author-ModName
+        ├───mod_main.gd
+        ├───manifest.json
+        └───extensions
+            └───Any files that extend vanilla code can go here, eg:
+            ├───main.gd
+            └───singletons
+                ├───item_service.gd
+                └───debug_service.gd
 ```
 
 ### addTranslationFromResource
