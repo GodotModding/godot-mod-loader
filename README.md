@@ -14,9 +14,9 @@ Mod ZIPs should have the structure shown below. The name of the ZIP is arbitrary
 yourmod.zip
 ├───.import
 └───mods-unpacked
-    └───Author-ModName
-        ├───mod_main.gd
-        └───manifest.json
+	└───Author-ModName
+		├───mod_main.gd
+		└───manifest.json
 ```
 
 #### Notes on .import
@@ -38,7 +38,7 @@ Mods you create must have the following 2 files:
 ```json
 {
 	"name": "ModName",
-    "namespace": "AuthorName",
+	"namespace": "AuthorName",
 	"version_number": "1.0.0",
 	"description": "Mod description goes here",
 	"website_url": "https://github.com/example/repo",
@@ -52,9 +52,9 @@ Mods you create must have the following 2 files:
 				"Add IDs of other mods here, if your mod conflicts with them"
 			],
 			"authors": ["AuthorName"],
-            "compatible_modloader_version": "3.0.0",
+			"compatible_modloader_version": "3.0.0",
 			"compatible_game_version": ["0.6.1.6"],
-            "config_defaults": {}
+			"config_defaults": {}
 		}
 	}
 }
@@ -82,15 +82,15 @@ One approach to organising your extender scripts is to put them in a dedicated f
 yourmod.zip
 ├───.import
 └───mods-unpacked
-    └───Author-ModName
-        ├───mod_main.gd
-        ├───manifest.json
-        └───extensions
-            └───Any files that extend vanilla code can go here, eg:
-            ├───main.gd
-            └───singletons
-                ├───item_service.gd
-                └───debug_service.gd
+	└───Author-ModName
+		├───mod_main.gd
+		├───manifest.json
+		└───extensions
+			└───Any files that extend vanilla code can go here, eg:
+			├───main.gd
+			└───singletons
+				├───item_service.gd
+				└───debug_service.gd
 ```
 
 ### addTranslationFromResource
@@ -115,7 +115,7 @@ Save the scene as a PackedScene, overwriting Godot's cache if needed.
 
 ### get_mod_config
 
-    get_mod_config(mod_id:String = "", key:String = "", default_value = null)->Dictionary:
+	get_mod_config(mod_id:String = "", key:String = "", default_value = null)->Dictionary:
 
 Get data from a mod's config JSON file. Configs are added by users, to a folder named *configs* (`res://configs`). They are named by the mod ID (eg. `AuthorName-ModName.json`).
 
@@ -156,7 +156,7 @@ The `load_from` JSON file should be in the same directory, and include the file 
 
 ```json
 {
-    "load_from": "my-special-config.json"
+	"load_from": "my-special-config.json"
 }
 ```
 
