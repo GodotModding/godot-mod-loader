@@ -45,18 +45,26 @@ const MOD_LOG_PATH = "user://mods.log"
 const UNPACKED_DIR = "res://mods-unpacked/"
 
 # These 2 files are always required by mods.
-# ModMain.gd = The main init file for the mod
-# _meta.json = Meta data for the mod, including its dependancies
-const REQUIRED_MOD_FILES = ["ModMain.gd", "_meta.json"]
+# mod_main.gd = The main init file for the mod
+# manifest.json = Meta data for the mod, including its dependancies
+const REQUIRED_MOD_FILES = ["mod_main.gd", "manifest.json"]
 
-# Required keys in a mod's _meta.json file
-const REQUIRED_META_TAGS = [
-	"id",
+# Required keys in a mod's manifest.json file
+const REQUIRED_MANIFEST_KEYS_ROOT = [
 	"name",
-	"version",
-	"compatible_game_version",
-	"authors",
+	"version_number",
+	"website_url",
 	"description",
+	"dependencies",
+	"extra",
+]
+
+# Required keys in manifest's `json.extra.godot`
+const REQUIRED_MANIFEST_KEYS_EXTRA = [
+	"id",
+	"incompatibilities",
+	"authors",
+	"compatible_game_version",
 ]
 
 # Set to true to require using "--enable-mods" to enable them
@@ -75,6 +83,11 @@ var mod_data = {}
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order = []
 
+# Override for the path mods are loaded from. Only gets set if the CLI arg
+# --mods-path is used. This can be tested in the editor via:
+# Project Settings > Display> Editor > Main Run Args
+var os_mods_path_override = ""
+
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies = {}
@@ -91,6 +104,12 @@ func _init():
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
 
+	# check if we want to use a different mods path that is provided as a command line argument
+	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
+	if cmd_line_mod_path != "":
+		os_mods_path_override = cmd_line_mod_path
+		mod_log("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
+
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	_load_mod_zips()
@@ -102,7 +121,7 @@ func _init():
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
-	# (from their _meta.json file), and verify that the meta JSON has all
+	# (from their manifest.json file), and verify that the meta JSON has all
 	# required properties (REQUIRED_META_TAGS)
 	for mod_id in mod_data:
 		var mod = mod_data[mod_id]
@@ -129,11 +148,15 @@ func _init():
 	# Sort mod_load_order by the importance score of the mod
 	_get_load_order()
 
-	dev_log(str("mod_load_order -> ", JSON.print(mod_load_order, '   ')), LOG_NAME)
+	# Log mod order
+	var mod_i = 1
+	for mod in mod_load_order: # mod === mod_data
+		dev_log(str("mod_load_order -> ", mod_i, ") ", mod.dir), LOG_NAME)
+		mod_i += 1
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
-		mod_log(str("Initializing -> ", mod.meta_data.id), LOG_NAME)
+		mod_log(str("Initializing -> ", mod.meta_data.extra.godot.id), LOG_NAME)
 		_init_mod(mod)
 
 	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
@@ -310,8 +333,8 @@ func _init_mod_data(mod_folder_path):
 
 	for required_filename in REQUIRED_MOD_FILES:
 		# Eg:
-		# "modmain.gd": local_mod_path + "/ModMain.gd",
-		# "_meta.json": local_mod_path + "/_meta.json"
+		# "mod_main.gd": local_mod_path + "/mod_main.gd",
+		# "manifest.json": local_mod_path + "/manifest.json"
 		mod_data[mod_id].required_files_path[required_filename] = local_mod_path + "/" + required_filename
 
 
@@ -332,21 +355,22 @@ func _check_mod_files(mod_id):
 		mod_log(str("ERROR - ", mod_id, " cannot be loaded due to missing required files"), LOG_NAME)
 
 
-# Load meta data into mod_data, from a mod's _meta.json file
+# Load meta data into mod_data, from a mod's manifest.json file
 func _load_meta_data(mod_id):
-	mod_log(str("Loading meta_data for -> ", mod_id), LOG_NAME)
+	mod_log(str("Loading meta_data (manifest.json) for -> ", mod_id), LOG_NAME)
 	var mod = mod_data[mod_id]
 
 	# Load meta data file
-	var meta_path = mod.required_files_path["_meta.json"]
+	var meta_path = mod.required_files_path["manifest.json"]
 	var meta_data = _get_json_as_dict(meta_path)
 
-	dev_log(str(mod_id, " loaded meta data -> ", meta_data), LOG_NAME)
+	dev_log(str(mod_id, " loaded manifest data -> ", meta_data), LOG_NAME)
 
-	# Check if the meta data has all required fields
+	# Check if the manifest data has all required fields
 	var missing_fields = _check_meta_file(meta_data)
 	if(missing_fields.size() > 0):
-		mod_log(str("ERROR - ", mod_id, " ", missing_fields, " are required in _meta.json."), LOG_NAME)
+		for missing_field in missing_fields:
+			mod_log(str("ERROR - ", mod_id, " - Missing a required field in manifest.json: '", missing_field, "'"), LOG_NAME)
 		# Flag mod - so it's not loaded later
 		mod.is_loadable = false
 		# Continue with the next mod
@@ -356,20 +380,33 @@ func _load_meta_data(mod_id):
 	mod.meta_data = meta_data
 
 
-# Make sure the meta file has all required fields
+# Ensure manifest.json has all required keys
 func _check_meta_file(meta_data):
-	var missing_fields = REQUIRED_META_TAGS
+	var missing_keys_root = REQUIRED_MANIFEST_KEYS_ROOT.duplicate()
+	var missing_keys_extra = REQUIRED_MANIFEST_KEYS_EXTRA.duplicate()
 
 	for key in meta_data:
-		if(REQUIRED_META_TAGS.has(key)):
+		if(REQUIRED_MANIFEST_KEYS_ROOT.has(key)):
 			# remove the entry from missing fields if it is there
-			missing_fields.erase(key)
+			missing_keys_root.erase(key)
+
+	if meta_data.has("extra") && meta_data.extra.has("godot"):
+		for godot_key in meta_data.extra.godot:
+			if(REQUIRED_MANIFEST_KEYS_EXTRA.has(godot_key)):
+				missing_keys_extra.erase(godot_key)
+
+	# Combine both arrays, and reformat the "extra" keys
+	var missing_fields = missing_keys_root
+	if missing_keys_extra.size() > 0:
+		for godot_key in missing_keys_extra:
+			var formatted_key = str("extra.godot.", godot_key)
+			missing_fields.push_back(formatted_key)
 
 	return missing_fields
 
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
-# meta_data (ie. its _meta.json file). If a mod depends on another mod that
+# meta_data (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded.
 func _check_dependencies(mod_id:String, deps:Array):
 	dev_log(str("Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps), LOG_NAME)
@@ -434,12 +471,12 @@ func _compare_Importance(a, b):
 # Instance every mod and add it as a node to the Mod Loader.
 # Runs mods in the order stored in mod_load_order.
 func _init_mod(mod):
-	var mod_main_path = mod.required_files_path["ModMain.gd"]
+	var mod_main_path = mod.required_files_path["mod_main.gd"]
 	dev_log(str("Loading script from -> ", mod_main_path), LOG_NAME)
 	var mod_main_script = ResourceLoader.load(mod_main_path)
 	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
 	var mod_main_instance = mod_main_script.new(self)
-	mod_main_instance.name = mod.meta_data.id
+	mod_main_instance.name = mod.meta_data.extra.godot.id
 	dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
 	add_child(mod_main_instance, true)
 
@@ -458,6 +495,17 @@ func _check_cmd_line_arg(argument) -> bool:
 
 	return false
 
+# Get the command line argument value if present when launching the game
+func _get_cmd_line_arg(argument) -> String:
+	for arg in OS.get_cmdline_args():
+		if arg.find("=") > -1:
+			var key_value = arg.split("=")
+			# True if the checked argument matches a user-specified arg key
+			# (eg. checking `--mods-path` will match with `--mods-path="C://mods"`
+			if key_value[0] == argument:
+				return key_value[1]
+
+	return ""
 
 # Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
 func _get_mod_folder_dir():
@@ -471,6 +519,9 @@ func _get_mod_folder_dir():
 	# if OS.is_debug_build():
 	if OS.has_feature("editor"):
 		gameInstallDirectory = "res://"
+
+	if (os_mods_path_override != ""):
+		gameInstallDirectory = os_mods_path_override	
 
 	mod_log(str("gameInstallDirectory: ", gameInstallDirectory), LOG_NAME)
 

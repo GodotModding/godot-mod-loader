@@ -112,8 +112,8 @@ yourmod.zip
 ├───.import
 └───mods-unpacked
     └───Author-ModName
-        ├───ModMain.gd
-        └───_meta.json
+        ├───mod_main.gd
+        └───manifest.json
 ```
 
 > `Notes on .import`
@@ -131,25 +131,30 @@ yourmod.zip
 
 Mods you create must have the following 2 files:
 
-- `ModMain.gd` - The init file for your mod.
-  - `_meta.json` - Metadata for your mod (see below).
+- `mod_main.gd` - The init file for your mod.
+- `manifest.json` - Meta data for your mod (see below).
 
-**Example `_meta.json`**
+**Example `manifest.json`**
+
 ```json
 {
-	"id": "AuthorName-ModName",
-	"name": "Mod Name",
-	"version": "1.0.0",
-	"compatible_game_version": ["0.6.1.6"],
-	"authors": ["AuthorName"],
-	"description": "Mod description goes here",
-	"website_url": "",
-	"dependencies": [
+    "name": "ModName",
+    "version": "1.0.0",
+    "description": "Mod description goes here",
+    "website_url": "https://github.com/example/repo",
+    "dependencies": [
 		"Add IDs of other mods here, if your mod needs them to work"
-	],
-	"incompatibilities": [
-		"Add IDs of other mods here, if your mod conflicts with them"
-	]
+    ],
+    "extra": {
+        "godot": {
+            "id": "AuthorName-ModName",
+            "incompatibilities": [
+				"Add IDs of other mods here, if your mod conflicts with them"
+			],
+            "authors": ["AuthorName"],
+            "compatible_game_version": ["0.6.1.6"],
+        }
+    }
 }
 ```
 
@@ -187,8 +192,8 @@ yourmod.zip
 ├───.import
 └───mods-unpacked
     └───Author-ModName
-        ├───ModMain.gd
-        ├───_meta.json
+        ├───mod_main.gd
+        ├───manifest.json
         └───extensions
             └───Any files that extend vanilla code can go here, eg:
             ├───main.gd
@@ -278,5 +283,3 @@ Right-click the game on steam > press `manage` > press `browse local files`
 🔥 ModLoader is based on the work of these brilliant people 🔥
 
 - [Delta-V-Modding](https://gitlab.com/Delta-V-Modding/Mods)
-
-
