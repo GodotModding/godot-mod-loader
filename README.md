@@ -37,19 +37,20 @@ Mods you create must have the following 2 files:
 
 ```json
 {
-    "name": "Invasion",
-    "version": "0.6.0",
-    "description": "Adds content from Space Gladiators",
-    "website_url": "https://github.com/BrotatoMods/Brotato-Invasion-Mod",
+    "name": "ModName",
+    "version": "1.0.0",
+    "description": "Mod description goes here",
+    "website_url": "https://github.com/example/repo",
     "dependencies": [
-        "Dami-ContentLoader",
-        "Darkly77-BFX"
+		"Add IDs of other mods here, if your mod needs them to work"
     ],
     "extra": {
         "godot": {
-            "id": "Darkly77-Invasion",
-            "incompatibilities": [],
-            "authors": ["Darkly77"],
+            "id": "AuthorName-ModName",
+            "incompatibilities": [
+				"Add IDs of other mods here, if your mod conflicts with them"
+			],
+            "authors": ["AuthorName"],
             "compatible_game_version": ["0.6.1.6"],
         }
     }
