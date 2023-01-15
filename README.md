@@ -72,7 +72,7 @@ Use these when creating your mods. As above, see the [docs for Delta-V Modding](
 
 Add a script that extends a vanilla script. `childScriptPath` is the path to your mod's extender script path, eg `MOD/extensions/singletons/utils.gd`.
 
-Inside that extender script, it should include `extends {target}`, where {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
+Inside that extender script, it should include `extends "{target}"`, where `{target}` is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 
 Your extender scripts don't have to follow the same directory path as the vanilla file, but it's good practice to do so.
 
