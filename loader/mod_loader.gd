@@ -82,8 +82,10 @@ var mod_data = {}
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order = []
 
-# Path provided if cli arguments are added
-var mods_path = ""
+# Override for the path mods are loaded from. Only gets set if the CLI arg
+# --mods-path is used. This can be tested in the editor via:
+# Project Settings > Display> Editor > Main Run Args
+var os_mods_path_override = ""
 
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
@@ -100,12 +102,13 @@ func _init():
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
-	
+
 	# check if we want to use a different mods path that is provided as a command line argument
 	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
 	if cmd_line_mod_path != "":
-		mods_path = cmd_line_mod_path
-	
+		os_mods_path_override = cmd_line_mod_path
+		mod_log("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
+
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	_load_mod_zips()
@@ -270,14 +273,14 @@ func _load_mod_zips():
 
 func _setup_mods():
 	# Path to the unpacked mods folder
-	var unpacked_mods_path = UNPACKED_DIR
+	var unpacked_os_mods_path_override = UNPACKED_DIR
 
 	var dir = Directory.new()
-	if dir.open(unpacked_mods_path) != OK:
-		mod_log("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
+	if dir.open(unpacked_os_mods_path_override) != OK:
+		mod_log("Can't open unpacked mods folder %s." % unpacked_os_mods_path_override, LOG_NAME)
 		return
 	if dir.list_dir_begin() != OK:
-		mod_log("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
+		mod_log("Can't read unpacked mods folder %s." % unpacked_os_mods_path_override, LOG_NAME)
 		return
 
 	# Get all unpacked mod dirs
@@ -495,9 +498,11 @@ func _check_cmd_line_arg(argument) -> bool:
 # Get the command line argument value if present when launching the game
 func _get_cmd_line_arg(argument) -> String:
 	for arg in OS.get_cmdline_args():
-		if arg == argument:
-			if arg.find("=") > -1:
-				var key_value = arg.split("=")
+		if arg.find("=") > -1:
+			var key_value = arg.split("=")
+			# True if the checked argument matches a user-specified arg key
+			# (eg. checking `--mods-path` will match with `--mods-path="C://mods"`
+			if key_value[0] == argument:
 				return key_value[1]
 
 	return ""
@@ -508,15 +513,15 @@ func _get_mod_folder_dir():
 
 	if OS.get_name() == "OSX":
 		gameInstallDirectory = gameInstallDirectory.get_base_dir().get_base_dir().get_base_dir()
-	
-	if (mods_path != ""):
-		gameInstallDirectory = mods_path
 
 	# Fix for running the game through the Godot editor (as the EXE path would be
 	# the editor's own EXE, which won't have any mod ZIPs)
 	# if OS.is_debug_build():
 	if OS.has_feature("editor"):
 		gameInstallDirectory = "res://"
+
+	if (os_mods_path_override != ""):
+		gameInstallDirectory = os_mods_path_override	
 
 	mod_log(str("gameInstallDirectory: ", gameInstallDirectory), LOG_NAME)
 
