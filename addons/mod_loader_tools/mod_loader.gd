@@ -28,7 +28,7 @@ extends Node
 # options (which should be `false` when distributing compiled PCKs)
 
 # Enables logging messages made with dev_log. Usually these are enabled with the
-# command line arg `--mod-dev`, but you can also enable them this way if you're
+# command line arg `--log-dev`, but you can also enable them this way if you're
 # debugging in the editor
 const DEBUG_ENABLE_DEV_LOG = false
 
@@ -52,6 +52,7 @@ const REQUIRED_MOD_FILES = ["mod_main.gd", "manifest.json"]
 # Required keys in a mod's manifest.json file
 const REQUIRED_MANIFEST_KEYS_ROOT = [
 	"name",
+	"namespace",
 	"version_number",
 	"website_url",
 	"description",
@@ -64,6 +65,7 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"id",
 	"incompatibilities",
 	"authors",
+	"compatible_mod_loader_version",
 	"compatible_game_version",
 ]
 
@@ -83,16 +85,18 @@ var mod_data = {}
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order = []
 
-# Override for the path mods are loaded from. Only gets set if the CLI arg
-# --mods-path is used. This can be tested in the editor via:
-# Project Settings > Display> Editor > Main Run Args
+# Override for the path mods are loaded from. Only set if the CLI arg is present.
+# Can be tested in the editor via: Project Settings > Display> Editor > Main Run Args
+# Default: "res://mods"
+# Set via: --mods-path
+# Example: --mods-path="C://path/mods"
 var os_mods_path_override = ""
 
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies = {}
 
-# Things to keep to ensure they are not garbage collected (used by `saveScene`)
+# Things to keep to ensure they are not garbage collected (used by `save_scene`)
 var _saved_objects = []
 
 
@@ -103,6 +107,9 @@ func _init():
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
+
+	# Log game install dir
+	mod_log(str("game_install_directory: ", _get_local_folder_dir()), LOG_NAME)
 
 	# check if we want to use a different mods path that is provided as a command line argument
 	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
@@ -167,9 +174,9 @@ func init_mods():
 
 
 # Log developer info. Has to be enabled, either with the command line arg
-# `--mod-dev--mod-dev`, or by temporarily enabling DEBUG_ENABLE_DEV_LOG
-func dev_log(text:String, mod_name:String = "", pretty:bool = false):
-	if DEBUG_ENABLE_DEV_LOG || (_check_cmd_line_arg("--mod-dev")):
+# `--log-dev`, or by temporarily enabling DEBUG_ENABLE_DEV_LOG
+func dev_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false):
+	if DEBUG_ENABLE_DEV_LOG || (_check_cmd_line_arg("--log-dev")):
 		mod_log(text, mod_name, pretty)
 
 
@@ -186,7 +193,7 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 	var mins := (date_time.minute as String).pad_zeros(2)
 	var secs := (date_time.second as String).pad_zeros(2)
 
-	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', hour,':',mins,':',secs)
+	var date_time_string := "%s.%s.%s - %s:%s:%s" % [date_time.day, date_time.month, date_time.year, hour, mins, secs]
 
 	print(str(date_time_string,'   ', prefix, text))
 
@@ -194,24 +201,26 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 
 	if(!log_file.file_exists(MOD_LOG_PATH)):
 		log_file.open(MOD_LOG_PATH, File.WRITE)
-		log_file.store_string("%s	Created mod.log!" % date_time_string)
+		log_file.store_string('%s    Created mod.log!' % date_time_string)
 		log_file.close()
 
 	var _error = log_file.open(MOD_LOG_PATH, File.READ_WRITE)
-	if(_error):
+	if _error:
 		printerr(_error)
 		return
 	log_file.seek_end()
-	if(pretty):
+	if pretty:
 		log_file.store_string("\n" + str(date_time_string,'   ', prefix, JSON.print(text, " ")))
 	else:
 		log_file.store_string("\n" + str(date_time_string,'   ', prefix, text))
 	log_file.close()
 
 
+# Loop over "res://mods" and add any mod zips to the unpacked virtual directory
+# (UNPACKED_DIR)
 func _load_mod_zips():
 	# Path to the games mod folder
-	var game_mod_folder_path = _get_mods_dir()
+	var game_mod_folder_path = _get_local_folder_dir("mods")
 
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
@@ -247,12 +256,15 @@ func _load_mod_zips():
 		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, false)
 
 		# Notifies developer of an issue with Godot, where using `load_resource_pack`
-		# in the editor WIPES the entire res:// directory the first time you use it:
+		# in the editor WIPES the entire virtual res:// directory the first time you
+		# use it. This means that unpacked mods are no longer accessible, because they
+		# no longer exist in the file system. So this warning basically says
+		# "don't use ZIPs with unpacked mods!"
 		# https://github.com/godotengine/godot/issues/19815
 		# https://github.com/godotengine/godot/issues/16798
 		if OS.has_feature("editor") && !has_shown_editor_warning:
 			mod_log(str(
-				"WARNING: Loading files with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
+				"WARNING: Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
 			has_shown_editor_warning = true
@@ -271,6 +283,8 @@ func _load_mod_zips():
 	dir.list_dir_end()
 
 
+# Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
+# which adds their data to mod_data.
 func _setup_mods():
 	# Path to the unpacked mods folder
 	var unpacked_mods_path = UNPACKED_DIR
@@ -484,7 +498,6 @@ func _init_mod(mod):
 	add_child(mod_main_instance, true)
 
 
-
 # Utils (Mod Loader)
 # =============================================================================
 
@@ -510,8 +523,9 @@ func _get_cmd_line_arg(argument) -> String:
 
 	return ""
 
-# Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
-func _get_mods_dir() -> String:
+# Get the path to a local folder. Primarily used to get the  (packed) mods
+# folder, ie "res://mods" or the OS's equivalent, as well as the configs path
+func _get_local_folder_dir(subfolder:String = ""):
 	var game_install_directory = OS.get_executable_path().get_base_dir()
 
 	if OS.has_feature("OSX"):
@@ -523,18 +537,19 @@ func _get_mods_dir() -> String:
 	if OS.has_feature("editor"):
 		game_install_directory = "res://"
 
-	if (os_mods_path_override != ""):
-		game_install_directory = os_mods_path_override
-
-	mod_log(str("game_install_directory: ", game_install_directory), LOG_NAME)
-
-	return game_install_directory.plus_file("mods")
+	return game_install_directory.plus_file(subfolder)
 
 
-# Parses JSON from a given file path and returns a dictionary
-func _get_json_as_dict(path):
+# Parses JSON from a given file path and returns a dictionary.
+# Returns an empty dictionary if no file exists (check with size() < 1)
+func _get_json_as_dict(path:String)->Dictionary:
 	# mod_log(str("getting JSON as dict from path -> ", path), LOG_NAME)
 	var file = File.new()
+
+	if !file.file_exists(path):
+		file.close()
+		return {}
+
 	file.open(path, File.READ)
 	var content = file.get_as_text()
 
@@ -651,7 +666,7 @@ func install_script_extension(child_script_path:String):
 func add_translation_from_resource(resource_path: String):
 	var translation_object = load(resource_path)
 	TranslationServer.add_translation(translation_object)
-	mod_log("Added Translation from Resource", LOG_NAME)
+	mod_log(str("Added Translation from Resource -> ", resource_path), LOG_NAME)
 
 
 func append_node_in_scene(modified_scene, node_name:String = "", node_parent = null, instance_path:String = "", is_visible:bool = true):
@@ -673,10 +688,10 @@ func append_node_in_scene(modified_scene, node_name:String = "", node_parent = n
 		new_node.set_owner(modified_scene)
 
 
-func save_scene(modified_scene, scenePath:String):
+func save_scene(modified_scene, scene_path:String):
 	var packed_scene = PackedScene.new()
 	packed_scene.pack(modified_scene)
 	dev_log(str("packing scene -> ", packed_scene), LOG_NAME)
-	packed_scene.take_over_path(scenePath)
-	dev_log(str("saveScene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
+	packed_scene.take_over_path(scene_path)
+	dev_log(str("save_scene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
 	_saved_objects.append(packed_scene)
