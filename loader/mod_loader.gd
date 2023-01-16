@@ -103,6 +103,9 @@ func _init():
 	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
 		return
 
+	# Log game install dir
+	mod_log(str("game_install_directory: ", _get_local_folder_dir()), LOG_NAME)
+
 	# check if we want to use a different mods path that is provided as a command line argument
 	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
 	if cmd_line_mod_path != "":
@@ -211,7 +214,7 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 
 func _load_mod_zips():
 	# Path to the games mod folder
-	var game_mod_folder_path = _get_mod_folder_dir()
+	var game_mod_folder_path = _get_local_folder_dir("mods")
 
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
@@ -510,8 +513,9 @@ func _get_cmd_line_arg(argument) -> String:
 
 	return ""
 
-# Get the path to the (packed) mods folder, ie "res://mods" or the OS's equivalent
-func _get_mod_folder_dir():
+# Get the path to a local folder. Primarily used to get the  (packed) mods
+# folder, ie "res://mods" or the OS's equivalent, as well as the configs path
+func _get_local_folder_dir(subfolder:String = ""):
 	var game_install_directory = OS.get_executable_path().get_base_dir()
 
 	if OS.get_name() == "OSX":
@@ -523,12 +527,7 @@ func _get_mod_folder_dir():
 	if OS.has_feature("editor"):
 		game_install_directory = "res://"
 
-	if (os_mods_path_override != ""):
-		game_install_directory = os_mods_path_override
-
-	mod_log(str("game_install_directory: ", game_install_directory), LOG_NAME)
-
-	return game_install_directory.plus_file("mods")
+	return game_install_directory.plus_file(subfolder)
 
 
 # Parses JSON from a given file path and returns a dictionary.
