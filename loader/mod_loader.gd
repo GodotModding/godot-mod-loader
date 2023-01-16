@@ -64,7 +64,7 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"id",
 	"incompatibilities",
 	"authors",
-	"compatible_modloader_version",
+	"compatible_mod_loader_version",
 	"compatible_game_version",
 	"config_defaults",
 ]
@@ -239,10 +239,6 @@ func _load_mod_zips():
 	# Path to the games mod folder
 	var game_mod_folder_path = _get_local_folder_dir("mods")
 
-	# CLI override
-	if (os_mods_path_override != ""):
-		game_mod_folder_path = os_mods_path_override
-
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
 		mod_log("Can't open mod folder %s." % game_mod_folder_path, LOG_NAME)
@@ -285,7 +281,7 @@ func _load_mod_zips():
 		# https://github.com/godotengine/godot/issues/16798
 		if OS.has_feature("editor") && !has_shown_editor_warning:
 			mod_log(str(
-				"WARNING: Loading ZIP files with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
+				"WARNING: Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
 			has_shown_editor_warning = true
