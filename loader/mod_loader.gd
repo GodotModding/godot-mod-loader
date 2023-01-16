@@ -750,12 +750,12 @@ func append_node_in_scene(modified_scene, node_name:String = "", node_parent = n
 		new_node.set_owner(modified_scene)
 
 
-func save_scene(modified_scene, scenePath:String):
+func save_scene(modified_scene, scene_path:String):
 	var packed_scene = PackedScene.new()
 	packed_scene.pack(modified_scene)
 	dev_log(str("packing scene -> ", packed_scene), LOG_NAME)
-	packed_scene.take_over_path(scenePath)
-	dev_log(str("saveScene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
+	packed_scene.take_over_path(scene_path)
+	dev_log(str("save_scene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
 	_saved_objects.append(packed_scene)
 
 
