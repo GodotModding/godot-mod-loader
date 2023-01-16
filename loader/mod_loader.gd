@@ -63,6 +63,7 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"id",
 	"incompatibilities",
 	"authors",
+	"compatible_modloader_version",
 	"compatible_game_version",
 ]
 
