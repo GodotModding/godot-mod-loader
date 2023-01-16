@@ -259,7 +259,7 @@ func _load_mod_zips():
 		# https://github.com/godotengine/godot/issues/16798
 		if OS.has_feature("editor") && !has_shown_editor_warning:
 			mod_log(str(
-				"WARNING: Loading any any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
+				"WARNING: Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
 			has_shown_editor_warning = true
