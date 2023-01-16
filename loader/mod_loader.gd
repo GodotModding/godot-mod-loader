@@ -61,7 +61,6 @@ const REQUIRED_MANIFEST_KEYS_ROOT = [
 
 # Required keys in manifest's `json.extra.godot`
 const REQUIRED_MANIFEST_KEYS_EXTRA = [
-	"id",
 	"incompatibilities",
 	"authors",
 	"compatible_mod_loader_version",
@@ -179,7 +178,8 @@ func _init():
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
-		mod_log(str("Initializing -> ", mod.meta_data.extra.godot.id), LOG_NAME)
+		# mod_log(str("Initializing -> ", mod.meta_data.extra.godot.id), LOG_NAME)
+		mod_log(str("Initializing -> ", _get_mod_full_id(mod)), LOG_NAME)
 		_init_mod(mod)
 
 	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
@@ -455,6 +455,13 @@ func _load_meta_data(mod_id):
 	# Add the meta data to the mod
 	mod.meta_data = meta_data
 
+	# Check that the mod ID is correct. This will fail if the mod's folder in
+	# "res://mods-unpacked" does not match its full ID, which is `namespace.name`
+	var mod_check_id = _get_mod_full_id(mod)
+	if mod_id != mod_check_id:
+		mod_log(str("ERROR - ", mod_id, " - Mod ID does not match the data in manifest.json. Expected '", mod_id ,"', but '{namespace}-{name}' was '", mod_check_id ,"'"), LOG_NAME)
+		mod.is_loadable = false
+
 
 # Ensure manifest.json has all required keys
 func _check_meta_file(meta_data):
@@ -554,7 +561,8 @@ func _init_mod(mod):
 	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
 
 	var mod_main_instance = mod_main_script.new(self)
-	mod_main_instance.name = mod.meta_data.extra.godot.id
+	# mod_main_instance.name = mod.meta_data.extra.godot.id
+	mod_main_instance.name = _get_mod_full_id(mod)
 
 	dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
 	add_child(mod_main_instance, true)
@@ -564,6 +572,12 @@ func _init_mod(mod):
 # =============================================================================
 
 # Util functions used in the mod loading process
+
+func _get_mod_full_id(mod:Dictionary)->String:
+	var name = mod.meta_data.name
+	var namespace = mod.meta_data.namespace
+	return str(namespace, "-", name)
+
 
 # Check if the provided command line argument was present when launching the game
 func _check_cmd_line_arg(argument) -> bool:
