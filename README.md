@@ -42,7 +42,7 @@ Mods you create must have the following 2 files:
 {
 	"name": "ModName",
 	"namespace": "AuthorName",
-	"version": "1.0.0",
+	"version_number": "1.0.0",
 	"description": "Mod description goes here",
 	"website_url": "https://github.com/example/repo",
 	"dependencies": [
@@ -57,6 +57,7 @@ Mods you create must have the following 2 files:
 			"authors": ["AuthorName"],
 			"compatible_mod_loader_version": "3.0.0",
 			"compatible_game_version": ["0.6.1.6"],
+			"config_defaults": {}
 		}
 	}
 }

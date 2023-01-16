@@ -66,6 +66,7 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"authors",
 	"compatible_mod_loader_version",
 	"compatible_game_version",
+	"config_defaults",
 ]
 
 # Set to true to require using "--enable-mods" to enable them
@@ -90,6 +91,12 @@ var mod_load_order = []
 # Set via: --mods-path
 # Example: --mods-path="C://path/mods"
 var os_mods_path_override = ""
+
+# Override for the path config JSONs are loaded from
+# Default: "res://configs"
+# Set via: --configs-path
+# Example: --configs-path="C://path/configs"
+var os_configs_path_override = ""
 
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
@@ -116,6 +123,12 @@ func _init():
 		os_mods_path_override = cmd_line_mod_path
 		mod_log("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
 
+	# Check for the CLI arg that overrides the configs path
+	var cmd_line_configs_path = _get_cmd_line_arg("--configs-path")
+	if cmd_line_configs_path != "":
+		os_configs_path_override = cmd_line_configs_path
+		mod_log("The path configs are loaded from has been changed via the CLI arg `--configs-path`, to: " + cmd_line_configs_path, LOG_NAME)
+
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	_load_mod_zips()
@@ -124,6 +137,10 @@ func _init():
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
 	_setup_mods()
+
+	# Set up mod configs. If a mod's JSON file is found, its data gets added
+	# to mod_data.{mod_id}.config
+	_load_mod_configs()
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
@@ -317,6 +334,53 @@ func _setup_mods():
 	dir.list_dir_end()
 
 
+# Load mod config JSONs from res://configs
+func _load_mod_configs():
+	var found_configs_count = 0
+	var configs_path = _get_local_folder_dir("configs")
+
+	# CLI override, set with `--configs-path="C://path/configs"`
+	# (similar to os_mods_path_override)
+	if (os_configs_path_override != ""):
+		configs_path = os_configs_path_override
+
+	for mod_id in mod_data:
+		var json_path = configs_path.plus_file(mod_id + ".json")
+		var mod_config = _get_json_as_dict(json_path)
+
+		dev_log(str("Config JSON: Looking for config at path: ", json_path), LOG_NAME)
+
+		if mod_config.size() > 0:
+			found_configs_count += 1
+
+			mod_log(str("Config JSON: Found a config file: '", json_path, "'"), LOG_NAME)
+			dev_log(str("Config JSON: File data: ", JSON.print(mod_config)), LOG_NAME)
+
+			# Check `load_from` option. This lets you specify the name of a
+			# different JSON file to load your config from. Must be in the same
+			# dir. Means you can have multiple config files for a single mod
+			# and switch between them quickly. Should include ".json" extension.
+			# Ignored if the filename matches the mod ID, or is empty
+			if mod_config.has("load_from"):
+				var new_path = mod_config.load_from
+				if new_path != "" && new_path != str(mod_id, ".json"):
+					mod_log(str("Config JSON: Following load_from path: ", new_path), LOG_NAME)
+					var new_config = _get_json_as_dict(configs_path + new_path)
+					if new_config.size() > 0 != null:
+						mod_config = new_config
+						mod_log(str("Config JSON: Loaded from custom json: ", new_path), LOG_NAME)
+						dev_log(str("Config JSON: File data: ", JSON.print(mod_config)), LOG_NAME)
+					else:
+						mod_log(str("Config JSON: ERROR - Could not load data via `load_from` for ", mod_id, ", at path: ", new_path), LOG_NAME)
+
+			mod_data[mod_id].config = mod_config
+
+	if found_configs_count > 0:
+		mod_log(str("Config JSON: Loaded ", str(found_configs_count), " config(s)"), LOG_NAME)
+	else:
+		mod_log(str("Config JSON: No mod configs were found"), LOG_NAME)
+
+
 # Add a mod's data to mod_data.
 # The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
@@ -333,6 +397,7 @@ func _init_mod_data(mod_folder_path):
 	mod_data[mod_id].is_loadable = true
 	mod_data[mod_id].importance = 0
 	mod_data[mod_id].dir = local_mod_path
+	mod_data[mod_id].config = {} # updated in _load_mod_configs
 
 	if DEBUG_ENABLE_STORING_FILEPATHS:
 		# Get the mod file paths
@@ -622,7 +687,6 @@ func _get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = fals
 	return data
 
 
-
 # Helpers
 # =============================================================================
 
@@ -692,3 +756,66 @@ func save_scene(modified_scene, scene_path:String):
 	packed_scene.take_over_path(scene_path)
 	dev_log(str("save_scene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
 	_saved_objects.append(packed_scene)
+
+
+# Get the config data for a specific mod. Always returns a dictionary with two
+# keys: `error` and `data`.
+# Data (`data`) is either the full config, or data from a specific key if one was specified.
+# Error (`error`) is 0 if there were no errors, or > 0 if the setting could not be retrieved:
+# 0 = No errors
+# 1 = Invalid mod ID
+# 2 = No custom JSON. File probably does not exist. Defaults will be used if available
+# 3 = No custom JSON, and key was invalid when trying to get the default from your manifest defaults (`extra.godot.config_defaults`)
+# 4 = Invalid key, although config data does exists
+func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
+	var error_num = 0
+	var error_msg = ""
+	var data = {}
+	var defaults = null
+
+	# Invalid mod ID
+	if !mod_data.has(mod_id):
+		error_num = 1
+		error_msg = str("ERROR - Mod ID was invalid: ", mod_id)
+
+	# Mod ID is valid
+	if error_num == 0:
+		var config_data = mod_data[mod_id].config
+		defaults = mod_data[mod_id].meta_data.extra.godot.config_defaults
+
+		# No custom JSON file
+		if config_data.size() == 0:
+			error_num = 2
+			error_msg = str("WARNING - No config file for ", mod_id, ".json. ")
+			if key == "":
+				data = defaults
+				error_msg += "Using defaults (extra.godot.config_defaults)"
+			else:
+				if defaults.has(key):
+					data = defaults[key]
+					error_msg += str("Using defaults for key '", key, "' (extra.godot.config_defaults.", key, ")")
+				else:
+					error_num = 3
+					# error_msg = str("WARNING - No config file for Invalid key '", key, "' for mod ID: ", mod_id)
+					error_msg += str("Requested key '", key, "' is not present in the defaults (extra.godot.config_defaults.", key, ")")
+
+		# JSON file exists
+		if error_num == 0:
+			if key == "":
+				data = config_data
+			else:
+				if config_data.has(key):
+					data = config_data[key]
+				else:
+					error_num = 4
+					error_msg = str("WARNING - Invalid key '", key, "' for mod ID: ", mod_id)
+
+	# Log if any errors occured
+	if error_num != 0:
+		dev_log(str("Config: ", error_msg), mod_id)
+
+	return {
+		"error": error_num,
+		"error_msg": error_msg,
+		"data": data,
+	}
