@@ -54,6 +54,7 @@ Mods you create must have the following 2 files:
 				"Add IDs of other mods here, if your mod conflicts with them"
 			],
             "authors": ["AuthorName"],
+			"compatible_mod_loader_version": "3.0.0",
             "compatible_game_version": ["0.6.1.6"],
         }
     }
