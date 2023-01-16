@@ -20,7 +20,6 @@ const settings := {
 const file_paths := {
 	"MOD_SELECTION_SCENE" : "res://addons/mod_loader_tools/interface/mod_selector.tscn",
 	"MOD_LOADER_SCRIPT" : "res://addons/mod_loader_tools/mod_loader.gd",
-	"INTERFACE_DIR": "res://addons/mod_loader_tools/interface"
 }
 
 # Required keys in a mod's manifest.json file

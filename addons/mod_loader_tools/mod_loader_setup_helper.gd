@@ -5,32 +5,32 @@ extends SceneTree
 # just use the normal one with autocomplete and then lowercase it
 var modloaderhelper: Node = load("res://addons/mod_loader_tools/mod_loader_helper.gd").new()
 
-var has_interface: bool = do_main_interface_files_exist()
+var has_interface := false
 var allow_interrupt := false
 var interrupt_attempt := 0
 var skip_mod_selection: bool = modloaderhelper.should_skip_mod_selection()
 
 
 func _init() -> void:
+	has_interface = do_main_interface_files_exist()
 	try_setup_modloader()
 
-	if modloaderhelper.are_mods_enabled():
-		allow_interrupt = true
+	var mod_loader := get_mod_loader_or_null()
+	if not mod_loader == null:
+		if has_interface:
+			allow_interrupt = true
+		else:
+			mod_loader.init_mods()
+			change_scene_to_game_main()
 	elif has_interface:
 		change_scene_to_mod_selection()
 	else:
-		get_mod_loader().init_mods()
 		change_scene_to_game_main()
 
 
 func _idle(delta: float) -> bool:
 	if not allow_interrupt:
 		return false # keep main loop running
-
-	if not has_interface:
-		allow_interrupt = false
-		get_mod_loader().init_mods()
-		change_scene_to_game_main()
 
 	# first Input.is_key_pressed() is always false for some reason
 	# so we check at least three times
@@ -52,16 +52,13 @@ func _idle(delta: float) -> bool:
 	return false
 
 
-func get_mod_loader() -> Node:
-	return root.get_node("/root/ModLoader")
+func get_mod_loader_or_null() -> Node:
+	return root.get_node_or_null("/root/ModLoader")
 
 
 func do_main_interface_files_exist() -> bool:
 	var dir := Directory.new()
-	return (
-		dir.dir_exists(modloaderhelper.file_paths.INTERFACE_DIR) and
-		dir.file_exists(modloaderhelper.file_paths.MOD_SELECTION_SCENE)
-	)
+	return dir.file_exists(modloaderhelper.file_paths.MOD_SELECTION_SCENE)
 
 
 func change_scene_to_mod_selection() -> void:
