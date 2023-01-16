@@ -17,15 +17,11 @@ const settings := {
 	"MOD_ENABLED_STATE_DICT": "application/run/mod_enabled_state_dict",
 }
 
-const mod_selection_scene := "res://addons/mod_loader_tools/interface/mod_selector.tscn"
-const mod_loader_script := "res://addons/mod_loader_tools/mod_loader.gd"
-
-const new_global_classes := [
-	{ "base": "Resource", "class": "ModDetails", "language": "GDScript", "path": "res://addons/mod_loader_tools/mod_details.gd" },
-	{ "base": "Node", "class": "ModLoaderHelper", "language": "GDScript", "path": "res://addons/mod_loader_tools/mod_loader_helper.gd" },
-	{ "base": "VBoxContainer", "class": "ModList", "language": "GDScript", "path": "res://addons/mod_loader_tools/interface/mod_list.gd" },
-	{ "base": "PanelContainer", "class": "ModCard", "language": "GDScript", "path": "res://addons/mod_loader_tools/interface/mod_card.gd" },
-]
+const file_paths := {
+	"MOD_SELECTION_SCENE" : "res://addons/mod_loader_tools/interface/mod_selector.tscn",
+	"MOD_LOADER_SCRIPT" : "res://addons/mod_loader_tools/mod_loader.gd",
+	"INTERFACE_DIR": "res://addons/mod_loader_tools/interface"
+}
 
 # Required keys in a mod's manifest.json file
 const REQUIRED_MANIFEST_KEYS_ROOT = [
@@ -45,6 +41,12 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"compatible_game_version",
 ]
 
+const new_global_classes := [
+	{ "base": "Resource", "class": "ModDetails", "language": "GDScript", "path": "res://addons/mod_loader_tools/mod_details.gd" },
+	{ "base": "Node", "class": "ModLoaderHelper", "language": "GDScript", "path": "res://addons/mod_loader_tools/mod_loader_helper.gd" },
+	{ "base": "VBoxContainer", "class": "ModList", "language": "GDScript", "path": "res://addons/mod_loader_tools/interface/mod_list.gd" },
+	{ "base": "PanelContainer", "class": "ModCard", "language": "GDScript", "path": "res://addons/mod_loader_tools/interface/mod_card.gd" },
+]
 
 static func get_override_path() -> String:
 	var base_path := ""

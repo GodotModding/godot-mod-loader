@@ -5,6 +5,7 @@ extends SceneTree
 # just use the normal one with autocomplete and then lowercase it
 var modloaderhelper: Node = load("res://addons/mod_loader_tools/mod_loader_helper.gd").new()
 
+var has_interface: bool = do_main_interface_files_exist()
 var allow_interrupt := false
 var interrupt_attempt := 0
 var skip_mod_selection: bool = modloaderhelper.should_skip_mod_selection()
@@ -15,17 +16,25 @@ func _init() -> void:
 
 	if modloaderhelper.are_mods_enabled():
 		allow_interrupt = true
-	else:
+	elif has_interface:
 		change_scene_to_mod_selection()
+	else:
+		get_mod_loader().init_mods()
+		change_scene_to_game_main()
 
 
 func _idle(delta: float) -> bool:
 	if not allow_interrupt:
 		return false # keep main loop running
 
+	if not has_interface:
+		allow_interrupt = false
+		get_mod_loader().init_mods()
+		change_scene_to_game_main()
+
 	# first Input.is_key_pressed() is always false for some reason
 	# so we check at least three times
-	if interrupt_attempt > 3:
+	if interrupt_attempt > 3: # not interrupted
 		allow_interrupt = false
 		if skip_mod_selection:
 			change_scene_to_game_main()
@@ -33,7 +42,7 @@ func _idle(delta: float) -> bool:
 			change_scene_to_mod_selection()
 
 	interrupt_attempt += 1
-	if Input.is_key_pressed(KEY_ALT):
+	if Input.is_key_pressed(KEY_ALT): # interrupted
 		allow_interrupt = false
 		if skip_mod_selection:
 			change_scene_to_mod_selection()
@@ -41,6 +50,18 @@ func _idle(delta: float) -> bool:
 			change_scene_to_game_main()
 
 	return false
+
+
+func get_mod_loader() -> Node:
+	return root.get_node("/root/ModLoader")
+
+
+func do_main_interface_files_exist() -> bool:
+	var dir := Directory.new()
+	return (
+		dir.dir_exists(modloaderhelper.file_paths.INTERFACE_DIR) and
+		dir.file_exists(modloaderhelper.file_paths.MOD_SELECTION_SCENE)
+	)
 
 
 func change_scene_to_mod_selection() -> void:
@@ -115,7 +136,7 @@ func setup_modloader() -> void:
 
 
 	# save the mod selection scene for global access
-	ProjectSettings.set_setting(modloaderhelper.settings.MOD_SELECTION_SCENE, modloaderhelper.mod_selection_scene)
+	ProjectSettings.set_setting(modloaderhelper.settings.MOD_SELECTION_SCENE, modloaderhelper.file_paths.MOD_SELECTION_SCENE)
 
 	# removing and adding autoloads back does not work apparently
 	# even autoloads that are removed in the override are loaded
@@ -125,7 +146,7 @@ func setup_modloader() -> void:
 		ProjectSettings.set_setting(autoload, null)
 
 	# add ModLoader autoload (the * marks the path as autoload)
-	ProjectSettings.set_setting(modloaderhelper.settings.MOD_LOADER_AUTOLOAD, "*" + modloaderhelper.mod_loader_script)
+	ProjectSettings.set_setting(modloaderhelper.settings.MOD_LOADER_AUTOLOAD, "*" + modloaderhelper.file_paths.MOD_LOADER_SCRIPT)
 	ProjectSettings.set_setting(modloaderhelper.settings.AUTOLOAD_AVAILABLE, true)
 
 	# add all previous autoloads back again
