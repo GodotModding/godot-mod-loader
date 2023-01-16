@@ -40,24 +40,24 @@ Mods you create must have the following 2 files:
 
 ```json
 {
-    "name": "ModName",
-    "version": "1.0.0",
-    "description": "Mod description goes here",
-    "website_url": "https://github.com/example/repo",
-    "dependencies": [
+	"name": "ModName",
+	"version": "1.0.0",
+	"description": "Mod description goes here",
+	"website_url": "https://github.com/example/repo",
+	"dependencies": [
 		"Add IDs of other mods here, if your mod needs them to work"
-    ],
-    "extra": {
-        "godot": {
-            "id": "AuthorName-ModName",
-            "incompatibilities": [
+	],
+	"extra": {
+		"godot": {
+			"id": "AuthorName-ModName",
+			"incompatibilities": [
 				"Add IDs of other mods here, if your mod conflicts with them"
 			],
-            "authors": ["AuthorName"],
+			"authors": ["AuthorName"],
 			"compatible_mod_loader_version": "3.0.0",
-            "compatible_game_version": ["0.6.1.6"],
-        }
-    }
+			"compatible_game_version": ["0.6.1.6"],
+		}
+	}
 }
 ```
 
