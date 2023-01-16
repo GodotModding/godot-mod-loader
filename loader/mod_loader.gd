@@ -512,9 +512,9 @@ func _init_mod(mod):
 # Util functions used in the mod loading process
 
 func _get_mod_full_id(mod:Dictionary)->String:
-	var id = mod.meta_data.extra.godot.id
+	var name = mod.meta_data.name
 	var namespace = mod.meta_data.namespace
-	return str(namespace, "-", id)
+	return str(namespace, "-", name)
 
 
 # Check if the provided command line argument was present when launching the game
