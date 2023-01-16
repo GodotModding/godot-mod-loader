@@ -666,7 +666,7 @@ func install_script_extension(child_script_path:String):
 func add_translation_from_resource(resource_path: String):
 	var translation_object = load(resource_path)
 	TranslationServer.add_translation(translation_object)
-	mod_log("Added Translation from Resource", LOG_NAME)
+	mod_log(str("Added Translation from Resource -> ", resource_path), LOG_NAME)
 
 
 func append_node_in_scene(modified_scene, node_name:String = "", node_parent = null, instance_path:String = "", is_visible:bool = true):
