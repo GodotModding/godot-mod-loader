@@ -339,7 +339,7 @@ func _setup_mods():
 
 # Load mod config JSONs from res://configs
 func _load_mod_configs():
-	var found_1_config = false
+	var found_configs_count = 0
 	var configs_path = _get_local_folder_dir("configs")
 
 	# CLI override, set with `--configs-path="C://path/configs"`
@@ -354,7 +354,7 @@ func _load_mod_configs():
 		dev_log(str("Config JSON: Looking for config at path: ", json_path), LOG_NAME)
 
 		if mod_config.size() > 0:
-			found_1_config = true
+			found_configs_count += 1
 
 			mod_log(str("Config JSON: Found a config file: '", json_path, "'"), LOG_NAME)
 			dev_log(str("Config JSON: File data: ", JSON.print(mod_config)), LOG_NAME)
@@ -378,7 +378,9 @@ func _load_mod_configs():
 
 			mod_data[mod_id].config = mod_config
 
-	if !found_1_config:
+	if found_configs_count > 0:
+		mod_log(str("Config JSON: Loaded ", str(found_configs_count), " config(s)"), LOG_NAME)
+	else:
 		mod_log(str("Config JSON: No mod configs were found"), LOG_NAME)
 
 
