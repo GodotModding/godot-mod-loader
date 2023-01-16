@@ -84,9 +84,11 @@ var mod_data = {}
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order = []
 
-# Override for the path mods are loaded from. Only gets set if the CLI arg
-# --mods-path is used. This can be tested in the editor via:
-# Project Settings > Display> Editor > Main Run Args
+# Override for the path mods are loaded from. Only set if the CLI arg is present.
+# Can be tested in the editor via: Project Settings > Display> Editor > Main Run Args
+# Default: "res://mods"
+# Set via: --mods-path
+# Example: --mods-path="C://path/mods"
 var os_mods_path_override = ""
 
 # Any mods that are missing their dependancies are added to this
@@ -214,6 +216,8 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 	log_file.close()
 
 
+# Loop over "res://mods" and add any mod zips to the unpacked virtual directory
+# (UNPACKED_DIR)
 func _load_mod_zips():
 	# Path to the games mod folder
 	var game_mod_folder_path = _get_local_folder_dir("mods")
@@ -252,12 +256,15 @@ func _load_mod_zips():
 		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, false)
 
 		# Notifies developer of an issue with Godot, where using `load_resource_pack`
-		# in the editor WIPES the entire res:// directory the first time you use it:
+		# in the editor WIPES the entire virtual res:// directory the first time you
+		# use it. This means that unpacked mods are no longer accessible, because they
+		# no longer exist in the file system. So this warning basically says
+		# "don't use ZIPs with unpacked mods!"
 		# https://github.com/godotengine/godot/issues/19815
 		# https://github.com/godotengine/godot/issues/16798
 		if OS.has_feature("editor") && !has_shown_editor_warning:
 			mod_log(str(
-				"WARNING: Loading files with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
+				"WARNING: Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
 			has_shown_editor_warning = true
@@ -276,6 +283,8 @@ func _load_mod_zips():
 	dir.list_dir_end()
 
 
+# Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
+# which adds their data to mod_data.
 func _setup_mods():
 	# Path to the unpacked mods folder
 	var unpacked_mods_path = UNPACKED_DIR
@@ -487,7 +496,6 @@ func _init_mod(mod):
 
 	dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
 	add_child(mod_main_instance, true)
-
 
 
 # Utils (Mod Loader)
