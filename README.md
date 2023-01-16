@@ -2,9 +2,12 @@
 
 A general purpose mod-loader for GDScript-based Godot Games.
 
-For detailed info, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md), upon which ModLoader is based. The docs there cover mod setup and helper functions in much greater detail.
+See the [Wiki](https://github.com/GodotModding/godot-mod-loader/wiki) for additional details, including [Helper Methods](https://github.com/GodotModding/godot-mod-loader/wiki/Helper-Methods) and [CLI Args](https://github.com/GodotModding/godot-mod-loader/wiki/CLI-Args).
+
 
 ## Mod Setup
+
+For more info, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md), upon which ModLoader is based. The docs there cover mod setup in much greater detail.
 
 ### Structure
 
@@ -56,69 +59,6 @@ Mods you create must have the following 2 files:
     }
 }
 ```
-
-#### Notes on meta.json
-
-Some properties in the JSON are not checked in the code, and are only used for reference by yourself and your mod's users. These are:
-
-- `version`
-- `compatible_game_version`
-- `authors`
-- `description`
-- `website_url`
-
-
-## Helper Methods
-
-Use these when creating your mods. As above, see the [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md) for more details.
-
-### install_script_extension
-
-	func install_script_extension(child_script_path:String)
-
-Add a script that extends a vanilla script. `child_script_path` is the path to your mod's extender script path, eg `MOD/extensions/singletons/utils.gd`.
-
-Inside that extender script, it should include `extends {target}`, where {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
-
-Your extender scripts don't have to follow the same directory path as the vanilla file, but it's good practice to do so.
-
-One approach to organising your extender scripts is to put them in a dedicated folder named "extensions", eg:
-
-```
-yourmod.zip
-├───.import
-└───mods-unpacked
-    └───Author-ModName
-        ├───mod_main.gd
-        ├───manifest.json
-        └───extensions
-            └───Any files that extend vanilla code can go here, eg:
-            ├───main.gd
-            └───singletons
-                ├───item_service.gd
-                └───debug_service.gd
-```
-
-### add_translation_from_resource
-
-	add_translation_from_resource(resource_path: String)
-
-Add a translation file, eg "mytranslation.en.translation". The translation file should have been created in Godot already: When you import a CSV, such a file will be created for you.
-
-Note that this function is exclusive to ModLoader, and departs from Delta-V's two functions [addTranslationsFromCSV](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md#addtranslationsfromcsv) and [addTranslationsFromJSON](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md#addtranslationsfromjson), which aren't available in ModLoader.
-
-### append_node_in_scene
-
-	append_node_in_scene(modified_scene, node_name:String = "", node_parent = null, instance_path:String = "", is_visible:bool = true)
-
-Create and add a node to a instanced scene.
-
-### save_scene
-
-	save_scene(modified_scene, scenePath:String)
-
-Save the scene as a PackedScene, overwriting Godot's cache if needed.
-
 
 ## Credits
 
