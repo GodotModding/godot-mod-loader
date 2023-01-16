@@ -526,7 +526,7 @@ func _get_local_folder_dir(subfolder:String = ""):
 	var game_install_directory = OS.get_executable_path().get_base_dir()
 
 	if OS.get_name() == "OSX":
-		game_install_directory = game_install_directory.get_base_dir().get_base_dir().get_base_dir()
+		game_install_directory = game_install_directory.get_base_dir().get_base_dir()
 
 	# Fix for running the game through the Godot editor (as the EXE path would be
 	# the editor's own EXE, which won't have any mod ZIPs)
