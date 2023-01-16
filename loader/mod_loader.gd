@@ -393,6 +393,13 @@ func _load_meta_data(mod_id):
 	# Add the meta data to the mod
 	mod.meta_data = meta_data
 
+	# Check that the mod ID is correct. This will fail if the mod's folder in
+	# "res://mods-unpacked" does not match its full ID, which is `namespace.name`
+	var mod_check_id = _get_mod_full_id(mod)
+	if mod_id != mod_check_id:
+		mod_log(str("ERROR - ", mod_id, " - Mod ID does not match the data in manifest.json. Expected '", mod_id ,"', but '{namespace}-{name}' was '", mod_check_id ,"'"), LOG_NAME)
+		mod.is_loadable = false
+
 
 # Ensure manifest.json has all required keys
 func _check_meta_file(meta_data):
