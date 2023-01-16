@@ -61,7 +61,6 @@ const REQUIRED_MANIFEST_KEYS_ROOT = [
 
 # Required keys in manifest's `json.extra.godot`
 const REQUIRED_MANIFEST_KEYS_EXTRA = [
-	"id",
 	"incompatibilities",
 	"authors",
 	"compatible_mod_loader_version",
@@ -162,7 +161,8 @@ func _init():
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
-		mod_log(str("Initializing -> ", mod.meta_data.extra.godot.id), LOG_NAME)
+		# mod_log(str("Initializing -> ", mod.meta_data.extra.godot.id), LOG_NAME)
+		mod_log(str("Initializing -> ", _get_mod_full_id(mod)), LOG_NAME)
 		_init_mod(mod)
 
 	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
@@ -492,7 +492,8 @@ func _init_mod(mod):
 	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
 
 	var mod_main_instance = mod_main_script.new(self)
-	mod_main_instance.name = mod.meta_data.extra.godot.id
+	# mod_main_instance.name = mod.meta_data.extra.godot.id
+	mod_main_instance.name = _get_mod_full_id(mod)
 
 	dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
 	add_child(mod_main_instance, true)
@@ -502,6 +503,12 @@ func _init_mod(mod):
 # =============================================================================
 
 # Util functions used in the mod loading process
+
+func _get_mod_full_id(mod:Dictionary)->String:
+	var id = mod.meta_data.extra.godot.id
+	var namespace = mod.meta_data.namespace
+	return str(namespace, "-", id)
+
 
 # Check if the provided command line argument was present when launching the game
 func _check_cmd_line_arg(argument) -> bool:
