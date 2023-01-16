@@ -531,10 +531,16 @@ func _get_mod_folder_dir():
 	return game_install_directory.plus_file("mods")
 
 
-# Parses JSON from a given file path and returns a dictionary
-func _get_json_as_dict(path):
+# Parses JSON from a given file path and returns a dictionary.
+# Returns an empty dictionary if no file exists (check with size() < 1)
+func _get_json_as_dict(path:String)->Dictionary:
 	# mod_log(str("getting JSON as dict from path -> ", path), LOG_NAME)
 	var file = File.new()
+
+	if !file.file_exists(path):
+		file.close()
+		return {}
+
 	file.open(path, File.READ)
 	var content = file.get_as_text()
 
