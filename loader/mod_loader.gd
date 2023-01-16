@@ -51,6 +51,7 @@ const REQUIRED_MOD_FILES = ["mod_main.gd", "manifest.json"]
 # Required keys in a mod's manifest.json file
 const REQUIRED_MANIFEST_KEYS_ROOT = [
 	"name",
+	"namespace",
 	"version_number",
 	"website_url",
 	"description",
