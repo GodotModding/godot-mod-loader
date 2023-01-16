@@ -203,14 +203,11 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 	var date_time = Time.get_datetime_dict_from_system()
 
 	# Add leading zeroes if needed
-	var hour = date_time.hour
-	var mins = date_time.minute
-	var secs = date_time.second
-	hour = hour if str(hour).length() > 1 else str("0", hour)
-	mins = mins if str(mins).length() > 1 else str("0", mins)
-	secs = secs if str(secs).length() > 1 else str("0", secs)
+	var hour := (date_time.hour as String).pad_zeros(2)
+	var mins := (date_time.minute as String).pad_zeros(2)
+	var secs := (date_time.second as String).pad_zeros(2)
 
-	var date_time_string = str(date_time.day,'.',date_time.month,'.',date_time.year,' - ', hour,':',mins,':',secs)
+	var date_time_string := "%s.%s.%s - %s:%s:%s" % [date_time.day, date_time.month, date_time.year, hour, mins, secs]
 
 	print(str(date_time_string,'   ', prefix, text))
 
@@ -218,15 +215,15 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 
 	if(!log_file.file_exists(MOD_LOG_PATH)):
 		log_file.open(MOD_LOG_PATH, File.WRITE)
-		log_file.store_string("\n" + str(date_time_string,'   ', 'Created mod.log!'))
+		log_file.store_string('%s    Created mod.log!' % date_time_string)
 		log_file.close()
 
 	var _error = log_file.open(MOD_LOG_PATH, File.READ_WRITE)
-	if(_error):
+	if _error:
 		print(_error)
 		return
 	log_file.seek_end()
-	if(pretty):
+	if pretty:
 		log_file.store_string("\n" + str(date_time_string,'   ', prefix, JSON.print(text, " ")))
 	else:
 		log_file.store_string("\n" + str(date_time_string,'   ', prefix, text))
@@ -594,7 +591,7 @@ func _get_local_folder_dir(subfolder:String = ""):
 	var game_install_directory = OS.get_executable_path().get_base_dir()
 
 	if OS.get_name() == "OSX":
-		game_install_directory = game_install_directory.get_base_dir().get_base_dir().get_base_dir()
+		game_install_directory = game_install_directory.get_base_dir().get_base_dir()
 
 	# Fix for running the game through the Godot editor (as the EXE path would be
 	# the editor's own EXE, which won't have any mod ZIPs)
