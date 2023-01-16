@@ -165,7 +165,7 @@ func _init():
 
 # Log developer info. Has to be enabled, either with the command line arg
 # `--mod-dev--mod-dev`, or by temporarily enabling DEBUG_ENABLE_DEV_LOG
-func dev_log(text:String, mod_name:String = "", pretty:bool = false):
+func dev_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false):
 	if DEBUG_ENABLE_DEV_LOG || (_check_cmd_line_arg("--mod-dev")):
 		mod_log(text, mod_name, pretty)
 
