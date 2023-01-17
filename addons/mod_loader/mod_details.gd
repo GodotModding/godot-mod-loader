@@ -1,19 +1,31 @@
 extends Resource
+## Stores and validates contents of the manifest set by the user
 class_name ModDetails
 
+
+## Mod name.
+## Validated by [method is_name_or_namespace_valid]
 var name := ""
+## Mod namespace, most commonly the main author.
+## Validated by [method is_name_or_namespace_valid]
 var namespace := ""
-var version_number := "v0.0.0"
+## Semantic version. Not a number, but required to be named like this by Thunderstore
+## Validated by [method is_semver_valid]
+var version_number := "0.0.0"
 var description := ""
 var website_url := ""
+## Used to determine mod load order
 var dependencies := []				# Array[String]
 
 var authors := [] 					# Array[String]
+## only used for information
 var compatible_game_version := [] 	# Array[String]
+## only used for information
+var incompatibilities := [] 			# Array[String]
 var tags := [] 						# Array[String]
 var description_rich := ""
-var incompatibilities := [] 			# Array[String]
 var image: StreamTexture
+
 
 ## Required keys in a mod's manifest.json file
 const REQUIRED_MANIFEST_KEYS_ROOT = [
@@ -36,6 +48,8 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 ]
 
 
+## Takes the manifest as [Dictionary] and validates everything.
+## Will return null if something is invalid.
 func _init(manifest: Dictionary) -> void:
 	if (not dict_has_fields(manifest, REQUIRED_MANIFEST_KEYS_ROOT) or
 		not dict_has_fields(manifest.extra, ["godot"]) or
@@ -49,7 +63,6 @@ func _init(manifest: Dictionary) -> void:
 		not is_name_or_namespace_valid(namespace) or
 		not is_semver_valid(version_number)):
 			return
-
 
 	description = manifest.description
 	website_url = manifest.website_url
@@ -66,14 +79,21 @@ func _init(manifest: Dictionary) -> void:
 #	image StreamTexture
 
 
+## Mod ID used in the mod loader
+## Format: {namespace}-{name}
 func get_mod_id() -> String:
 	return "%s-%s" % [namespace, name]
 
 
+## Package ID used by Thunderstore
+## Format: {namespace}-{name}-{version_number}
 func get_package_id() -> String:
 	return "%s-%s-%s" % [namespace, name, version_number]
 
 
+## A valid namespace may only use letters (any case), numbers and underscores
+## and has to be longer than 3 characters
+## /^[a-zA-Z0-9_]{3,}$/
 static func is_name_or_namespace_valid(name: String) -> bool:
 	var re := RegEx.new()
 	re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
@@ -90,29 +110,37 @@ static func is_name_or_namespace_valid(name: String) -> bool:
 	return true
 
 
-func _get_string_from_dict(dict: Dictionary, key: String) -> String:
-	if not dict.has(key):
-		return ""
-	return dict[key]
-
-
-func _get_array_from_dict(dict: Dictionary, key: String) -> Array:
-	if not dict.has(key):
-		return []
-	return dict[key]
-
-
+## A valid semantic version should follow this format: {mayor}.{minor}.{patch}
+## reference https://semver.org/ for details
+## /^[0-9]+\\.[0-9]+\\.[0-9]+$/
 static func is_semver_valid(version_number: String) -> bool:
 	var re := RegEx.new()
 	re.compile("^[0-9]+\\.[0-9]+\\.[0-9]+$")
 
 	if re.search(version_number) == null:
-		printerr('Invalid semantic version: "%s". You may only use numbers and periods in this format {mayor}.{minor}.{patch}' % version_number)
+		printerr('Invalid semantic version: "%s". ' +
+		'You may only use numbers and periods in this format {mayor}.{minor}.{patch}' % version_number)
 		return false
 
 	return true
 
 
+## Returns an empty String if the key does not exist
+static func _get_string_from_dict(dict: Dictionary, key: String) -> String:
+	if not dict.has(key):
+		return ""
+	return dict[key]
+
+
+## Returns an empty Array if the key does not exist
+static func _get_array_from_dict(dict: Dictionary, key: String) -> Array:
+	if not dict.has(key):
+		return []
+	return dict[key]
+
+
+## Works like [method Dictionary.has_all],
+## but allows for more specific errors if a field is missing
 static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
 	var missing_fields := required_fields
 

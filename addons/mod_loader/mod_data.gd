@@ -1,24 +1,33 @@
 extends Resource
 class_name ModData
 
-# These 2 files are always required by mods.
-# mod_main.gd = The main init file for the mod
-# manifest.json = Meta data for the mod, including its dependancies
+## Stores and validates all Data required to load a mod successfully
+## If some of the data is invalid, [member is_loadable] will be false
+
 const LOG_NAME := "ModLoader:ModData"
 
+## These 2 files are always required by mods.
+## [i]mod_main.gd[/i] = The main init file for the mod
+## [i]manifest.json[/i] = Meta data for the mod, including its dependencies
 enum required_mod_files {
 	MOD_MAIN,
 	MANIFEST,
 }
 
-var dir_name := "" # technically a duplicate with ModDetails
+## Directory of the mod. Has to be identical to [method ModDetails.get_mod_id]
+var dir_name := ""
+## Path to the Mod's Directory
 var dir_path := ""
+## False if any data is invalid
 var is_loadable := true
+## Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
+## Contents of the manifest
 var details: ModDetails
-var config := {} # updated in _load_mod_configs
+## Updated in _load_mod_configs
+var config := {}
 
-# debug
+## only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths := []
 
 
@@ -26,7 +35,7 @@ func _init(_dir_path: String) -> void:
 	dir_path = _dir_path
 
 
-# Load meta data from a mod's manifest.json file
+## Load meta data from a mod's manifest.json file
 func load_details(modLoader = ModLoader) -> void:
 	if not has_required_files():
 		return
@@ -48,9 +57,8 @@ func load_details(modLoader = ModLoader) -> void:
 	details = mod_details
 
 
+## Validates if [member dir_name] matches [method ModDetails.get_mod_id]
 func is_mod_dir_name_same_as_id() -> bool:
-	# Check that the mod ID is correct. This will fail if the mod's folder in
-	# "res://mods-unpacked" does not match its full ID, which is `namespace.name`
 	var manifest_id = details.get_mod_id()
 	if dir_name != manifest_id:
 		ModLoader.mod_log('ERROR - Mod directory name "%s" does not match the data in manifest.json. Expected "%s"' % [ dir_name, manifest_id ], LOG_NAME)
@@ -59,6 +67,7 @@ func is_mod_dir_name_same_as_id() -> bool:
 	return true
 
 
+## Confirms that all files from [member required_mod_files] exist
 func has_required_files() -> bool:
 	var file_check = File.new()
 
@@ -71,10 +80,12 @@ func has_required_files() -> bool:
 	return is_loadable
 
 
+## Validates if details are set
 func has_details() -> bool:
 	return not details == null
 
 
+## Converts enum indices [member required_mod_files] into their respective file paths
 func get_required_mod_file_path(required_file: int) -> String:
 	match required_file:
 		required_mod_files.MOD_MAIN:
