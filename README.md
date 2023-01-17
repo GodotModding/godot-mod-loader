@@ -2,112 +2,13 @@
 
 A general purpose mod-loader for GDScript-based Godot Games.
 
-See the [Wiki](https://github.com/GodotModding/godot-mod-loader/wiki) for additional details, including [Helper Methods](https://github.com/GodotModding/godot-mod-loader/wiki/Helper-Methods) and [CLI Args](https://github.com/GodotModding/godot-mod-loader/wiki/CLI-Args).
+## Getting Started
 
-*See also: The [docs for Delta-V Modding](https://gitlab.com/Delta-V-Modding/Mods/-/blob/main/MODDING.md), upon which ModLoader is based. The docs there cover mod setup in much greater detail.*
+1. Create your [Mod Structure](Mod-Structure)
+1. Create your [Mod Files](Mod-Files)
+1. Use the [API Methods](API-Methods)
 
-## Mod Structure
-
-### Editor
-
-When developing mods in Godot, create a folder named *mods-unpacked* and add your mods there. Mod folder names **must** follow the convention of `{AuthorName}-{ModName}`:
-
-If you have any dependencies, you can also add them to *mods-unpacked*. Note that due to a bug in Godot, you cannot use zipped mods, as they prevent the editor from reading the contents of the *mods-unpacked* directory.
-
-```
-res://
-└───mods-unpacked
-    └───Author-ModName
-        ├───mod_main.gd
-        └───manifest.json
-```
-
-### ZIPs
-
-Mod ZIPs should have the structure shown below. The name of the ZIP is arbitrary.
-
-```
-yourmod.zip
-├───.import
-└───mods-unpacked
-    └───Author-ModName
-        ├───mod_main.gd
-        └───manifest.json
-```
-
-#### Custom Assets
-
-If your mod includes custom assets such as PNGs and CSVs, these files should be included in your mod ZIP. Like in the editor, these go in a top-level directory called *.import*.
-
-Your mod ZIP's .import folder **should only include your custom assets**. It should not include any vanilla files.
-
-<details>
-<summary><em>Notes on .import</em></summary>
-<em>Custom assets can be easily identified by sorting by date. To clean up unused files, it's helpful to delete everything in .import that's not vanilla, then run the game again, which will re-create only the files that are actually used.</em>
-</details>
-
-## Mod Files
-
-Mods you create must have the following 2 files:
-
-- **mod_main.gd** - The init file for your mod
-- **manifest.json** - Meta data for your mod
-
-#### Example mod_main.gd
-
-```gdscript
-extends Node
-
-const MOD_DIR = "AuthorName-ModName/"
-const LOG_NAME = "AuthorName-ModName"
-
-var dir = ""
-var ext_dir = ""
-var trans_dir = ""
-
-func _init(modLoader = ModLoader):
-	modLoader.mod_log("Init", LOG_NAME)
-	dir = modLoader.UNPACKED_DIR + MOD_DIR
-	ext_dir = dir + "extensions/"
-	trans_dir = dir + "translations/"
-
-	# Add extensions
-	modLoader.install_script_extension(ext_dir + "main.gd")
-
-	# Add translations
-	modLoader.add_translation_from_resource(trans_dir + "translations/bfx.en.translation")
-
-
-func _ready():
-	ModLoader.mod_log("Done", LOG_NAME)
-```
-
-#### Example manifest.json
-
-```json
-{
-	"name": "ModName",
-	"namespace": "AuthorName",
-	"version_number": "1.0.0",
-	"description": "Mod description goes here",
-	"website_url": "https://github.com/example/repo",
-	"dependencies": [
-		"Add IDs of other mods here, if your mod needs them to work"
-	],
-	"extra": {
-		"godot": {
-			"id": "AuthorName-ModName",
-			"incompatibilities": [
-				"Add IDs of other mods here, if your mod conflicts with them"
-			],
-			"authors": ["AuthorName"],
-			"compatible_mod_loader_version": "3.0.0",
-			"compatible_game_version": ["0.6.1.6"],
-			"config_defaults": {}
-		}
-	}
-}
-```
+See the [Wiki](https://github.com/GodotModding/godot-mod-loader/wiki) for more details, including [Helper Methods](https://github.com/GodotModding/godot-mod-loader/wiki/Helper-Methods) and [CLI Args](https://github.com/GodotModding/godot-mod-loader/wiki/CLI-Args).
 
 ## Credits
 
