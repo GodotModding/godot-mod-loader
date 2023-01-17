@@ -123,17 +123,17 @@ func _init():
 	# required properties (REQUIRED_META_TAGS)
 	for dir_name in mod_data:
 		var mod: ModData = mod_data[dir_name]
-		mod.load_details(self)
+		mod.load_manifest()
 
 	mod_log("DONE: Loaded all meta data", LOG_NAME)
 
-	# Run dependency checks after loading mod_details. If a mod depends on another
+	# Run dependency checks after loading mod_manifest. If a mod depends on another
 	# mod that hasn't been loaded, that dependent mod won't be loaded.
 	for dir_name in mod_data:
 		var mod: ModData = mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
-		_check_dependencies(dir_name, mod.details.dependencies)
+		_check_dependencies(dir_name, mod.manifest.dependencies)
 
 	# Sort mod_load_order by the importance score of the mod
 	_get_load_order()
@@ -147,8 +147,8 @@ func _init():
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
-		# mod_log(str("Initializing -> ", mod.mod_details.extra.godot.id), LOG_NAME)
-		mod_log("Initializing -> %s" % mod.details.get_mod_id(), LOG_NAME)
+		# mod_log(str("Initializing -> ", mod.mod_manifest.extra.godot.id), LOG_NAME)
+		mod_log("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
 
 	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
@@ -315,7 +315,7 @@ func _load_mod_configs():
 
 	for dir_name in mod_data:
 		var json_path = configs_path.plus_file(dir_name + ".json")
-		var mod_config = _get_json_as_dict(json_path)
+		var mod_config = ModData._get_json_as_dict(json_path)
 
 		dev_log(str("Config JSON: Looking for config at path: ", json_path), LOG_NAME)
 
@@ -334,7 +334,7 @@ func _load_mod_configs():
 				var new_path = mod_config.load_from
 				if new_path != "" && new_path != str(dir_name, ".json"):
 					mod_log(str("Config JSON: Following load_from path: ", new_path), LOG_NAME)
-					var new_config = _get_json_as_dict(configs_path + new_path)
+					var new_config = ModData._get_json_as_dict(configs_path + new_path)
 					if new_config.size() > 0 != null:
 						mod_config = new_config
 						mod_log(str("Config JSON: Loaded from custom json: ", new_path), LOG_NAME)
@@ -373,7 +373,7 @@ func _init_mod_data(mod_folder_path):
 
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
-# mod_details (ie. its manifest.json file). If a mod depends on another mod that
+# mod_manifest (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded.
 func _check_dependencies(mod_id:String, deps:Array):
 	dev_log(str("Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps), LOG_NAME)
@@ -386,7 +386,7 @@ func _check_dependencies(mod_id:String, deps:Array):
 			continue
 
 		var dependency = mod_data[dependency_id]
-		var dependency_mod_details = mod_data[dependency_id].mod_details
+		var dependency_mod_manifest = mod_data[dependency_id].mod_manifest
 
 		# Init the importance score if it's missing
 
@@ -395,8 +395,8 @@ func _check_dependencies(mod_id:String, deps:Array):
 		dev_log(str("Dependency -> ", dependency_id, " importance -> ", dependency.importance), LOG_NAME)
 
 		# check if dependency has dependencies
-		if(dependency_mod_details.dependencies.size() > 0):
-			_check_dependencies(dependency_id, dependency_mod_details.dependencies)
+		if(dependency_mod_manifest.dependencies.size() > 0):
+			_check_dependencies(dependency_id, dependency_mod_manifest.dependencies)
 
 
 # Handle missing dependencies: Sets `is_loadable` to false and logs an error
@@ -445,8 +445,8 @@ func _init_mod(mod: ModData):
 	dev_log("Loaded script -> %s" % mod_main_script, LOG_NAME)
 
 	var mod_main_instance = mod_main_script.new(self)
-	# mod_main_instance.name = mod.mod_details.extra.godot.id
-	mod_main_instance.name = mod.details.get_mod_id()
+	# mod_main_instance.name = mod.mod_manifest.extra.godot.id
+	mod_main_instance.name = mod.manifest.get_mod_id()
 
 	dev_log("Adding child -> %s" % mod_main_instance, LOG_NAME)
 	add_child(mod_main_instance, true)
@@ -492,22 +492,6 @@ func _get_local_folder_dir(subfolder:String = ""):
 		game_install_directory = "res://"
 
 	return game_install_directory.plus_file(subfolder)
-
-
-# Parses JSON from a given file path and returns a dictionary.
-# Returns an empty dictionary if no file exists (check with size() < 1)
-func _get_json_as_dict(path:String)->Dictionary:
-	# mod_log(str("getting JSON as dict from path -> ", path), LOG_NAME)
-	var file = File.new()
-
-	if !file.file_exists(path):
-		file.close()
-		return {}
-
-	file.open(path, File.READ)
-	var content = file.get_as_text()
-
-	return JSON.parse(content).result
 
 
 func _get_file_name(path, is_lower_case = true, is_no_extension = false):
@@ -673,7 +657,7 @@ func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
 	# Mod ID is valid
 	if error_num == 0:
 		var config_data = mod_data[mod_id].config
-		defaults = mod_data[mod_id].mod_details.extra.godot.config_defaults
+		defaults = mod_data[mod_id].mod_manifest.extra.godot.config_defaults
 
 		# No custom JSON file
 		if config_data.size() == 0:

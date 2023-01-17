@@ -1,6 +1,6 @@
 extends Resource
 ## Stores and validates contents of the manifest set by the user
-class_name ModDetails
+class_name ModManifest
 
 
 ## Mod name.
