@@ -50,7 +50,6 @@ Mods you create must have the following 2 files:
 	],
 	"extra": {
 		"godot": {
-			"id": "AuthorName-ModName",
 			"incompatibilities": [
 				"Add IDs of other mods here, if your mod conflicts with them"
 			],
