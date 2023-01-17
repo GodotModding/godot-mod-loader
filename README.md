@@ -10,7 +10,9 @@ See the [Wiki](https://github.com/GodotModding/godot-mod-loader/wiki) for additi
 
 ### Editor
 
-When developing mods in Godot, create a folder named `mods-unpacked` and add your mods there. Mod folder names **must** follow the convention of `{AuthorName}-{ModName}`:
+When developing mods in Godot, create a folder named *mods-unpacked* and add your mods there. Mod folder names **must** follow the convention of `{AuthorName}-{ModName}`:
+
+If you have any dependencies, you can also add them to *mods-unpacked*. Note that due to a bug in Godot, you cannot use zipped mods, as they prevent the editor from reading the contents of the *mods-unpacked* directory.
 
 ```
 res://
@@ -33,12 +35,16 @@ yourmod.zip
         └───manifest.json
 ```
 
-#### Notes on .import
+#### Custom Assets
 
-Adding the .import directory is only needed when your mod adds content such as PNGs and sound files. In these cases, your mod's .import folder **should only include your custom assets**, and **should not** include any vanilla files.
+If your mod includes custom assets such as PNGs and CSVs, these files should be included in your mod ZIP. Like in the editor, these go in a top-level directory called *.import*.
 
-You can copy your custom assets from your project's .import directory. They can be easily identified by sorting by date. To clean up unused files, it's helpful to delete everything in .import that's not vanilla, then run the game again, which will re-create only the files that are actually used.
+Your mod ZIP's .import folder **should only include your custom assets**. It should not include any vanilla files.
 
+<details>
+<summary><em>Notes on .import</em></summary>
+<em>Custom assets can be easily identified by sorting by date. To clean up unused files, it's helpful to delete everything in .import that's not vanilla, then run the game again, which will re-create only the files that are actually used.</em>
+</details>
 
 ## Mod Files
 
@@ -49,7 +55,7 @@ Mods you create must have the following 2 files:
 
 #### Example mod_main.gd
 
-```gd
+```gdscript
 extends Node
 
 const MOD_DIR = "AuthorName-ModName/"
