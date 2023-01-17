@@ -25,6 +25,7 @@ const file_paths := {
 # Required keys in a mod's manifest.json file
 const REQUIRED_MANIFEST_KEYS_ROOT = [
 	"name",
+	"namespace",
 	"version_number",
 	"website_url",
 	"description",
@@ -34,10 +35,11 @@ const REQUIRED_MANIFEST_KEYS_ROOT = [
 
 # Required keys in manifest's `json.extra.godot`
 const REQUIRED_MANIFEST_KEYS_EXTRA = [
-	"id",
 	"incompatibilities",
 	"authors",
+	"compatible_mod_loader_version",
 	"compatible_game_version",
+	"config_defaults",
 ]
 
 const new_global_classes := [

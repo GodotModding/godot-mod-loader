@@ -49,26 +49,6 @@ const UNPACKED_DIR = "res://mods-unpacked/"
 # manifest.json = Meta data for the mod, including its dependancies
 const REQUIRED_MOD_FILES = ["mod_main.gd", "manifest.json"]
 
-# Required keys in a mod's manifest.json file
-const REQUIRED_MANIFEST_KEYS_ROOT = [
-	"name",
-	"namespace",
-	"version_number",
-	"website_url",
-	"description",
-	"dependencies",
-	"extra",
-]
-
-# Required keys in manifest's `json.extra.godot`
-const REQUIRED_MANIFEST_KEYS_EXTRA = [
-	"id",
-	"incompatibilities",
-	"authors",
-	"compatible_mod_loader_version",
-	"compatible_game_version",
-]
-
 # Set to true to require using "--enable-mods" to enable them
 const REQUIRE_CMD_LINE = false
 
@@ -396,17 +376,17 @@ func _load_meta_data(mod_id):
 
 # Ensure manifest.json has all required keys
 func _check_meta_file(meta_data):
-	var missing_keys_root = REQUIRED_MANIFEST_KEYS_ROOT.duplicate()
-	var missing_keys_extra = REQUIRED_MANIFEST_KEYS_EXTRA.duplicate()
+	var missing_keys_root = ModLoaderHelper.REQUIRED_MANIFEST_KEYS_ROOT.duplicate()
+	var missing_keys_extra = ModLoaderHelper.REQUIRED_MANIFEST_KEYS_EXTRA.duplicate()
 
 	for key in meta_data:
-		if(REQUIRED_MANIFEST_KEYS_ROOT.has(key)):
+		if(ModLoaderHelper.REQUIRED_MANIFEST_KEYS_ROOT.has(key)):
 			# remove the entry from missing fields if it is there
 			missing_keys_root.erase(key)
 
 	if meta_data.has("extra") && meta_data.extra.has("godot"):
 		for godot_key in meta_data.extra.godot:
-			if(REQUIRED_MANIFEST_KEYS_EXTRA.has(godot_key)):
+			if(ModLoaderHelper.REQUIRED_MANIFEST_KEYS_EXTRA.has(godot_key)):
 				missing_keys_extra.erase(godot_key)
 
 	# Combine both arrays, and reformat the "extra" keys
