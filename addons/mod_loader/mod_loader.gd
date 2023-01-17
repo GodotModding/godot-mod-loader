@@ -43,30 +43,6 @@ const MOD_LOG_PATH = "user://mods.log"
 # This is where mod ZIPs are unpacked to
 const UNPACKED_DIR = "res://mods-unpacked/"
 
-# These 2 files are always required by mods.
-# mod_main.gd = The main init file for the mod
-# manifest.json = Meta data for the mod, including its dependancies
-const REQUIRED_MOD_FILES = ["mod_main.gd", "manifest.json"]
-
-# Required keys in a mod's manifest.json file
-const REQUIRED_MANIFEST_KEYS_ROOT = [
-	"name",
-	"namespace",
-	"version_number",
-	"website_url",
-	"description",
-	"dependencies",
-	"extra",
-]
-
-# Required keys in manifest's `json.extra.godot`
-const REQUIRED_MANIFEST_KEYS_EXTRA = [
-	"incompatibilities",
-	"authors",
-	"compatible_mod_loader_version",
-	"compatible_game_version",
-	"config_defaults",
-]
 
 # Set to true to require using "--enable-mods" to enable them
 const REQUIRE_CMD_LINE = false
@@ -131,41 +107,33 @@ func _init():
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	_load_mod_zips()
-	mod_log("DONE: Unziped all Mods", LOG_NAME)
+	mod_log("DONE: Loaded all mod files into the virtual filesystem", LOG_NAME)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
 	_setup_mods()
 
 	# Set up mod configs. If a mod's JSON file is found, its data gets added
-	# to mod_data.{mod_id}.config
+	# to mod_data.{dir_name}.config
 	_load_mod_configs()
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
 	# (from their manifest.json file), and verify that the meta JSON has all
 	# required properties (REQUIRED_META_TAGS)
-	for mod_id in mod_data:
-		var mod = mod_data[mod_id]
-
-		# Verify files
-		_check_mod_files(mod_id)
-		if(!mod.is_loadable):
-			continue
-
-		# Load meta data into mod_data
-		_load_meta_data(mod_id)
-		if(!mod.is_loadable):
-			continue
+	for dir_name in mod_data:
+		var mod: ModData = mod_data[dir_name]
+		mod.load_details(self)
 
 	mod_log("DONE: Loaded all meta data", LOG_NAME)
 
-	# Run dependency checks after loading meta_data. If a mod depends on another
+	# Run dependency checks after loading mod_details. If a mod depends on another
 	# mod that hasn't been loaded, that dependent mod won't be loaded.
-	for mod_id in mod_data:
-		if(!mod_data[mod_id].is_loadable):
+	for dir_name in mod_data:
+		var mod: ModData = mod_data[dir_name]
+		if not mod.is_loadable:
 			continue
-		_check_dependencies(mod_id, mod_data[mod_id].meta_data.dependencies)
+		_check_dependencies(dir_name, mod.details.dependencies)
 
 	# Sort mod_load_order by the importance score of the mod
 	_get_load_order()
@@ -173,13 +141,14 @@ func _init():
 	# Log mod order
 	var mod_i = 1
 	for mod in mod_load_order: # mod === mod_data
-		dev_log(str("mod_load_order -> ", mod_i, ") ", mod.dir), LOG_NAME)
+		mod = mod as ModData
+		dev_log("mod_load_order -> %s) %s" % [mod_i, mod.dir_name], LOG_NAME)
 		mod_i += 1
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
-		# mod_log(str("Initializing -> ", mod.meta_data.extra.godot.id), LOG_NAME)
-		mod_log(str("Initializing -> ", _get_mod_full_id(mod)), LOG_NAME)
+		# mod_log(str("Initializing -> ", mod.mod_details.extra.godot.id), LOG_NAME)
+		mod_log("Initializing -> %s" % mod.details.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
 
 	dev_log(str("mod_data: ", JSON.print(mod_data, '   ')), LOG_NAME)
@@ -344,8 +313,8 @@ func _load_mod_configs():
 	if (os_configs_path_override != ""):
 		configs_path = os_configs_path_override
 
-	for mod_id in mod_data:
-		var json_path = configs_path.plus_file(mod_id + ".json")
+	for dir_name in mod_data:
+		var json_path = configs_path.plus_file(dir_name + ".json")
 		var mod_config = _get_json_as_dict(json_path)
 
 		dev_log(str("Config JSON: Looking for config at path: ", json_path), LOG_NAME)
@@ -363,7 +332,7 @@ func _load_mod_configs():
 			# Ignored if the filename matches the mod ID, or is empty
 			if mod_config.has("load_from"):
 				var new_path = mod_config.load_from
-				if new_path != "" && new_path != str(mod_id, ".json"):
+				if new_path != "" && new_path != str(dir_name, ".json"):
 					mod_log(str("Config JSON: Following load_from path: ", new_path), LOG_NAME)
 					var new_config = _get_json_as_dict(configs_path + new_path)
 					if new_config.size() > 0 != null:
@@ -371,9 +340,9 @@ func _load_mod_configs():
 						mod_log(str("Config JSON: Loaded from custom json: ", new_path), LOG_NAME)
 						dev_log(str("Config JSON: File data: ", JSON.print(mod_config)), LOG_NAME)
 					else:
-						mod_log(str("Config JSON: ERROR - Could not load data via `load_from` for ", mod_id, ", at path: ", new_path), LOG_NAME)
+						mod_log(str("Config JSON: ERROR - Could not load data via `load_from` for ", dir_name, ", at path: ", new_path), LOG_NAME)
 
-			mod_data[mod_id].config = mod_config
+			mod_data[dir_name].config = mod_config
 
 	if found_configs_count > 0:
 		mod_log(str("Config JSON: Loaded ", str(found_configs_count), " config(s)"), LOG_NAME)
@@ -386,110 +355,25 @@ func _load_mod_configs():
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
 func _init_mod_data(mod_folder_path):
 	# The file name should be a valid mod id
-	var mod_id = _get_file_name(mod_folder_path, false, true)
+	var dir_name = _get_file_name(mod_folder_path, false, true)
 
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
-	var local_mod_path = str(UNPACKED_DIR, mod_id)
+	var local_mod_path = str(UNPACKED_DIR, dir_name)
 
-	mod_data[mod_id] = {}
-	mod_data[mod_id].file_paths = []
-	mod_data[mod_id].required_files_path = {}
-	mod_data[mod_id].is_loadable = true
-	mod_data[mod_id].importance = 0
-	mod_data[mod_id].dir = local_mod_path
-	mod_data[mod_id].config = {} # updated in _load_mod_configs
+	var mod := ModData.new(local_mod_path)
+	mod_data[dir_name] = mod
 
+	# Get the mod file paths
+	# Note: This was needed in the original version of this script, but it's
+	# not needed anymore. It can be useful when debugging, but it's also an expensive
+	# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
+	# which has ~1,000 files). That's why it's disabled by default
 	if DEBUG_ENABLE_STORING_FILEPATHS:
-		# Get the mod file paths
-		# Note: This was needed in the original version of this script, but it's
-		# not needed anymore. It can be useful when debugging, but it's also an expensive
-		# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
-		# which has ~1,000 files). That's why it's disabled by default
-		mod_data[mod_id].file_paths = _get_flat_view_dict(local_mod_path)
-
-	for required_filename in REQUIRED_MOD_FILES:
-		# Eg:
-		# "mod_main.gd": local_mod_path + "/mod_main.gd",
-		# "manifest.json": local_mod_path + "/manifest.json"
-		mod_data[mod_id].required_files_path[required_filename] = local_mod_path + "/" + required_filename
-
-
-# Make sure the required mod files are there
-func _check_mod_files(mod_id):
-
-	var file_check = File.new()
-	var mod = mod_data[mod_id]
-
-	for required_filename in REQUIRED_MOD_FILES:
-		var filepath = mod_data[mod_id].required_files_path[required_filename]
-
-		if !file_check.file_exists(filepath):
-			mod_log(str("ERROR - ", mod_id, " is missing a required file: ", required_filename), LOG_NAME)
-			mod.is_loadable = false
-
-	if !mod.is_loadable:
-		mod_log(str("ERROR - ", mod_id, " cannot be loaded due to missing required files"), LOG_NAME)
-
-
-# Load meta data into mod_data, from a mod's manifest.json file
-func _load_meta_data(mod_id):
-	mod_log(str("Loading meta_data (manifest.json) for -> ", mod_id), LOG_NAME)
-	var mod = mod_data[mod_id]
-
-	# Load meta data file
-	var meta_path = mod.required_files_path["manifest.json"]
-	var meta_data = _get_json_as_dict(meta_path)
-
-	dev_log(str(mod_id, " loaded manifest data -> ", meta_data), LOG_NAME)
-
-	# Check if the manifest data has all required fields
-	var missing_fields = _check_meta_file(meta_data)
-	if(missing_fields.size() > 0):
-		for missing_field in missing_fields:
-			mod_log(str("ERROR - ", mod_id, " - Missing a required field in manifest.json: '", missing_field, "'"), LOG_NAME)
-		# Flag mod - so it's not loaded later
-		mod.is_loadable = false
-		# Continue with the next mod
-		return
-
-	# Add the meta data to the mod
-	mod.meta_data = meta_data
-
-	# Check that the mod ID is correct. This will fail if the mod's folder in
-	# "res://mods-unpacked" does not match its full ID, which is `namespace.name`
-	var mod_check_id = _get_mod_full_id(mod)
-	if mod_id != mod_check_id:
-		mod_log(str("ERROR - ", mod_id, " - Mod ID does not match the data in manifest.json. Expected '", mod_id ,"', but '{namespace}-{name}' was '", mod_check_id ,"'"), LOG_NAME)
-		mod.is_loadable = false
-
-
-# Ensure manifest.json has all required keys
-func _check_meta_file(meta_data):
-	var missing_keys_root = REQUIRED_MANIFEST_KEYS_ROOT.duplicate()
-	var missing_keys_extra = REQUIRED_MANIFEST_KEYS_EXTRA.duplicate()
-
-	for key in meta_data:
-		if(REQUIRED_MANIFEST_KEYS_ROOT.has(key)):
-			# remove the entry from missing fields if it is there
-			missing_keys_root.erase(key)
-
-	if meta_data.has("extra") && meta_data.extra.has("godot"):
-		for godot_key in meta_data.extra.godot:
-			if(REQUIRED_MANIFEST_KEYS_EXTRA.has(godot_key)):
-				missing_keys_extra.erase(godot_key)
-
-	# Combine both arrays, and reformat the "extra" keys
-	var missing_fields = missing_keys_root
-	if missing_keys_extra.size() > 0:
-		for godot_key in missing_keys_extra:
-			var formatted_key = str("extra.godot.", godot_key)
-			missing_fields.push_back(formatted_key)
-
-	return missing_fields
+		mod.file_paths = _get_flat_view_dict(local_mod_path)
 
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
-# meta_data (ie. its manifest.json file). If a mod depends on another mod that
+# mod_details (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded.
 func _check_dependencies(mod_id:String, deps:Array):
 	dev_log(str("Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps), LOG_NAME)
@@ -502,7 +386,7 @@ func _check_dependencies(mod_id:String, deps:Array):
 			continue
 
 		var dependency = mod_data[dependency_id]
-		var dependency_meta_data = mod_data[dependency_id].meta_data
+		var dependency_mod_details = mod_data[dependency_id].mod_details
 
 		# Init the importance score if it's missing
 
@@ -511,8 +395,8 @@ func _check_dependencies(mod_id:String, deps:Array):
 		dev_log(str("Dependency -> ", dependency_id, " importance -> ", dependency.importance), LOG_NAME)
 
 		# check if dependency has dependencies
-		if(dependency_meta_data.dependencies.size() > 0):
-			_check_dependencies(dependency_id, dependency_meta_data.dependencies)
+		if(dependency_mod_details.dependencies.size() > 0):
+			_check_dependencies(dependency_id, dependency_mod_details.dependencies)
 
 
 # Handle missing dependencies: Sets `is_loadable` to false and logs an error
@@ -553,18 +437,18 @@ func _compare_importance(a, b):
 
 # Instance every mod and add it as a node to the Mod Loader.
 # Runs mods in the order stored in mod_load_order.
-func _init_mod(mod):
-	var mod_main_path = mod.required_files_path["mod_main.gd"]
+func _init_mod(mod: ModData):
+	var mod_main_path = mod.get_required_mod_file_path(ModData.required_mod_files.MOD_MAIN)
 
-	dev_log(str("Loading script from -> ", mod_main_path), LOG_NAME)
+	dev_log("Loading script from -> %s" % mod_main_path, LOG_NAME)
 	var mod_main_script = ResourceLoader.load(mod_main_path)
-	dev_log(str("Loaded script -> ", mod_main_script), LOG_NAME)
+	dev_log("Loaded script -> %s" % mod_main_script, LOG_NAME)
 
 	var mod_main_instance = mod_main_script.new(self)
-	# mod_main_instance.name = mod.meta_data.extra.godot.id
-	mod_main_instance.name = _get_mod_full_id(mod)
+	# mod_main_instance.name = mod.mod_details.extra.godot.id
+	mod_main_instance.name = mod.details.get_mod_id()
 
-	dev_log(str("Adding child -> ", mod_main_instance), LOG_NAME)
+	dev_log("Adding child -> %s" % mod_main_instance, LOG_NAME)
 	add_child(mod_main_instance, true)
 
 
@@ -572,12 +456,6 @@ func _init_mod(mod):
 # =============================================================================
 
 # Util functions used in the mod loading process
-
-func _get_mod_full_id(mod:Dictionary)->String:
-	var name = mod.meta_data.name
-	var namespace = mod.meta_data.namespace
-	return str(namespace, "-", name)
-
 
 # Check if the provided command line argument was present when launching the game
 func _check_cmd_line_arg(argument) -> bool:
@@ -795,7 +673,7 @@ func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
 	# Mod ID is valid
 	if error_num == 0:
 		var config_data = mod_data[mod_id].config
-		defaults = mod_data[mod_id].meta_data.extra.godot.config_defaults
+		defaults = mod_data[mod_id].mod_details.extra.godot.config_defaults
 
 		# No custom JSON file
 		if config_data.size() == 0:
