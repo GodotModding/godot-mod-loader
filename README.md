@@ -22,12 +22,12 @@ yourmod.zip
         └───manifest.json
 ```
 
-#### Notes on .import
-
+<details>
+<summary>Notes on .import</summary>
 Adding the .import directory is only needed when your mod adds content such as PNGs and sound files. In these cases, your mod's .import folder should **only** include your custom assets, and should not include any vanilla files.
 
 You can copy your custom assets from your project's .import directory. They can be easily identified by sorting by date. To clean up unused files, it's helpful to delete everything in .import that's not vanilla, then run the game again, which will re-create only the files that are actually used.
-
+</details>
 
 ### Required Files
 
