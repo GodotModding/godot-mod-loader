@@ -62,29 +62,29 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 
 	match log_type.to_lower():
 		"fatal-error":
-			write_to_log_file(log_message)
-			write_to_log_file(JSON.print(get_stack(), "  "))
+			_write_to_log_file(log_message)
+			_write_to_log_file(JSON.print(get_stack(), "  "))
 			assert(false, message)
 		"error":
 			printerr(message)
 			push_error(message)
-			write_to_log_file(log_message)
+			_write_to_log_file(log_message)
 		"warning":
-			if get_verbosity() >= verbosity_level.WARNING:
+			if _get_verbosity() >= verbosity_level.WARNING:
 				print(prefix + message)
 				push_warning(message)
-				write_to_log_file(log_message)
+				_write_to_log_file(log_message)
 		"info", "success":
-			if get_verbosity() >= verbosity_level.INFO:
+			if _get_verbosity() >= verbosity_level.INFO:
 				print(prefix + message)
-				write_to_log_file(log_message)
+				_write_to_log_file(log_message)
 		"debug":
-			if get_verbosity() >= verbosity_level.DEBUG:
+			if _get_verbosity() >= verbosity_level.DEBUG:
 				print(prefix + message)
-				write_to_log_file(log_message)
+				_write_to_log_file(log_message)
 
 
-static func write_to_log_file(log_entry: String) -> void:
+static func _write_to_log_file(log_entry: String) -> void:
 	var log_file = File.new()
 
 	if not log_file.file_exists(MOD_LOG_PATH):
@@ -102,7 +102,7 @@ static func write_to_log_file(log_entry: String) -> void:
 	log_file.close()
 
 
-static func get_verbosity() -> int:
+static func _get_verbosity() -> int:
 	if is_running_with_command_line_arg("-vvv") or is_running_with_command_line_arg("--log-debug"):
 		return verbosity_level.DEBUG
 	if is_running_with_command_line_arg("-vv") or is_running_with_command_line_arg("--log-info"):
