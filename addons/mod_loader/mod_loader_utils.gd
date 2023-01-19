@@ -1,7 +1,8 @@
 extends Node
 class_name ModLoaderUtils
 
-const MOD_LOG_PATH = "user://mods.log"
+const LOG_NAME := "ModLoader:ModLoaderUtils"
+const MOD_LOG_PATH := "user://mods.log"
 
 enum verbosity_level {
 	ERROR,
@@ -84,7 +85,7 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 
 
 static func _write_to_log_file(log_entry: String) -> void:
-	var log_file = File.new()
+	var log_file := File.new()
 
 	if not log_file.file_exists(MOD_LOG_PATH):
 		log_file.open(MOD_LOG_PATH, File.WRITE)
@@ -127,8 +128,8 @@ static func is_running_with_command_line_arg(argument: String) -> bool:
 # Get the command line argument value if present when launching the game
 static func get_cmd_line_arg_value(argument: String) -> String:
 	for arg in OS.get_cmdline_args():
-		if arg.find("=") > -1:
-			var key_value = arg.split("=")
+		if (arg as String).find("=") > -1:
+			var key_value := (arg as String).split("=")
 			# True if the checked argument matches a user-specified arg key
 			# (eg. checking `--mods-path` will match with `--mods-path="C://mods"`
 			if key_value[0] == argument:
@@ -146,4 +147,107 @@ static func get_date_time_string() -> String:
 		date_time.hour, date_time.minute, date_time.second
 	]
 
+
+# Get the path to a local folder. Primarily used to get the  (packed) mods
+# folder, ie "res://mods" or the OS's equivalent, as well as the configs path
+static func get_local_folder_dir(subfolder: String = "") -> String:
+	var game_install_directory := OS.get_executable_path().get_base_dir()
+
+	if OS.get_name() == "OSX":
+		game_install_directory = game_install_directory.get_base_dir().get_base_dir()
+
+	# Fix for running the game through the Godot editor (as the EXE path would be
+	# the editor's own EXE, which won't have any mod ZIPs)
+	# if OS.is_debug_build():
+	if OS.has_feature("editor"):
+		game_install_directory = "res://"
+
+	return game_install_directory.plus_file(subfolder)
+
+
+# Provide a path, get the file name at the end of the path
+static func get_file_name_from_path(path: String, make_lower_case := true, remove_extension := false) -> String:
+	var file_name := path.get_file()
+
+	if make_lower_case:
+		file_name = file_name.to_lower()
+
+	if remove_extension:
+		file_name = file_name.trim_suffix("." + file_name.get_extension())
+
+	return file_name
+
+
+# Parses JSON from a given file path and returns a dictionary.
+# Returns an empty dictionary if no file exists (check with size() < 1)
+static func get_json_as_dict(path: String) -> Dictionary:
+	var file := File.new()
+
+	if !file.file_exists(path):
+		file.close()
+		return {}
+
+	file.open(path, File.READ)
+	var content := file.get_as_text()
+
+	var parsed := JSON.parse(content)
+	if parsed.error:
+		log_error("Error parsing JSON", LOG_NAME)
+		return {}
+	if not parsed.result is Dictionary:
+		log_error("JSON is not a dictionary", LOG_NAME)
+		return {}
+	return parsed.result
+
+
+# Get a flat array of all files in the target directory. This was needed in the
+# original version of this script, before becoming deprecated. It may still be
+# used if DEBUG_ENABLE_STORING_FILEPATHS is true.
+# Source: https://gist.github.com/willnationsdev/00d97aa8339138fd7ef0d6bd42748f6e
+static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_regex := false) -> Array:
+	var regex: RegEx
+	if p_match_is_regex:
+		regex = RegEx.new()
+		regex.compile(p_match)
+		if not regex.is_valid():
+			return []
+
+	var dirs := [p_dir]
+	var first := true
+	var data := []
+	while not dirs.empty():
+		var dir := Directory.new()
+		var dir_name: String = dirs.back()
+		dirs.pop_back()
+
+		if dir.open(dir_name) == OK:
+			dir.list_dir_begin()
+			var file_name := dir.get_next()
+			while file_name != "":
+				if not dir_name == "res://":
+					first = false
+				# ignore hidden, temporary, or system content
+				if not file_name.begins_with(".") and not file_name.get_extension() in ["tmp", "import"]:
+					# If a directory, then add to list of directories to visit
+					if dir.current_is_dir():
+						dirs.push_back(dir.get_current_dir().plus_file(file_name))
+					# If a file, check if we already have a record for the same name
+					else:
+						var path := dir.get_current_dir() + ("/" if not first else "") + file_name
+						# grab all
+						if not p_match:
+							data.append(path)
+						# grab matching strings
+						elif not p_match_is_regex and file_name.find(p_match, 0) != -1:
+							data.append(path)
+						# grab matching regex
+						else:
+							var regex_match := regex.search(path)
+							if regex_match != null:
+								data.append(path)
+				# Move on to the next file in this directory
+				file_name = dir.get_next()
+			# We've exhausted all files in this directory. Close the iterator.
+			dir.list_dir_end()
+	return data
 
