@@ -266,7 +266,7 @@ func _load_mod_configs():
 
 	for dir_name in mod_data:
 		var json_path = configs_path.plus_file(dir_name + ".json")
-		var mod_config = ModData._get_json_as_dict(json_path)
+		var mod_config = ModLoaderUtils.get_json_as_dict(json_path)
 
 		ModLoaderUtils.log_debug(str("Config JSON: Looking for config at path: ", json_path), LOG_NAME)
 

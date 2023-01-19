@@ -1,8 +1,8 @@
 extends Node
 class_name ModLoaderUtils
 
-const LOG_NAME = "ModLoader:ModLoaderUtils"
-const MOD_LOG_PATH = "user://mods.log"
+const LOG_NAME := "ModLoader:ModLoaderUtils"
+const MOD_LOG_PATH := "user://mods.log"
 
 enum verbosity_level {
 	ERROR,
@@ -85,7 +85,7 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 
 
 static func _write_to_log_file(log_entry: String) -> void:
-	var log_file = File.new()
+	var log_file := File.new()
 
 	if not log_file.file_exists(MOD_LOG_PATH):
 		log_file.open(MOD_LOG_PATH, File.WRITE)
