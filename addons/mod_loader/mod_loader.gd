@@ -135,7 +135,7 @@ func _init():
 		mod_log("No mods found", LOG_NAME)
 		return
 
-	mod_log("DONE: Unziped %s mods", LOG_NAME % loaded_mods)
+	mod_log("DONE: Unzipped %s mods" % loaded_mods, LOG_NAME)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
