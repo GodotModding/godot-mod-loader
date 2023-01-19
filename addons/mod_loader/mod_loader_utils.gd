@@ -1,6 +1,7 @@
 extends Node
 class_name ModLoaderUtils
 
+const LOG_NAME = "ModLoader:ModLoaderUtils"
 const MOD_LOG_PATH = "user://mods.log"
 
 enum verbosity_level {
@@ -175,6 +176,28 @@ static func get_file_name_from_path(path: String, make_lower_case := true, remov
 		file_name = file_name.trim_suffix("." + file_name.get_extension())
 
 	return file_name
+
+
+# Parses JSON from a given file path and returns a dictionary.
+# Returns an empty dictionary if no file exists (check with size() < 1)
+static func get_json_as_dict(path: String) -> Dictionary:
+	var file := File.new()
+
+	if !file.file_exists(path):
+		file.close()
+		return {}
+
+	file.open(path, File.READ)
+	var content := file.get_as_text()
+
+	var parsed := JSON.parse(content)
+	if parsed.error:
+		log_error("Error parsing JSON", LOG_NAME)
+		return {}
+	if not parsed.result is Dictionary:
+		log_error("JSON is not a dictionary", LOG_NAME)
+		return {}
+	return parsed.result
 
 
 # Get a flat array of all files in the target directory. This was needed in the

@@ -43,8 +43,8 @@ func load_manifest() -> void:
 	ModLoaderUtils.log_info("Loading mod_manifest (manifest.json) for -> %s" % dir_name, LOG_NAME)
 
 	# Load meta data file
-	var manifest_path = get_required_mod_file_path(required_mod_files.MANIFEST)
-	var manifest_dict = _get_json_as_dict(manifest_path) # todo get from utils
+	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
+	var manifest_dict := ModLoaderUtils.get_json_as_dict(manifest_path)
 
 	ModLoaderUtils.log_info("%s loaded manifest data -> %s" % [dir_name, manifest_dict], LOG_NAME)
 
@@ -59,8 +59,8 @@ func load_manifest() -> void:
 
 ## Validates if [member dir_name] matches [method ModManifest.get_mod_id]
 func is_mod_dir_name_same_as_id() -> bool:
-	var manifest_id = manifest.get_mod_id()
-	if dir_name != manifest_id:
+	var manifest_id := manifest.get_mod_id()
+	if not dir_name == manifest_id:
 		ModLoaderUtils.log_fatal('Mod directory name "%s" does not match the data in manifest.json. Expected "%s"' % [ dir_name, manifest_id ], LOG_NAME)
 		is_loadable = false
 		return false
@@ -69,10 +69,10 @@ func is_mod_dir_name_same_as_id() -> bool:
 
 ## Confirms that all files from [member required_mod_files] exist
 func has_required_files() -> bool:
-	var file_check = File.new()
+	var file_check := File.new()
 
 	for required_file in required_mod_files:
-		var file_path = get_required_mod_file_path(required_mod_files[required_file])
+		var file_path := get_required_mod_file_path(required_mod_files[required_file])
 
 		if !file_check.file_exists(file_path):
 			ModLoaderUtils.log_fatal("ERROR - %s is missing a required file: %s" % [dir_name, file_path], LOG_NAME)
@@ -93,25 +93,6 @@ func get_required_mod_file_path(required_file: int) -> String:
 		required_mod_files.MANIFEST:
 			return dir_path.plus_file("manifest.json")
 	return ""
-
-
-## Parses JSON from a given file path and returns a dictionary.
-## Returns an empty dictionary if no file exists (check with size() < 1)
-static func _get_json_as_dict(path:String) -> Dictionary: # todo move to utils
-	var file = File.new()
-
-	if !file.file_exists(path):
-		file.close()
-		return {}
-
-	file.open(path, File.READ)
-	var content = file.get_as_text()
-
-	var parsed := JSON.parse(content)
-	if parsed.error:
-		# log error
-		return {}
-	return parsed.result
 
 
 #func _to_string() -> String:
