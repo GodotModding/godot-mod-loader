@@ -130,8 +130,12 @@ func _init():
 
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
-	_load_mod_zips()
-	mod_log("DONE: Unziped all Mods", LOG_NAME)
+	var loaded_mods = _load_mod_zips()
+	if (loaded_mods <= 0):
+		mod_log("No mods found", LOG_NAME)
+		return
+
+	mod_log("DONE: Unziped %s mods", LOG_NAME % loaded_mods)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
@@ -232,19 +236,21 @@ func mod_log(text:String, mod_name:String = "Unknown-Mod", pretty:bool = false)-
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
 # (UNPACKED_DIR)
-func _load_mod_zips():
+func _load_mod_zips()->int:
 	# Path to the games mod folder
 	var game_mod_folder_path = _get_local_folder_dir("mods")
 
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
 		mod_log("Can't open mod folder %s." % game_mod_folder_path, LOG_NAME)
-		return
+		return -1
 	if dir.list_dir_begin() != OK:
 		mod_log("Can't read mod folder %s." % game_mod_folder_path, LOG_NAME)
-		return
+		return -1
 
 	var has_shown_editor_warning = false
+	
+	var mod_count = 0
 
 	# Get all zip folders inside the game mod folder
 	while true:
@@ -293,8 +299,10 @@ func _load_mod_zips():
 
 		# Mod successfully loaded!
 		mod_log(str(mod_zip_file_name, " loaded."), LOG_NAME)
+		mod_count += 1
 
 	dir.list_dir_end()
+	return mod_count
 
 
 # Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
