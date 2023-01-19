@@ -81,20 +81,20 @@ var _saved_objects = []
 
 func _init():
 	# if mods are not enabled - don't load mods
-	if REQUIRE_CMD_LINE && (!_check_cmd_line_arg("--enable-mods")):
+	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
 		return
 
 	# Log game install dir
-	ModLoaderUtils.log_info(str("game_install_directory: ", _get_local_folder_dir()), LOG_NAME)
+	ModLoaderUtils.log_info("game_install_directory: %s" % ModLoaderUtils.get_local_folder_dir(), LOG_NAME)
 
 	# check if we want to use a different mods path that is provided as a command line argument
-	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
+	var cmd_line_mod_path := ModLoaderUtils.get_cmd_line_arg_value("--mods-path")
 	if cmd_line_mod_path != "":
 		os_mods_path_override = cmd_line_mod_path
 		ModLoaderUtils.log_info("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
 
 	# Check for the CLI arg that overrides the configs path
-	var cmd_line_configs_path = _get_cmd_line_arg("--configs-path")
+	var cmd_line_configs_path = ModLoaderUtils.get_cmd_line_arg_value("--configs-path")
 	if cmd_line_configs_path != "":
 		os_configs_path_override = cmd_line_configs_path
 		ModLoaderUtils.log_info("The path configs are loaded from has been changed via the CLI arg `--configs-path`, to: " + cmd_line_configs_path, LOG_NAME)
@@ -154,7 +154,7 @@ func _init():
 # (UNPACKED_DIR)
 func _load_mod_zips():
 	# Path to the games mod folder
-	var game_mod_folder_path = _get_local_folder_dir("mods")
+	var game_mod_folder_path = ModLoaderUtils.get_local_folder_dir("mods")
 
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
@@ -257,7 +257,7 @@ func _setup_mods():
 # Load mod config JSONs from res://configs
 func _load_mod_configs():
 	var found_configs_count = 0
-	var configs_path = _get_local_folder_dir("configs")
+	var configs_path = ModLoaderUtils.get_local_folder_dir("configs")
 
 	# CLI override, set with `--configs-path="C://path/configs"`
 	# (similar to os_mods_path_override)
@@ -306,7 +306,7 @@ func _load_mod_configs():
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
 func _init_mod_data(mod_folder_path):
 	# The file name should be a valid mod id
-	var dir_name = _get_file_name(mod_folder_path, false, true)
+	var dir_name = ModLoaderUtils.get_file_name_from_path(mod_folder_path, false, true)
 
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
 	var local_mod_path = str(UNPACKED_DIR, dir_name)
@@ -320,7 +320,7 @@ func _init_mod_data(mod_folder_path):
 	# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
 	# which has ~1,000 files). That's why it's disabled by default
 	if DEBUG_ENABLE_STORING_FILEPATHS:
-		mod.file_paths = _get_flat_view_dict(local_mod_path)
+		mod.file_paths = ModLoaderUtils.get_flat_view_dict(local_mod_path)
 
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
@@ -401,113 +401,6 @@ func _init_mod(mod: ModData):
 
 	ModLoaderUtils.log_debug("Adding child -> %s" % mod_main_instance, LOG_NAME)
 	add_child(mod_main_instance, true)
-
-
-# Utils (Mod Loader)
-# =============================================================================
-
-# Util functions used in the mod loading process
-
-# Check if the provided command line argument was present when launching the game
-func _check_cmd_line_arg(argument) -> bool:
-	for arg in OS.get_cmdline_args():
-		if arg == argument:
-			return true
-
-	return false
-
-# Get the command line argument value if present when launching the game
-func _get_cmd_line_arg(argument) -> String:
-	for arg in OS.get_cmdline_args():
-		if arg.find("=") > -1:
-			var key_value = arg.split("=")
-			# True if the checked argument matches a user-specified arg key
-			# (eg. checking `--mods-path` will match with `--mods-path="C://mods"`
-			if key_value[0] == argument:
-				return key_value[1]
-
-	return ""
-
-# Get the path to a local folder. Primarily used to get the  (packed) mods
-# folder, ie "res://mods" or the OS's equivalent, as well as the configs path
-func _get_local_folder_dir(subfolder:String = ""):
-	var game_install_directory = OS.get_executable_path().get_base_dir()
-
-	if OS.get_name() == "OSX":
-		game_install_directory = game_install_directory.get_base_dir().get_base_dir()
-
-	# Fix for running the game through the Godot editor (as the EXE path would be
-	# the editor's own EXE, which won't have any mod ZIPs)
-	# if OS.is_debug_build():
-	if OS.has_feature("editor"):
-		game_install_directory = "res://"
-
-	return game_install_directory.plus_file(subfolder)
-
-
-func _get_file_name(path, is_lower_case = true, is_no_extension = false):
-	var file_name = path.get_file()
-
-	if(is_lower_case):
-		file_name = file_name.to_lower()
-
-	if(is_no_extension):
-		var file_extension = file_name.get_extension()
-		file_name = file_name.replace(str(".",file_extension), '')
-
-	return file_name
-
-
-# Get a flat array of all files in the target directory. This was needed in the
-# original version of this script, before becoming deprecated. It may still be
-# used if DEBUG_ENABLE_STORING_FILEPATHS is true.
-# Source: https://gist.github.com/willnationsdev/00d97aa8339138fd7ef0d6bd42748f6e
-func _get_flat_view_dict(p_dir = "res://", p_match = "", p_match_is_regex = false):
-	var regex = null
-	if p_match_is_regex:
-		regex = RegEx.new()
-		regex.compile(p_match)
-		if not regex.is_valid():
-			return []
-
-	var dirs = [p_dir]
-	var first = true
-	var data = []
-	while not dirs.empty():
-		var dir = Directory.new()
-		var dir_name = dirs.back()
-		dirs.pop_back()
-
-		if dir.open(dir_name) == OK:
-			dir.list_dir_begin()
-			var file_name = dir.get_next()
-			while file_name != "":
-				if not dir_name == "res://":
-					first = false
-				# ignore hidden, temporary, or system content
-				if not file_name.begins_with(".") and not file_name.get_extension() in ["tmp", "import"]:
-					# If a directory, then add to list of directories to visit
-					if dir.current_is_dir():
-						dirs.push_back(dir.get_current_dir() + "/" + file_name)
-					# If a file, check if we already have a record for the same name
-					else:
-						var path = dir.get_current_dir() + ("/" if not first else "") + file_name
-						# grab all
-						if not p_match:
-							data.append(path)
-						# grab matching strings
-						elif not p_match_is_regex and file_name.find(p_match, 0) != -1:
-							data.append(path)
-						# grab matching regex
-						else:
-							var regex_match = regex.search(path)
-							if regex_match != null:
-								data.append(path)
-				# Move on to the next file in this directory
-				file_name = dir.get_next()
-			# We've exhausted all files in this directory. Close the iterator.
-			dir.list_dir_end()
-	return data
 
 
 # Helpers
