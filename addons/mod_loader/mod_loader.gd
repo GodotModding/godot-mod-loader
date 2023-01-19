@@ -104,6 +104,9 @@ var mod_missing_dependencies = {}
 # Things to keep to ensure they are not garbage collected (used by `save_scene`)
 var _saved_objects = []
 
+# Telling us if we are running the mod loader in the editor
+var is_in_editor
+
 
 # Main
 # =============================================================================
@@ -115,6 +118,8 @@ func _init():
 
 	# Log game install dir
 	mod_log(str("game_install_directory: ", _get_local_folder_dir()), LOG_NAME)
+
+	is_in_editor = OS.has_feature("editor")
 
 	# check if we want to use a different mods path that is provided as a command line argument
 	var cmd_line_mod_path = _get_cmd_line_arg("--mods-path")
@@ -132,10 +137,14 @@ func _init():
 	# directory (UNPACKED_DIR)
 	var loaded_mods = _load_mod_zips()
 	if (loaded_mods <= 0):
-		mod_log("No mods found", LOG_NAME)
+		mod_log("No zipped mods found", LOG_NAME)
 		return
+	
+	var editor_line = ""
+	if(is_in_editor):
+		editor_line = " - You are running in the editor, zipped mods do not work with unzipped ones in this environment"
 
-	mod_log("DONE: Unzipped %s mods" % loaded_mods, LOG_NAME)
+	mod_log("DONE: Unzipped %s mods%s" %[loaded_mods, editor_line], LOG_NAME)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
@@ -282,7 +291,7 @@ func _load_mod_zips()->int:
 		# "don't use ZIPs with unpacked mods!"
 		# https://github.com/godotengine/godot/issues/19815
 		# https://github.com/godotengine/godot/issues/16798
-		if OS.has_feature("editor") && !has_shown_editor_warning:
+		if is_in_editor && !has_shown_editor_warning:
 			mod_log(str(
 				"WARNING: Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
@@ -618,7 +627,7 @@ func _get_local_folder_dir(subfolder:String = ""):
 	# Fix for running the game through the Godot editor (as the EXE path would be
 	# the editor's own EXE, which won't have any mod ZIPs)
 	# if OS.is_debug_build():
-	if OS.has_feature("editor"):
+	if is_in_editor:
 		game_install_directory = "res://"
 
 	return game_install_directory.plus_file(subfolder)
