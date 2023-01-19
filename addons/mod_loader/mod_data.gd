@@ -1,33 +1,33 @@
 extends Resource
 class_name ModData
 
-## Stores and validates all Data required to load a mod successfully
-## If some of the data is invalid, [member is_loadable] will be false
+# Stores and validates all Data required to load a mod successfully
+# If some of the data is invalid, [member is_loadable] will be false
 
 const LOG_NAME := "ModLoader:ModData"
 
-## These 2 files are always required by mods.
-## [i]mod_main.gd[/i] = The main init file for the mod
-## [i]manifest.json[/i] = Meta data for the mod, including its dependencies
+# These 2 files are always required by mods.
+# [i]mod_main.gd[/i] = The main init file for the mod
+# [i]manifest.json[/i] = Meta data for the mod, including its dependencies
 enum required_mod_files {
 	MOD_MAIN,
 	MANIFEST,
 }
 
-## Directory of the mod. Has to be identical to [method ModManifest.get_mod_id]
+# Directory of the mod. Has to be identical to [method ModManifest.get_mod_id]
 var dir_name := ""
-## Path to the Mod's Directory
+# Path to the Mod's Directory
 var dir_path := ""
-## False if any data is invalid
+# False if any data is invalid
 var is_loadable := true
-## Is increased for every mod depending on this mod. Highest importance is loaded first
+# Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
-## Contents of the manifest
+# Contents of the manifest
 var manifest: ModManifest
-## Updated in _load_mod_configs
+# Updated in _load_mod_configs
 var config := {}
 
-## only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
+# only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths := []
 
 
@@ -35,7 +35,7 @@ func _init(_dir_path: String) -> void:
 	dir_path = _dir_path
 
 
-## Load meta data from a mod's manifest.json file
+# Load meta data from a mod's manifest.json file
 func load_manifest() -> void:
 	if not has_required_files():
 		return
@@ -57,7 +57,7 @@ func load_manifest() -> void:
 	manifest = mod_manifest
 
 
-## Validates if [member dir_name] matches [method ModManifest.get_mod_id]
+# Validates if [member dir_name] matches [method ModManifest.get_mod_id]
 func is_mod_dir_name_same_as_id() -> bool:
 	var manifest_id := manifest.get_mod_id()
 	if not dir_name == manifest_id:
@@ -67,7 +67,7 @@ func is_mod_dir_name_same_as_id() -> bool:
 	return true
 
 
-## Confirms that all files from [member required_mod_files] exist
+# Confirms that all files from [member required_mod_files] exist
 func has_required_files() -> bool:
 	var file_check := File.new()
 
@@ -80,12 +80,12 @@ func has_required_files() -> bool:
 	return is_loadable
 
 
-## Validates if manifest is set
+# Validates if manifest is set
 func has_manifest() -> bool:
 	return not manifest == null
 
 
-## Converts enum indices [member required_mod_files] into their respective file paths
+# Converts enum indices [member required_mod_files] into their respective file paths
 func get_required_mod_file_path(required_file: int) -> String:
 	match required_file:
 		required_mod_files.MOD_MAIN:
