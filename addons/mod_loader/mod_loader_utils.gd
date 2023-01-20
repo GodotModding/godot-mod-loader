@@ -56,9 +56,7 @@ static func log_debug_json_print(message: String, json_printable, mod_name: Stri
 
 
 static func _loader_log(message: String, mod_name: String, log_type: String = "info") -> void:
-	var ignored_arg := get_cmd_line_arg_value("--log-ignore")
-	var ignored_names: Array = str2var(ignored_arg)
-	if ignored_names and mod_name in ignored_names:
+	if is_mod_name_ignored(mod_name):
 		return
 
 	var date := "%s   " % get_date_time_string()
@@ -87,6 +85,16 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 			if _get_verbosity() >= verbosity_level.DEBUG:
 				print(prefix + message)
 				_write_to_log_file(log_message)
+
+
+static func is_mod_name_ignored(mod_name: String) -> bool:
+	var ignored_arg := get_cmd_line_arg_value("--log-ignore")
+
+	if not ignored_arg == "":
+		var ignored_names: Array = ignored_arg.split(",")
+		if mod_name in ignored_names:
+			return true
+	return false
 
 
 static func _write_to_log_file(log_entry: String) -> void:
