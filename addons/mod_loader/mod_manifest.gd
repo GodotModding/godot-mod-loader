@@ -24,7 +24,7 @@ var compatible_game_version := [] 	# Array[String]
 # only used for information
 var incompatibilities := [] 			# Array[String]
 var tags := [] 						# Array[String]
-var config_defaults := []           # Array[String]
+var config_defaults := {}
 var description_rich := ""
 var image: StreamTexture
 
@@ -76,7 +76,7 @@ func _init(manifest: Dictionary) -> void:
 	compatible_game_version = _get_array_from_dict(godot_details, "compatible_game_version")
 	description_rich = _get_string_from_dict(godot_details, "description_rich")
 	tags = _get_array_from_dict(godot_details, "tags")
-	config_defaults = _get_array_from_dict(godot_details, "config_defaults")
+	config_defaults = godot_details.config_defaults
 
 	# todo load file named icon.png when loading mods and use here
 #	image StreamTexture
