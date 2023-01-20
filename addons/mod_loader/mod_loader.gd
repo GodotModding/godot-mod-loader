@@ -29,57 +29,57 @@ extends Node
 # If true, a complete array of filepaths is stored for each mod. This is
 # disabled by default because the operation can be very expensive, but may
 # be useful for debugging
-const DEBUG_ENABLE_STORING_FILEPATHS = false
+const DEBUG_ENABLE_STORING_FILEPATHS := false
 
 # Path to the mod log file
 # Find this log here: %appdata%/GAMENAME/mods.log
-const MOD_LOG_PATH = "user://mods.log"
+const MOD_LOG_PATH := "user://mods.log"
 
 # This is where mod ZIPs are unpacked to
-const UNPACKED_DIR = "res://mods-unpacked/"
+const UNPACKED_DIR := "res://mods-unpacked/"
 
 
 # Set to true to require using "--enable-mods" to enable them
-const REQUIRE_CMD_LINE = false
+const REQUIRE_CMD_LINE := false
 
 # Prefix for this file when using mod_log or dev_log
-const LOG_NAME = "ModLoader"
+const LOG_NAME := "ModLoader"
 
 
 # Vars
 # =============================================================================
 
 # Stores data for every found/loaded mod
-var mod_data = {}
+var mod_data := {}
 
 # Order for mods to be loaded in, set by `_get_load_order`
-var mod_load_order = []
+var mod_load_order := []
 
 # Override for the path mods are loaded from. Only set if the CLI arg is present.
 # Can be tested in the editor via: Project Settings > Display> Editor > Main Run Args
 # Default: "res://mods"
 # Set via: --mods-path
 # Example: --mods-path="C://path/mods"
-var os_mods_path_override = ""
+var os_mods_path_override := ""
 
 # Override for the path config JSONs are loaded from
 # Default: "res://configs"
 # Set via: --configs-path
 # Example: --configs-path="C://path/configs"
-var os_configs_path_override = ""
+var os_configs_path_override := ""
 
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
-var mod_missing_dependencies = {}
+var mod_missing_dependencies := {}
 
 # Things to keep to ensure they are not garbage collected (used by `save_scene`)
-var _saved_objects = []
+var _saved_objects := []
 
 
 # Main
 # =============================================================================
 
-func _init():
+func _init() -> void:
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
 		return
@@ -89,28 +89,28 @@ func _init():
 
 	# check if we want to use a different mods path that is provided as a command line argument
 	var cmd_line_mod_path := ModLoaderUtils.get_cmd_line_arg_value("--mods-path")
-	if cmd_line_mod_path != "":
+	if not cmd_line_mod_path == "":
 		os_mods_path_override = cmd_line_mod_path
 		ModLoaderUtils.log_info("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
 
 	# Check for the CLI arg that overrides the configs path
-	var cmd_line_configs_path = ModLoaderUtils.get_cmd_line_arg_value("--configs-path")
-	if cmd_line_configs_path != "":
+	var cmd_line_configs_path := ModLoaderUtils.get_cmd_line_arg_value("--configs-path")
+	if not cmd_line_configs_path == "":
 		os_configs_path_override = cmd_line_configs_path
 		ModLoaderUtils.log_info("The path configs are loaded from has been changed via the CLI arg `--configs-path`, to: " + cmd_line_configs_path, LOG_NAME)
 
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
-	var unzipped_mods = _load_mod_zips()
-	if (unzipped_mods > 0):
+	var unzipped_mods := _load_mod_zips()
+	if unzipped_mods > 0:
 		ModLoaderUtils.log_success("DONE: Loaded %s mod files into the virtual filesystem" % unzipped_mods, LOG_NAME)
 	else:
 		ModLoaderUtils.log_info("No zipped mods found", LOG_NAME)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
-	var setup_mods = _setup_mods()
-	if (setup_mods > 0):
+	var setup_mods := _setup_mods()
+	if setup_mods > 0:
 		ModLoaderUtils.log_success("DONE: Setup %s mods" % setup_mods, LOG_NAME)
 	else:
 		ModLoaderUtils.log_info("No mods were setup", LOG_NAME)
@@ -135,20 +135,21 @@ func _init():
 		var mod: ModData = mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
-		_check_dependencies(dir_name, mod.manifest.dependencies)
+		_check_dependencies(mod)
 
 	# Sort mod_load_order by the importance score of the mod
-	_get_load_order()
+	mod_load_order = _get_load_order(mod_data.values())
 
 	# Log mod order
-	var mod_i = 1
+	var mod_i := 1
 	for mod in mod_load_order: # mod === mod_data
 		mod = mod as ModData
-		ModLoaderUtils.log_debug("mod_load_order -> %s) %s" % [mod_i, mod.dir_name], LOG_NAME)
+		ModLoaderUtils.log_info("mod_load_order -> %s) %s" % [mod_i, mod.dir_name], LOG_NAME)
 		mod_i += 1
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
+		mod = mod as ModData
 		ModLoaderUtils.log_info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
 
@@ -159,33 +160,33 @@ func _init():
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
 # (UNPACKED_DIR)
-func _load_mod_zips()->int:
+func _load_mod_zips() -> int:
 	# Path to the games mod folder
-	var game_mod_folder_path = ModLoaderUtils.get_local_folder_dir("mods")
+	var game_mod_folder_path := ModLoaderUtils.get_local_folder_dir("mods")
 
-	var dir = Directory.new()
-	if dir.open(game_mod_folder_path) != OK:
+	var dir := Directory.new()
+	if not dir.open(game_mod_folder_path) == OK:
 		ModLoaderUtils.log_error("Can't open mod folder %s." % game_mod_folder_path, LOG_NAME)
 		return -1
-	if dir.list_dir_begin() != OK:
+	if not dir.list_dir_begin() == OK:
 		ModLoaderUtils.log_error("Can't read mod folder %s." % game_mod_folder_path, LOG_NAME)
 		return -1
 
-	var has_shown_editor_warning = false
+	var has_shown_editor_warning := false
 
-	var zipped_mods_count = 0
+	var zipped_mods_count := 0
 	# Get all zip folders inside the game mod folder
 	while true:
 		# Get the next file in the directory
-		var mod_zip_file_name = dir.get_next()
+		var mod_zip_file_name := dir.get_next()
 
 		# If there is no more file
-		if mod_zip_file_name == '':
+		if mod_zip_file_name == "":
 			# Stop loading mod zip files
 			break
 
 		# Ignore files that aren't ZIP or PCK
-		if mod_zip_file_name.get_extension() != "zip" && mod_zip_file_name.get_extension() != "pck":
+		if not mod_zip_file_name.get_extension() == "zip" and not mod_zip_file_name.get_extension() == "pck":
 			continue
 
 		# If the current file is a directory
@@ -193,9 +194,9 @@ func _load_mod_zips()->int:
 			# Go to the next file
 			continue
 
-		var mod_folder_path = game_mod_folder_path.plus_file(mod_zip_file_name)
-		var mod_folder_global_path = ProjectSettings.globalize_path(mod_folder_path)
-		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, false)
+		var mod_folder_path := game_mod_folder_path.plus_file(mod_zip_file_name)
+		var mod_folder_global_path := ProjectSettings.globalize_path(mod_folder_path)
+		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_folder_global_path, false)
 
 		# Notifies developer of an issue with Godot, where using `load_resource_pack`
 		# in the editor WIPES the entire virtual res:// directory the first time you
@@ -204,23 +205,23 @@ func _load_mod_zips()->int:
 		# "don't use ZIPs with unpacked mods!"
 		# https://github.com/godotengine/godot/issues/19815
 		# https://github.com/godotengine/godot/issues/16798
-		if OS.has_feature("editor") && !has_shown_editor_warning:
+		if OS.has_feature("editor") and not has_shown_editor_warning:
 			ModLoaderUtils.log_warning(str(
 				"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
 			has_shown_editor_warning = true
 
-		ModLoaderUtils.log_debug(str("Found mod ZIP: ", mod_folder_global_path), LOG_NAME)
+		ModLoaderUtils.log_debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
 
 		# If there was an error loading the mod zip file
-		if !is_mod_loaded_success:
+		if not is_mod_loaded_successfully:
 			# Log the error and continue with the next file
-			ModLoaderUtils.log_error(str(mod_zip_file_name, " failed to load."), LOG_NAME)
+			ModLoaderUtils.log_error("%s failed to load." % mod_zip_file_name, LOG_NAME)
 			continue
 
 		# Mod successfully loaded!
-		ModLoaderUtils.log_success(str(mod_zip_file_name, " loaded."), LOG_NAME)
+		ModLoaderUtils.log_success("%s loaded." % mod_zip_file_name, LOG_NAME)
 		zipped_mods_count += 1
 
 	dir.list_dir_end()
@@ -229,34 +230,34 @@ func _load_mod_zips()->int:
 
 # Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
 # which adds their data to mod_data.
-func _setup_mods()->int:
+func _setup_mods() -> int:
 	# Path to the unpacked mods folder
-	var unpacked_mods_path = UNPACKED_DIR
+	var unpacked_mods_path := UNPACKED_DIR
 
-	var dir = Directory.new()
-	if dir.open(unpacked_mods_path) != OK:
+	var dir := Directory.new()
+	if not dir.open(unpacked_mods_path) == OK:
 		ModLoaderUtils.log_error("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return -1
-	if dir.list_dir_begin() != OK:
+	if not dir.list_dir_begin() == OK:
 		ModLoaderUtils.log_error("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return -1
 
-	var unpacked_mods_count = 0
+	var unpacked_mods_count := 0
 	# Get all unpacked mod dirs
 	while true:
 		# Get the next file in the directory
-		var mod_dir_name = dir.get_next()
+		var mod_dir_name := dir.get_next()
 
 		# If there is no more file
-		if mod_dir_name == '':
+		if mod_dir_name == "":
 			# Stop loading mod zip files
 			break
 
 		# Only check directories
-		if !dir.current_is_dir():
+		if not dir.current_is_dir():
 			continue
 
-		if mod_dir_name == "." || mod_dir_name == "..":
+		if mod_dir_name == "." or mod_dir_name == "..":
 			continue
 
 		# Init the mod data
@@ -268,26 +269,26 @@ func _setup_mods()->int:
 
 
 # Load mod config JSONs from res://configs
-func _load_mod_configs():
-	var found_configs_count = 0
-	var configs_path = ModLoaderUtils.get_local_folder_dir("configs")
+func _load_mod_configs() -> void:
+	var found_configs_count := 0
+	var configs_path := ModLoaderUtils.get_local_folder_dir("configs")
 
 	# CLI override, set with `--configs-path="C://path/configs"`
 	# (similar to os_mods_path_override)
-	if (os_configs_path_override != ""):
+	if not os_configs_path_override == "":
 		configs_path = os_configs_path_override
 
 	for dir_name in mod_data:
-		var json_path = configs_path.plus_file(dir_name + ".json")
-		var mod_config = ModLoaderUtils.get_json_as_dict(json_path)
+		var json_path := configs_path.plus_file(dir_name + ".json")
+		var mod_config := ModLoaderUtils.get_json_as_dict(json_path)
 
-		ModLoaderUtils.log_debug(str("Config JSON: Looking for config at path: ", json_path), LOG_NAME)
+		ModLoaderUtils.log_debug("Config JSON: Looking for config at path: %s" % json_path, LOG_NAME)
 
 		if mod_config.size() > 0:
 			found_configs_count += 1
 
-			ModLoaderUtils.log_info(str("Config JSON: Found a config file: '", json_path, "'"), LOG_NAME)
-			ModLoaderUtils.log_debug(str("Config JSON: File data: ", JSON.print(mod_config)), LOG_NAME)
+			ModLoaderUtils.log_info("Config JSON: Found a config file: '%s'" % json_path, LOG_NAME)
+			ModLoaderUtils.log_debug_json_print("Config JSON: File data: ", mod_config, LOG_NAME)
 
 			# Check `load_from` option. This lets you specify the name of a
 			# different JSON file to load your config from. Must be in the same
@@ -295,34 +296,34 @@ func _load_mod_configs():
 			# and switch between them quickly. Should include ".json" extension.
 			# Ignored if the filename matches the mod ID, or is empty
 			if mod_config.has("load_from"):
-				var new_path = mod_config.load_from
-				if new_path != "" && new_path != str(dir_name, ".json"):
-					ModLoaderUtils.log_info(str("Config JSON: Following load_from path: ", new_path), LOG_NAME)
-					var new_config = ModLoaderUtils.get_json_as_dict(configs_path + new_path)
-					if new_config.size() > 0 != null:
+				var new_path: String = mod_config.load_from
+				if not new_path == "" and not new_path == str(dir_name, ".json"):
+					ModLoaderUtils.log_info("Config JSON: Following load_from path: %s" % new_path, LOG_NAME)
+					var new_config := ModLoaderUtils.get_json_as_dict(configs_path + new_path)
+					if new_config.size() > 0:
 						mod_config = new_config
-						ModLoaderUtils.log_info(str("Config JSON: Loaded from custom json: ", new_path), LOG_NAME)
-						ModLoaderUtils.log_debug(str("Config JSON: File data: ", JSON.print(mod_config)), LOG_NAME)
+						ModLoaderUtils.log_info("Config JSON: Loaded from custom json: %s" % new_path, LOG_NAME)
+						ModLoaderUtils.log_debug_json_print("Config JSON: File data:", mod_config, LOG_NAME)
 					else:
-						ModLoaderUtils.log_error(str("Config JSON: ERROR - Could not load data via `load_from` for ", dir_name, ", at path: ", new_path), LOG_NAME)
+						ModLoaderUtils.log_error("Config JSON: ERROR - Could not load data via `load_from` for %s, at path: %s" % [dir_name, new_path], LOG_NAME)
 
 			mod_data[dir_name].config = mod_config
 
 	if found_configs_count > 0:
-		ModLoaderUtils.log_success(str("Config JSON: Loaded ", str(found_configs_count), " config(s)"), LOG_NAME)
+		ModLoaderUtils.log_success("Config JSON: Loaded %s config(s)" % found_configs_count, LOG_NAME)
 	else:
-		ModLoaderUtils.log_info(str("Config JSON: No mod configs were found"), LOG_NAME)
+		ModLoaderUtils.log_info("Config JSON: No mod configs were found", LOG_NAME)
 
 
 # Add a mod's data to mod_data.
 # The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
-func _init_mod_data(mod_folder_path):
+func _init_mod_data(mod_folder_path: String) -> void:
 	# The file name should be a valid mod id
-	var dir_name = ModLoaderUtils.get_file_name_from_path(mod_folder_path, false, true)
+	var dir_name := ModLoaderUtils.get_file_name_from_path(mod_folder_path, false, true)
 
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
-	var local_mod_path = str(UNPACKED_DIR, dir_name)
+	var local_mod_path := UNPACKED_DIR.plus_file(dir_name)
 
 	var mod := ModData.new(local_mod_path)
 	mod.dir_name = dir_name
@@ -340,77 +341,72 @@ func _init_mod_data(mod_folder_path):
 # Run dependency checks on a mod, checking any dependencies it lists in its
 # mod_manifest (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded.
-func _check_dependencies(mod_id:String, deps:Array):
-	ModLoaderUtils.log_debug(str("Checking dependencies - mod_id: ", mod_id, " dependencies: ", deps), LOG_NAME)
+func _check_dependencies(mod: ModData) -> void:
+	ModLoaderUtils.log_debug("Checking dependencies - mod_id: %s dependencies: %s" % [mod.dir_name, mod.manifest.dependencies], LOG_NAME)
 
 	# loop through each dependency
-	for dependency_id in deps:
+	for dependency_id in mod.manifest.dependencies:
 		# check if dependency is missing
-		if(!mod_data.has(dependency_id)):
-			_handle_missing_dependency(mod_id, dependency_id)
+		if not mod_data.has(dependency_id):
+			_handle_missing_dependency(mod.dir_name, dependency_id)
+			# Flag the mod so it's not loaded later
+			mod.is_loadable = false
 			continue
 
-		var dependency = mod_data[dependency_id]
-		var dependency_mod_manifest = mod_data[dependency_id].manifest
-
-		# Init the importance score if it's missing
+		var dependency: ModData = mod_data[dependency_id]
 
 		# increase importance score by 1
-		dependency.importance = dependency.importance + 1
-		ModLoaderUtils.log_debug(str("Dependency -> ", dependency_id, " importance -> ", dependency.importance), LOG_NAME)
+		dependency.importance += 1
+		ModLoaderUtils.log_debug("Dependency -> %s importance -> %s" % [dependency_id, dependency.importance], LOG_NAME)
 
 		# check if dependency has dependencies
-		if(dependency_mod_manifest.dependencies.size() > 0):
-			_check_dependencies(dependency_id, dependency_mod_manifest.dependencies)
+		if dependency.manifest.dependencies.size() > 0:
+			_check_dependencies(dependency)
 
 
 # Handle missing dependencies: Sets `is_loadable` to false and logs an error
-func _handle_missing_dependency(mod_id, dependency_id):
-	ModLoaderUtils.log_error(str("Missing dependency - mod_id -> ", mod_id, " dependency_id -> ", dependency_id), LOG_NAME)
+func _handle_missing_dependency(mod_dir_name: String, dependency_id: String) -> void:
+	ModLoaderUtils.log_error("Missing dependency - mod: -> %s dependency -> %s" % [mod_dir_name, dependency_id], LOG_NAME)
 	# if mod is not present in the missing dependencies array
-	if(!mod_missing_dependencies.has(mod_id)):
+	if mod_missing_dependencies.has(mod_dir_name):
 		# add it
-		mod_missing_dependencies[mod_id] = []
+		mod_missing_dependencies[mod_dir_name] = []
 
-	mod_missing_dependencies[mod_id].append(dependency_id)
-	# Flag the mod so it's not loaded later
-	mod_data[mod_id].is_loadable = false
+	mod_missing_dependencies[mod_dir_name].append(dependency_id)
 
 
 # Get the load order of mods, using a custom sorter
-func _get_load_order():
-	var mod_data_array = mod_data.values()
+func _get_load_order(mod_data_array: Array) -> Array:
 
 	# Add loadable mods to the mod load order array
 	for mod in mod_data_array:
-		if(mod.is_loadable):
+		mod = mod as ModData
+		if mod.is_loadable:
 			mod_load_order.append(mod)
 
 	# Sort mods by the importance value
 	mod_load_order.sort_custom(self, "_compare_importance")
+	return  mod_load_order
 
 
 # Custom sorter that orders mods by important
-func _compare_importance(a, b):
-	# if true a -> b
-	# if false b -> a
-	if(a.importance > b.importance):
-		return true
+func _compare_importance(a: ModData, b: ModData) -> bool:
+	if a.importance > b.importance:
+		return true # a -> b
 	else:
-		return false
+		return false # b -> a
 
 
 # Instance every mod and add it as a node to the Mod Loader.
 # Runs mods in the order stored in mod_load_order.
-func _init_mod(mod: ModData):
-	var mod_main_path = mod.get_required_mod_file_path(ModData.required_mod_files.MOD_MAIN)
+func _init_mod(mod: ModData) -> void:
+	var mod_main_path := mod.get_required_mod_file_path(ModData.required_mod_files.MOD_MAIN)
 
 	ModLoaderUtils.log_debug("Loading script from -> %s" % mod_main_path, LOG_NAME)
-	var mod_main_script = ResourceLoader.load(mod_main_path)
+	var mod_main_script := ResourceLoader.load(mod_main_path)
 	ModLoaderUtils.log_debug("Loaded script -> %s" % mod_main_script, LOG_NAME)
 
-	var mod_main_instance = mod_main_script.new(self)
-	# mod_main_instance.name = mod.mod_manifest.extra.godot.id
+	var mod_main_instance: Node = mod_main_script.new(self)
 	mod_main_instance.name = mod.manifest.get_mod_id()
 
 	ModLoaderUtils.log_debug("Adding child -> %s" % mod_main_instance, LOG_NAME)
@@ -428,13 +424,13 @@ func _init_mod(mod: ModData):
 # {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 # Note that your extender script doesn't have to follow the same directory path
 # as the vanilla file, but it's good practice to do so.
-func install_script_extension(child_script_path:String):
+func install_script_extension(child_script_path: String) -> void:
 	# Check path to file exists
-	if !File.new().file_exists(child_script_path):
+	if not File.new().file_exists(child_script_path):
 		ModLoaderUtils.log_error("The child script path '%s' does not exist" % [child_script_path], LOG_NAME)
 		return
 
-	var child_script = ResourceLoader.load(child_script_path)
+	var child_script := ResourceLoader.load(child_script_path)
 
 	# Force Godot to compile the script now.
 	# We need to do this here to ensure that the inheritance chain is
@@ -446,7 +442,7 @@ func install_script_extension(child_script_path:String):
 	child_script.new()
 
 	var parent_script = child_script.get_base_script()
-	var parent_script_path = parent_script.resource_path
+	var parent_script_path: String = parent_script.resource_path
 	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, child_script_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
 
@@ -454,24 +450,24 @@ func install_script_extension(child_script_path:String):
 # Add a translation file, eg "mytranslation.en.translation". The translation
 # file should have been created in Godot already: When you improt a CSV, such
 # a file will be created for you.
-func add_translation_from_resource(resource_path: String):
-	var translation_object = load(resource_path)
+func add_translation_from_resource(resource_path: String) -> void:
+	var translation_object: Translation = load(resource_path)
 	TranslationServer.add_translation(translation_object)
-	ModLoaderUtils.log_info(str("Added Translation from Resource -> ", resource_path), LOG_NAME)
+	ModLoaderUtils.log_info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
 
 
-func append_node_in_scene(modified_scene, node_name:String = "", node_parent = null, instance_path:String = "", is_visible:bool = true):
-	var new_node
-	if instance_path != "":
+func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
+	var new_node: Node
+	if not instance_path == "":
 		new_node = load(instance_path).instance()
 	else:
 		new_node = Node.instance()
-	if node_name != "":
+	if not node_name == "":
 		new_node.name = node_name
 	if is_visible == false:
 		new_node.visible = false
-	if node_parent != null:
-		var tmp_node = modified_scene.get_node(node_parent)
+	if not node_parent == null:
+		var tmp_node: Node = modified_scene.get_node(node_parent)
 		tmp_node.add_child(new_node)
 		new_node.set_owner(modified_scene)
 	else:
@@ -479,12 +475,12 @@ func append_node_in_scene(modified_scene, node_name:String = "", node_parent = n
 		new_node.set_owner(modified_scene)
 
 
-func save_scene(modified_scene, scene_path:String):
-	var packed_scene = PackedScene.new()
+func save_scene(modified_scene: Node, scene_path: String) -> void:
+	var packed_scene := PackedScene.new()
 	packed_scene.pack(modified_scene)
-	ModLoaderUtils.log_debug(str("packing scene -> ", packed_scene), LOG_NAME)
+	ModLoaderUtils.log_debug("packing scene -> " % packed_scene, LOG_NAME)
 	packed_scene.take_over_path(scene_path)
-	ModLoaderUtils.log_debug(str("save_scene - taking over path - new path -> ", packed_scene.resource_path), LOG_NAME)
+	ModLoaderUtils.log_debug("save_scene - taking over path - new path -> " % packed_scene.resource_path, LOG_NAME)
 	_saved_objects.append(packed_scene)
 
 
@@ -497,37 +493,37 @@ func save_scene(modified_scene, scene_path:String):
 # 2 = No custom JSON. File probably does not exist. Defaults will be used if available
 # 3 = No custom JSON, and key was invalid when trying to get the default from your manifest defaults (`extra.godot.config_defaults`)
 # 4 = Invalid key, although config data does exists
-func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
-	var error_num = 0
-	var error_msg = ""
-	var data = {}
-	var defaults = null
+func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
+	var error_num := 0
+	var error_msg := ""
+	var data = {} # can be anything
+	var defaults := {}
 
 	# Invalid mod ID
-	if !mod_data.has(mod_id):
+	if not mod_data.has(mod_dir_name):
 		error_num = 1
-		error_msg = str("ERROR - Mod ID was invalid: ", mod_id)
+		error_msg = "ERROR - Mod ID was invalid: " % mod_dir_name
 
 	# Mod ID is valid
 	if error_num == 0:
-		var config_data = mod_data[mod_id].config
-		defaults = mod_data[mod_id].manifest.config_defaults
+		var mod := mod_data[mod_dir_name] as ModData
+		var config_data := mod.config
+		defaults = mod.manifest.config_defaults
 
 		# No custom JSON file
 		if config_data.size() == 0:
 			error_num = 2
-			error_msg = str("WARNING - No config file for ", mod_id, ".json. ")
+			error_msg = "WARNING - No config file for %s.json." % mod_dir_name
 			if key == "":
 				data = defaults
 				error_msg += "Using defaults (extra.godot.config_defaults)"
 			else:
 				if defaults.has(key):
 					data = defaults[key]
-					error_msg += str("Using defaults for key '", key, "' (extra.godot.config_defaults.", key, ")")
+					error_msg += "Using defaults for key '%s' (extra.godot.config_defaults.%s)" % [key, key]
 				else:
 					error_num = 3
-					# error_msg = str("WARNING - No config file for Invalid key '", key, "' for mod ID: ", mod_id)
-					error_msg += str("Requested key '", key, "' is not present in the defaults (extra.godot.config_defaults.", key, ")")
+					error_msg += "Requested key '%s' is not present in the defaults (extra.godot.config_defaults.%s)" % [key, key]
 
 		# JSON file exists
 		if error_num == 0:
@@ -538,11 +534,11 @@ func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
 					data = config_data[key]
 				else:
 					error_num = 4
-					error_msg = str("WARNING - Invalid key '", key, "' for mod ID: ", mod_id)
+					error_msg = "WARNING - Invalid key '%s' for mod ID: %s" % [key, mod_dir_name]
 
 	# Log if any errors occured
-	if error_num != 0:
-		ModLoaderUtils.log_debug(str("Config: ", error_msg), mod_id)
+	if not error_num == 0:
+		ModLoaderUtils.log_debug("Config Error: %s" % error_msg, mod_dir_name)
 
 	return {
 		"error": error_num,
