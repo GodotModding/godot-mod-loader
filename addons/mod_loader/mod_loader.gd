@@ -337,7 +337,7 @@ func _check_dependencies(mod_id:String, deps:Array):
 			continue
 
 		var dependency = mod_data[dependency_id]
-		var dependency_mod_manifest = mod_data[dependency_id].mod_manifest
+		var dependency_mod_manifest = mod_data[dependency_id].manifest
 
 		# Init the importance score if it's missing
 
@@ -497,7 +497,7 @@ func get_mod_config(mod_id:String = "", key:String = "")->Dictionary:
 	# Mod ID is valid
 	if error_num == 0:
 		var config_data = mod_data[mod_id].config
-		defaults = mod_data[mod_id].mod_manifest.extra.godot.config_defaults
+		defaults = mod_data[mod_id].manifest.config_defaults
 
 		# No custom JSON file
 		if config_data.size() == 0:
