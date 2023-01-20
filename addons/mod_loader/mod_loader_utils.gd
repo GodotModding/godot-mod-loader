@@ -55,7 +55,12 @@ static func log_debug_json_print(message: String, json_printable, mod_name: Stri
 	_loader_log(message, mod_name, "debug")
 
 
-static func _loader_log(message: String, mod_name: String, log_type: String = "info")->void:
+static func _loader_log(message: String, mod_name: String, log_type: String = "info") -> void:
+	var ignored_arg := get_cmd_line_arg_value("--log-ignore")
+	var ignored_names: Array = str2var(ignored_arg)
+	if ignored_names and mod_name in ignored_names:
+		return
+
 	var date := "%s   " % get_date_time_string()
 	var prefix := "%s %s: " % [log_type.to_upper(), mod_name]
 	var log_message := date + prefix + message
