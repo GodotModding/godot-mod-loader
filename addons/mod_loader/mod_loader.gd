@@ -298,7 +298,7 @@ func _load_mod_configs():
 				var new_path = mod_config.load_from
 				if new_path != "" && new_path != str(dir_name, ".json"):
 					ModLoaderUtils.log_info(str("Config JSON: Following load_from path: ", new_path), LOG_NAME)
-					var new_config = ModData._get_json_as_dict(configs_path + new_path)
+					var new_config = ModLoaderUtils.get_json_as_dict(configs_path + new_path)
 					if new_config.size() > 0 != null:
 						mod_config = new_config
 						ModLoaderUtils.log_info(str("Config JSON: Loaded from custom json: ", new_path), LOG_NAME)

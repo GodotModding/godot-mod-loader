@@ -46,7 +46,7 @@ func load_manifest() -> void:
 	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
 	var manifest_dict := ModLoaderUtils.get_json_as_dict(manifest_path)
 
-	ModLoaderUtils.log_info("%s loaded manifest data -> %s" % [dir_name, manifest_dict], LOG_NAME)
+	ModLoaderUtils.log_debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
 
 	var mod_manifest := ModManifest.new(manifest_dict)
 
