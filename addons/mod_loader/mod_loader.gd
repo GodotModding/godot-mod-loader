@@ -325,6 +325,7 @@ func _init_mod_data(mod_folder_path):
 	var local_mod_path = str(UNPACKED_DIR, dir_name)
 
 	var mod := ModData.new(local_mod_path)
+	mod.dir_name = dir_name
 	mod_data[dir_name] = mod
 
 	# Get the mod file paths
