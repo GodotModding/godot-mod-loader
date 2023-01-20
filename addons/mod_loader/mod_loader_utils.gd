@@ -178,8 +178,8 @@ static func get_file_name_from_path(path: String, make_lower_case := true, remov
 	return file_name
 
 
-# Parses JSON from a given file path and returns a dictionary.
-# Returns an empty dictionary if no file exists (check with size() < 1)
+# Parses JSON from a given file path and returns a [Dictionary].
+# Returns an empty [Dictionary] if no file exists (check with size() < 1)
 static func get_json_as_dict(path: String) -> Dictionary:
 	var file := File.new()
 
@@ -187,10 +187,20 @@ static func get_json_as_dict(path: String) -> Dictionary:
 		file.close()
 		return {}
 
-	file.open(path, File.READ)
-	var content := file.get_as_text()
+	var error = file.open(path, File.READ)
+	if not error == OK:
+		log_error("Error opening file. Code: %s" % error, LOG_NAME)
 
-	var parsed := JSON.parse(content)
+	var content := file.get_as_text()
+	return get_json_string_as_dict(content)
+
+
+# Parses JSON from a given [String] and returns a [Dictionary].
+# Returns an empty [Dictionary] on error (check with size() < 1)
+static func get_json_string_as_dict(string: String) -> Dictionary:
+	if string == "":
+		return {}
+	var parsed := JSON.parse(string)
 	if parsed.error:
 		log_error("Error parsing JSON", LOG_NAME)
 		return {}
