@@ -337,7 +337,7 @@ func _check_dependencies(mod_id:String, deps:Array):
 			continue
 
 		var dependency = mod_data[dependency_id]
-		var dependency_mod_manifest = mod_data[dependency_id].mod_manifest
+		var dependency_mod_manifest = mod_data[dependency_id].manifest
 
 		# Init the importance score if it's missing
 
