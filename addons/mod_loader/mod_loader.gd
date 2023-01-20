@@ -101,12 +101,19 @@ func _init():
 
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
-	_load_mod_zips()
-	ModLoaderUtils.log_success("DONE: Loaded all mod files into the virtual filesystem", LOG_NAME)
+	var unzipped_mods = _load_mod_zips()
+	if (unzipped_mods > 0):
+		ModLoaderUtils.log_success("DONE: Loaded %s mod files into the virtual filesystem" % unzipped_mods, LOG_NAME)
+	else:
+		ModLoaderUtils.log_info("No zipped mods found", LOG_NAME)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
-	_setup_mods()
+	var setup_mods = _setup_mods()
+	if (setup_mods > 0):
+		ModLoaderUtils.log_success("DONE: Setup %s mods" % setup_mods, LOG_NAME)
+	else:
+		ModLoaderUtils.log_info("No mods were setup", LOG_NAME)
 
 	# Set up mod configs. If a mod's JSON file is found, its data gets added
 	# to mod_data.{dir_name}.config
@@ -152,20 +159,21 @@ func _init():
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
 # (UNPACKED_DIR)
-func _load_mod_zips():
+func _load_mod_zips()->int:
 	# Path to the games mod folder
 	var game_mod_folder_path = ModLoaderUtils.get_local_folder_dir("mods")
 
 	var dir = Directory.new()
 	if dir.open(game_mod_folder_path) != OK:
 		ModLoaderUtils.log_error("Can't open mod folder %s." % game_mod_folder_path, LOG_NAME)
-		return
+		return -1
 	if dir.list_dir_begin() != OK:
 		ModLoaderUtils.log_error("Can't read mod folder %s." % game_mod_folder_path, LOG_NAME)
-		return
+		return -1
 
 	var has_shown_editor_warning = false
 
+	var zipped_mods_count = 0
 	# Get all zip folders inside the game mod folder
 	while true:
 		# Get the next file in the directory
@@ -213,24 +221,27 @@ func _load_mod_zips():
 
 		# Mod successfully loaded!
 		ModLoaderUtils.log_success(str(mod_zip_file_name, " loaded."), LOG_NAME)
+		zipped_mods_count += 1
 
 	dir.list_dir_end()
+	return zipped_mods_count
 
 
 # Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
 # which adds their data to mod_data.
-func _setup_mods():
+func _setup_mods()->int:
 	# Path to the unpacked mods folder
 	var unpacked_mods_path = UNPACKED_DIR
 
 	var dir = Directory.new()
 	if dir.open(unpacked_mods_path) != OK:
 		ModLoaderUtils.log_error("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
-		return
+		return -1
 	if dir.list_dir_begin() != OK:
 		ModLoaderUtils.log_error("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
-		return
+		return -1
 
+	var unpacked_mods_count = 0
 	# Get all unpacked mod dirs
 	while true:
 		# Get the next file in the directory
@@ -250,8 +261,10 @@ func _setup_mods():
 
 		# Init the mod data
 		_init_mod_data(mod_dir_name)
+		unpacked_mods_count += 1
 
 	dir.list_dir_end()
+	return unpacked_mods_count
 
 
 # Load mod config JSONs from res://configs
