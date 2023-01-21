@@ -16,14 +16,14 @@ var version_number := "0.0.0"
 var description := ""
 var website_url := ""
 # Used to determine mod load order
-var dependencies := []				# Array[String]
+var dependencies: PoolStringArray = []
 
-var authors := [] 					# Array[String]
+var authors: PoolStringArray = []
 # only used for information
-var compatible_game_version := [] 	# Array[String]
+var compatible_game_version: PoolStringArray = []
 # only used for information
-var incompatibilities := [] 			# Array[String]
-var tags := [] 						# Array[String]
+var incompatibilities: PoolStringArray = []
+var tags : PoolStringArray = []
 var config_defaults := {}
 var description_rich := ""
 var image: StreamTexture
