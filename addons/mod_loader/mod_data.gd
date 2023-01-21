@@ -28,7 +28,7 @@ var manifest: ModManifest
 var config := {}
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
-var file_paths := []
+var file_paths: PoolStringArray = []
 
 
 func _init(_dir_path: String) -> void:
