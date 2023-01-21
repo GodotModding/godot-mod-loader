@@ -102,12 +102,12 @@ static func is_name_or_namespace_valid(name: String) -> bool:
 	re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
 
 	if re.search(name) == null:
-		printerr('Invalid name or namespace: "%s". You may only use letters, numbers and underscores.' % name)
+		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". You may only use letters, numbers and underscores.' % name, LOG_NAME)
 		return false
 
 	re.compile("^[a-zA-Z0-9_]{3,}$") # at least 3 long
 	if re.search(name) == null:
-		printerr('Invalid name or namespace: "%s". Must be longer than 3 characters.' % name)
+		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". Must be longer than 3 characters.' % name, LOG_NAME)
 		return false
 
 	return true
@@ -160,7 +160,7 @@ static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
 			missing_fields.erase(key)
 
 	if missing_fields.size() > 0:
-		printerr("Mod data is missing required fields: " + str(missing_fields))
+		ModLoaderUtils.log_fatal("Mod manifest is missing required fields: %s" % missing_fields, LOG_NAME)
 		return false
 
 	return true
