@@ -478,9 +478,9 @@ func append_node_in_scene(modified_scene: Node, node_name: String = "", node_par
 func save_scene(modified_scene: Node, scene_path: String) -> void:
 	var packed_scene := PackedScene.new()
 	packed_scene.pack(modified_scene)
-	ModLoaderUtils.log_debug("packing scene -> " % packed_scene, LOG_NAME)
+	ModLoaderUtils.log_debug("packing scene -> %s" % packed_scene, LOG_NAME)
 	packed_scene.take_over_path(scene_path)
-	ModLoaderUtils.log_debug("save_scene - taking over path - new path -> " % packed_scene.resource_path, LOG_NAME)
+	ModLoaderUtils.log_debug("save_scene - taking over path - new path -> %s" % packed_scene.resource_path, LOG_NAME)
 	_saved_objects.append(packed_scene)
 
 
@@ -502,7 +502,7 @@ func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	# Invalid mod ID
 	if not mod_data.has(mod_dir_name):
 		error_num = 1
-		error_msg = "ERROR - Mod ID was invalid: " % mod_dir_name
+		error_msg = "ERROR - Mod ID was invalid: %s" % mod_dir_name
 
 	# Mod ID is valid
 	if error_num == 0:
