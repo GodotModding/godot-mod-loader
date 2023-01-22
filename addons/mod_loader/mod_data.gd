@@ -14,12 +14,18 @@ enum required_mod_files {
 	MANIFEST,
 }
 
+enum optional_mod_files {
+	OVERWRITES
+}
+
 # Directory of the mod. Has to be identical to [method ModManifest.get_mod_id]
 var dir_name := ""
 # Path to the Mod's Directory
 var dir_path := ""
 # False if any data is invalid
 var is_loadable := true
+# True if overwrites.gd exists
+var is_overwrite := false
 # Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
 # Contents of the manifest
@@ -95,6 +101,11 @@ func get_required_mod_file_path(required_file: int) -> String:
 			return dir_path.plus_file("manifest.json")
 	return ""
 
+func get_optional_mod_file_path(optional_file: int) -> String:
+	match optional_file:
+		optional_mod_files.OVERWRITES:
+			return dir_path.plus_file("overwrites.gd")
+	return ""
 
 #func _to_string() -> String:
 	# todo if we want it pretty printed

@@ -146,7 +146,7 @@ func _init():
 		mod = mod as ModData
 		ModLoaderUtils.log_debug("mod_load_order -> %s) %s" % [mod_i, mod.dir_name], LOG_NAME)
 		mod_i += 1
-
+	
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
 		ModLoaderUtils.log_info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
@@ -326,6 +326,8 @@ func _init_mod_data(mod_folder_path):
 
 	var mod := ModData.new(local_mod_path)
 	mod.dir_name = dir_name
+	var mod_overwrites_path = mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
+	mod.is_overwrite = ModLoaderUtils.is_file_existing(mod_overwrites_path)
 	mod_data[dir_name] = mod
 
 	# Get the mod file paths
@@ -335,7 +337,6 @@ func _init_mod_data(mod_folder_path):
 	# which has ~1,000 files). That's why it's disabled by default
 	if DEBUG_ENABLE_STORING_FILEPATHS:
 		mod.file_paths = ModLoaderUtils.get_flat_view_dict(local_mod_path)
-
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
 # mod_manifest (ie. its manifest.json file). If a mod depends on another mod that
@@ -404,7 +405,15 @@ func _compare_importance(a, b):
 # Runs mods in the order stored in mod_load_order.
 func _init_mod(mod: ModData):
 	var mod_main_path = mod.get_required_mod_file_path(ModData.required_mod_files.MOD_MAIN)
-
+	var mod_overwrites_path = mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
+	
+	# If the mod contains overwrites initialize the overwrites script
+	if(mod.is_overwrite):
+		ModLoaderUtils.log_debug("Overwrite script detected -> %s" % mod_overwrites_path, LOG_NAME)
+		var mod_overwrites_script = load(mod_overwrites_path)
+		mod_overwrites_script.new()
+		ModLoaderUtils.log_debug("Initialized overwrite script -> %s" % mod_overwrites_path, LOG_NAME)
+	
 	ModLoaderUtils.log_debug("Loading script from -> %s" % mod_main_path, LOG_NAME)
 	var mod_main_script = ResourceLoader.load(mod_main_path)
 	ModLoaderUtils.log_debug("Loaded script -> %s" % mod_main_script, LOG_NAME)
