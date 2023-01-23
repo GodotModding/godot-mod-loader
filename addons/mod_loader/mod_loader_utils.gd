@@ -178,6 +178,20 @@ static func get_local_folder_dir(subfolder: String = "") -> String:
 	return game_install_directory.plus_file(subfolder)
 
 
+# Get the path where override.cfg will be stored.
+# Not the same as the local folder dir (for mac)
+static func get_override_path() -> String:
+	var base_path := ""
+	if OS.has_feature("editor"):
+		base_path = ProjectSettings.globalize_path("res://")
+	else:
+		# this is technically different to res:// in macos, but we want the
+		# executable dir anyway, so it is exactly what we need
+		base_path = OS.get_executable_path().get_base_dir()
+
+	return base_path.plus_file("override.cfg")
+
+
 # Provide a path, get the file name at the end of the path
 static func get_file_name_from_path(path: String, make_lower_case := true, remove_extension := false) -> String:
 	var file_name := path.get_file()
@@ -221,6 +235,45 @@ static func get_json_string_as_dict(string: String) -> Dictionary:
 		log_error("JSON is not a dictionary", LOG_NAME)
 		return {}
 	return parsed.result
+
+
+# Register an array of classes to the global scope, since Godot only does that in the editor.
+# Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
+# You can find these easily in the project.godot file under "_global_script_classes"
+# (but you should only include classes belonging to your mod)
+static func register_global_classes_from_array(new_global_classes: Array) -> void:
+	var registered_classes: Array = ProjectSettings.get_setting("_global_script_classes")
+	var registered_class_icons: Dictionary = ProjectSettings.get_setting("_global_script_class_icons")
+
+	for new_class in new_global_classes:
+		if not is_valid_global_class_dict(new_class):
+			continue
+		if registered_classes.has(new_class):
+			continue
+
+		registered_classes.append(new_class)
+		registered_class_icons[new_class.class] = "" # empty icon, does not matter
+
+	ProjectSettings.set_setting("_global_script_classes", registered_classes)
+	ProjectSettings.set_setting("_global_script_class_icons", registered_class_icons)
+	ProjectSettings.save_custom(get_override_path())
+
+
+# Checks if all required fields are in the given [Dictionary]
+# Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
+static func is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
+	var required_fields := ["base", "class", "language", "path"]
+	if not global_class_dict.has_all(required_fields):
+		log_fatal("Global class to be registered is missing one of %s" % required_fields, LOG_NAME)
+		return false
+
+	var file = File.new()
+	if not file.file_exists(global_class_dict.path):
+		log_fatal('Class "%s" to be registered as global could not be found at given path "%s"' %
+		[global_class_dict.class, global_class_dict.path], LOG_NAME)
+		return false
+
+	return true
 
 
 # Get a flat array of all files in the target directory. This was needed in the
