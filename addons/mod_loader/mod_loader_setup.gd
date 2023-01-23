@@ -78,16 +78,21 @@ func setup_modloader() -> void:
 	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
 
 
+func is_loader_set_up() -> bool:
+	return is_project_setting_true(settings.IS_LOADER_SET_UP)
+
+
+func is_loader_setup_applied() -> bool:
+	if not root.get_node_or_null("/root/ModLoader") == null:
+		if not is_project_setting_true(settings.IS_LOADER_SETUP_APPLIED):
+			modloaderutils.log_info("ModLoader is already set up. No self setup required.", LOG_NAME)
+		return true
+	return false
+
+
 static func is_project_setting_true(project_setting: String) -> bool:
 	return ProjectSettings.has_setting(project_setting) and\
 		ProjectSettings.get_setting(project_setting)
 
-
-static func is_loader_set_up() -> bool:
-	return is_project_setting_true(settings.IS_LOADER_SET_UP)
-
-
-static func is_loader_setup_applied() -> bool:
-	return is_project_setting_true(settings.IS_LOADER_SETUP_APPLIED)
 
 
