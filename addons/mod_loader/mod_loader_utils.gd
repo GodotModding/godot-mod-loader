@@ -280,17 +280,17 @@ static func is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 # original version of this script, before becoming deprecated. It may still be
 # used if DEBUG_ENABLE_STORING_FILEPATHS is true.
 # Source: https://gist.github.com/willnationsdev/00d97aa8339138fd7ef0d6bd42748f6e
-static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_regex := false) -> Array:
+static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_regex := false) -> PoolStringArray:
+	var data: PoolStringArray = []
 	var regex: RegEx
 	if p_match_is_regex:
 		regex = RegEx.new()
 		regex.compile(p_match)
 		if not regex.is_valid():
-			return []
+			return data
 
 	var dirs := [p_dir]
 	var first := true
-	var data := []
 	while not dirs.empty():
 		var dir := Directory.new()
 		var dir_name: String = dirs.back()
