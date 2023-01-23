@@ -162,7 +162,9 @@ func _init() -> void:
 # (UNPACKED_DIR)
 func _load_mod_zips() -> int:
 	# Path to the games mod folder
-	var game_mod_folder_path := ModLoaderUtils.get_local_folder_dir("mods")
+	var game_mod_folder_path = ModLoaderUtils.get_local_folder_dir("mods")
+	if not os_mods_path_override == "":
+		game_mod_folder_path = os_mods_path_override
 
 	var dir := Directory.new()
 	if not dir.open(game_mod_folder_path) == OK:
