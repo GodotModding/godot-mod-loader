@@ -403,7 +403,6 @@ func _compare_importance(a: ModData, b: ModData) -> bool:
 
 # Instance every mod and add it as a node to the Mod Loader.
 # Runs mods in the order stored in mod_load_order.
-
 func _init_mod(mod: ModData):
 	var mod_main_path := mod.get_required_mod_file_path(ModData.required_mod_files.MOD_MAIN)
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
@@ -414,7 +413,6 @@ func _init_mod(mod: ModData):
 		var mod_overwrites_script := load(mod_overwrites_path)
 		mod_overwrites_script.new()
 		ModLoaderUtils.log_debug("Initialized overwrite script -> %s" % mod_overwrites_path, LOG_NAME)
-
 
 	ModLoaderUtils.log_debug("Loading script from -> %s" % mod_main_path, LOG_NAME)
 	var mod_main_script := ResourceLoader.load(mod_main_path)
