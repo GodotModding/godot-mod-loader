@@ -237,6 +237,16 @@ static func get_json_string_as_dict(string: String) -> Dictionary:
 	return parsed.result
 
 
+static func file_exists(path: String) -> bool:
+	var file = File.new()
+	return file.file_exists(path)
+
+
+static func dir_exists(path: String) -> bool:
+	var dir = Directory.new()
+	return dir.dir_exists(path)
+
+
 # Register an array of classes to the global scope, since Godot only does that in the editor.
 # Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
 # You can find these easily in the project.godot file under "_global_script_classes"
