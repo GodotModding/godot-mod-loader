@@ -222,11 +222,11 @@ static func get_json_string_as_dict(string: String) -> Dictionary:
 		return {}
 	return parsed.result
 
-static func is_file_existing(path: String) -> bool:
+static func file_exists(path: String) -> bool:
 	var file = File.new()
 	return file.file_exists(path)
 
-static func is_dir_existing(path: String) -> bool:
+static func dir_exists(path: String) -> bool:
 	var dir = Directory.new()
 	return dir.dir_exists(path)
 
