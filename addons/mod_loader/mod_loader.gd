@@ -4,9 +4,11 @@
 #
 # Written in 2021 by harrygiel <harrygiel@gmail.com>,
 # in 2021 by Mariusz Chwalba <mariusz@chwalba.net>,
-# in 2022 by Vladimir Panteleev <git@cy.md>
-# in 2023 by KANA <kai@kana.jetzt>
-# in 2023 by Darkly77
+# in 2022 by Vladimir Panteleev <git@cy.md>,
+# in 2023 by KANA <kai@kana.jetzt>,
+# in 2023 by Darkly77,
+# in 2023 by otDan <otdanofficial@gmail.com>,
+# in 2023 by Qubus0
 #
 # To the extent possible under law, the author(s) have
 # dedicated all copyright and related and neighboring
