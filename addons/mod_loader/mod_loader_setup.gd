@@ -100,16 +100,6 @@ func try_setup_modloader() -> void:
 	var _exit_code_add_project_binary := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "add", "--file", project_binary_path, "--remove-prefix", mod_loader_dir_path], true, output_add_project_binary)
 	modloaderutils.log_debug_json_print("Adding custom project.binaray to res://", output_add_project_binary, LOG_NAME)
 
-	# Add mod loader script to the pck under res://addons/mod_loader/
-	var output_add_addons := []
-	var _exit_add_addons := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "add", "--file",
-			exe_path + "addons/mod_loader/mod_data.gd," +
-			exe_path + "addons/mod_loader/mod_loader.gd," +
-			exe_path + "addons/mod_loader/mod_loader_utils.gd," +
-			exe_path + "addons/mod_loader/mod_manifest.gd",
-			"--remove-prefix", exe_path], true, output_add_addons)
-	modloaderutils.log_debug_json_print("Adding mod loader script to res://addons/", output_add_addons, LOG_NAME)
-
 	# TODO: Remove unnecessary files after installation?
 
 	setup_modloader()
