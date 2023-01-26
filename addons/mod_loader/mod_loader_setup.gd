@@ -34,6 +34,7 @@ var modloaderutils: Node = load("res://addons/mod_loader/mod_loader_utils.gd").n
 
 
 func _init() -> void:
+	modloaderutils.log_debug("Mod-Loader setup initialized", LOG_NAME)
 	try_setup_modloader()
 	change_scene(ProjectSettings.get_setting("application/run/main_scene"))
 
@@ -45,6 +46,71 @@ func try_setup_modloader() -> void:
 		modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
 		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
 		return
+
+	var pck_name : String = modloaderutils.get_cmd_line_arg_value("--pck-name")
+	var exe_path : String = modloaderutils.get_local_folder_dir()
+	modloaderutils.log_debug("exe_path -> " + exe_path, LOG_NAME)
+
+# remove and re-add autoloads
+	var original_autoloads := {}
+	for prop in ProjectSettings.get_property_list():
+			var name: String = prop.name
+			if name.begins_with("autoload/"):
+					var value: String = ProjectSettings.get_setting(name)
+					original_autoloads[name] = value
+
+	for autoload in original_autoloads.keys():
+			ProjectSettings.set_setting(autoload, null)
+
+	# add ModLoader autoload (the * marks the path as autoload)
+	ProjectSettings.set_setting("autoload/ModLoader", "*" + "res://addons/mod_loader/mod_loader.gd")
+
+	# add all previous autoloads back again
+	for autoload in original_autoloads.keys():
+			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
+
+	# save the current project settings to a new project.binary
+	ProjectSettings.save_custom(exe_path + "addons/mod_loader/project.binary")
+
+	# C:/path/to/game/addons/mod_loader
+	var mod_loader_dir_path := exe_path + "addons/mod_loader"
+	modloaderutils.log_debug("mod_loader_dir_path -> " + mod_loader_dir_path, LOG_NAME)
+
+	# C:/path/to/game/addons/mod_loader/godotpcktool/godotpcktool.exe
+	var pck_tool_path := mod_loader_dir_path + "/godotpcktool/godotpcktool.exe"
+	modloaderutils.log_debug("pck_tool_path -> " + pck_tool_path, LOG_NAME)
+
+	# TODO: Pck potentially embedded in the games .exe
+	# C:/path/to/game/game.pck
+	var pck_path := exe_path + pck_name
+	modloaderutils.log_debug("pck_path -> " + pck_path, LOG_NAME)
+
+	# C:/path/to/game/addons/mod_loader/project.binary
+	var project_binary_path := mod_loader_dir_path + "/project.binary"
+	modloaderutils.log_debug("project_binary_path -> " + project_binary_path, LOG_NAME)
+
+	# Create a backup of the original pck
+	var output_backup_pck := []
+	var _exit_code_backup_pck := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "repack", " " + pck_name + "_backup"])
+	modloaderutils.log_debug(output_backup_pck, LOG_NAME)
+	modloaderutils.log_debug_json_print("Creating a backup of the original pck", output_backup_pck, LOG_NAME)
+
+	# Add modified binary to the pck
+	var output_add_project_binary := []
+	var _exit_code_add_project_binary := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "add", "--file", project_binary_path, "--remove-prefix", mod_loader_dir_path], true, output_add_project_binary)
+	modloaderutils.log_debug_json_print("Adding custom project.binaray to res://", output_add_project_binary, LOG_NAME)
+
+	# Add mod loader script to the pck under res://addons/mod_loader/
+	var output_add_addons := []
+	var _exit_add_addons := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "add", "--file",
+			exe_path + "addons/mod_loader/mod_data.gd," +
+			exe_path + "addons/mod_loader/mod_loader.gd," +
+			exe_path + "addons/mod_loader/mod_loader_utils.gd," +
+			exe_path + "addons/mod_loader/mod_manifest.gd",
+			"--remove-prefix", exe_path], true, output_add_addons)
+	modloaderutils.log_debug_json_print("Adding mod loader script to res://addons/", output_add_addons, LOG_NAME)
+
+	# TODO: Remove unnecessary files after installation?
 
 	setup_modloader()
 
@@ -74,7 +140,7 @@ func setup_modloader() -> void:
 	# Set this here and check it elsewhere to prompt the user for a restart
 	ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, false)
 
-	ProjectSettings.save_custom(ModLoaderUtils.get_override_path())
+	ProjectSettings.save_custom(modloaderutils.get_override_path())
 	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
 
 
