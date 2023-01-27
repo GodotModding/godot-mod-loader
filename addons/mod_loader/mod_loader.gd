@@ -89,6 +89,16 @@ func _init() -> void:
 	# Log game install dir
 	ModLoaderUtils.log_info("game_install_directory: %s" % ModLoaderUtils.get_local_folder_dir(), LOG_NAME)
 
+	# Log Autoload order
+	var autoloads := {}
+	for prop in ProjectSettings.get_property_list():
+			var name: String = prop.name
+			if name.begins_with("autoload/"):
+					var value: String = ProjectSettings.get_setting(name)
+					autoloads[name] = value
+
+	ModLoaderUtils.log_debug_json_print("Autoload order", autoloads, LOG_NAME)
+
 	# check if we want to use a different mods path that is provided as a command line argument
 	var cmd_line_mod_path := ModLoaderUtils.get_cmd_line_arg_value("--mods-path")
 	if not cmd_line_mod_path == "":
