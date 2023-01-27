@@ -107,10 +107,15 @@ func try_setup_modloader() -> void:
 	# If the loader is set up, but the override is not applied yet,
 	# prompt the user to quit and restart the game.
 	if is_loader_set_up() and not is_loader_setup_applied():
-		modloaderutils.log_info("ModLoader is set up, but the game needs to be restarted", LOG_NAME)
-		OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
+		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
+
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
 		ProjectSettings.save_custom(modloaderutils.get_override_path())
+
+		# run the game again to apply the changed project settings
+		var _exit_code_game_start = OS.execute(exe_path + "Brotato.exe", ["--script", "addons/mod_loader/mod_loader_setup.gd", '--pck-name="Brotato.pck"', "--log-debug"], false)
+
+		# quit the current execution
 		quit()
 
 
