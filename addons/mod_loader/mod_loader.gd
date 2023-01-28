@@ -331,7 +331,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 
 	var mod := ModData.new(local_mod_path)
 	mod.dir_name = dir_name
-	var mod_overwrites_path: String = mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
+	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = ModLoaderUtils.file_exists(mod_overwrites_path)
 	mod_data[dir_name] = mod
 
@@ -407,7 +407,7 @@ func _compare_importance(a: ModData, b: ModData) -> bool:
 # Runs mods in the order stored in mod_load_order.
 func _init_mod(mod: ModData) -> void:
 	var mod_main_path := mod.get_required_mod_file_path(ModData.required_mod_files.MOD_MAIN)
-	var mod_overwrites_path: String = mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
+	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 
 	# If the mod contains overwrites initialize the overwrites script
 	if mod.is_overwrite:
