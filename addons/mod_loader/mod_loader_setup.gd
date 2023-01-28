@@ -74,7 +74,7 @@ func setup_modloader() -> void:
 	# Set this here and check it elsewhere to prompt the user for a restart
 	ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, false)
 
-	ProjectSettings.save_custom(ModLoaderUtils.get_override_path())
+	ProjectSettings.save_custom(modloaderutils.get_override_path())
 	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
 
 
