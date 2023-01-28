@@ -50,9 +50,17 @@ func try_setup_modloader() -> void:
 	# C:/path/to/game/game.exe
 	var exe_path : String = OS.get_executable_path()
 	# can be supplied to override the exe_name
-	var cli_arg_exe_name : String = modloaderutils.get_cmd_line_arg_value("--pck-name")
-	# game or cli_arg_exe_name
+	var cli_arg_exe_name : String = modloaderutils.get_cmd_line_arg_value("--exe-name")
+	# can be supplied to override the pck_name
+	var cli_arg_pck_name : String = modloaderutils.get_cmd_line_arg_value("--pck-name")
+	# game - or use the value of cli_arg_exe_name if there is one
 	var exe_name : String = exe_path.get_file() if cli_arg_exe_name == '' else cli_arg_exe_name
+	# game - or use the value of cli_arg_pck_name if there is one
+	# using exe_path.get_file() instead of exe_name
+	# so you don't override the pck_name with the --exe-name cli arg
+	# the main pack name is the same as the .exe name
+	# if --main-pack cli arg is not set
+	var pck_name : String = exe_path.get_file() if cli_arg_pck_name == '' else cli_arg_pck_name
 	# C:/path/to/game/
 	var game_base_dir : String = modloaderutils.get_local_folder_dir()
 	# C:/path/to/game/addons/mod_loader
@@ -67,6 +75,7 @@ func try_setup_modloader() -> void:
 	modloaderutils.log_debug("exe_path            -> " + exe_path, LOG_NAME)
 	modloaderutils.log_debug("cli_arg_exe_name    -> " + cli_arg_exe_name, LOG_NAME)
 	modloaderutils.log_debug("exe_name            -> " + exe_name, LOG_NAME)
+	modloaderutils.log_debug("pck_name            -> " + pck_name, LOG_NAME)
 	modloaderutils.log_debug("game_base_dir       -> " + game_base_dir, LOG_NAME)
 	modloaderutils.log_debug("mod_loader_dir_path -> " + mod_loader_dir_path, LOG_NAME)
 	modloaderutils.log_debug("pck_tool_path       -> " + pck_tool_path, LOG_NAME)
@@ -94,11 +103,9 @@ func try_setup_modloader() -> void:
 	# save the current project settings to a new project.binary
 	ProjectSettings.save_custom(game_base_dir + "addons/mod_loader/project.binary")
 
-
-
 	# Create a backup of the original pck
 	var output_backup_pck := []
-	var _exit_code_backup_pck := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "repack", " " + exe_name + "_backup"])
+	var _exit_code_backup_pck := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "repack", " " + pck_name + "_backup"])
 	modloaderutils.log_debug(output_backup_pck, LOG_NAME)
 	modloaderutils.log_debug_json_print("Creating a backup of the original pck", output_backup_pck, LOG_NAME)
 
