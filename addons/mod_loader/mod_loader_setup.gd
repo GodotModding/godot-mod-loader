@@ -57,8 +57,8 @@ func try_setup_modloader() -> void:
 	var game_base_dir : String = modloaderutils.get_local_folder_dir()
 	# C:/path/to/game/addons/mod_loader
 	var mod_loader_dir_path := game_base_dir + "addons/mod_loader"
-	# C:/path/to/game/addons/mod_loader/godotpcktool/godotpcktool.exe
-	var pck_tool_path := mod_loader_dir_path + "godotpcktool/godotpcktool.exe"
+	# C:/path/to/game/addons/mod_loader/vendor/godotpcktool/godotpcktool.exe
+	var pck_tool_path := mod_loader_dir_path + "vendor/godotpcktool/godotpcktool.exe"
 	# C:/path/to/game/game.pck
 	var pck_path := game_base_dir.plus_file(exe_name + '.pck')
 	# C:/path/to/game/addons/mod_loader/project.binary
