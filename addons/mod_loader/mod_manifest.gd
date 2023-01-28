@@ -99,15 +99,15 @@ func get_package_id() -> String:
 # a-z A-Z 0-9 _ (longer than 3 characters)
 static func is_name_or_namespace_valid(name: String) -> bool:
 	var re := RegEx.new()
-	re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
+	var _compile_error_1 = re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
 
 	if re.search(name) == null:
 		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". You may only use letters, numbers and underscores.' % name, LOG_NAME)
 		return false
 
-	re.compile("^[a-zA-Z0-9_]{3,}$") # at least 3 long
 	if re.search(name) == null:
 		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". Must be longer than 3 characters.' % name, LOG_NAME)
+	var _compile_error_2 = re.compile("^[a-zA-Z0-9_]{3,}$") # at least 3 long
 		return false
 
 	return true
@@ -118,7 +118,7 @@ static func is_name_or_namespace_valid(name: String) -> bool:
 # {0-9}.{0-9}.{0-9} (no leading 0, shorter than 16 characters total)
 static func is_semver_valid(version_number: String) -> bool:
 	var re := RegEx.new()
-	re.compile("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$")
+	var _compile_error = re.compile("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$")
 
 	if re.search(version_number) == null:
 		ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +

@@ -101,7 +101,7 @@ static func _write_to_log_file(log_entry: String) -> void:
 	var log_file := File.new()
 
 	if not log_file.file_exists(MOD_LOG_PATH):
-		log_file.open(MOD_LOG_PATH, File.WRITE)
+		var _fileopen_error: int = log_file.open(MOD_LOG_PATH, File.WRITE)
 		log_file.store_string('%s\t Created mod.log!' % get_date_time_string())
 		log_file.close()
 
@@ -266,7 +266,7 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 
 	ProjectSettings.set_setting("_global_script_classes", registered_classes)
 	ProjectSettings.set_setting("_global_script_class_icons", registered_class_icons)
-	ProjectSettings.save_custom(get_override_path())
+	var _savecustom_error: int = ProjectSettings.save_custom(get_override_path())
 
 
 # Checks if all required fields are in the given [Dictionary]
@@ -295,7 +295,7 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 	var regex: RegEx
 	if p_match_is_regex:
 		regex = RegEx.new()
-		regex.compile(p_match)
+		var _compile_error: int = regex.compile(p_match)
 		if not regex.is_valid():
 			return data
 
@@ -307,7 +307,7 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 		dirs.pop_back()
 
 		if dir.open(dir_name) == OK:
-			dir.list_dir_begin()
+			var _dirlist_error: int = dir.list_dir_begin()
 			var file_name := dir.get_next()
 			while file_name != "":
 				if not dir_name == "res://":
