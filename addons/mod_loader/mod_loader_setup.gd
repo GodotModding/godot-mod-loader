@@ -103,12 +103,6 @@ func try_setup_modloader() -> void:
 	# save the current project settings to a new project.binary
 	ProjectSettings.save_custom(game_base_dir + "addons/mod_loader/project.binary")
 
-	# Create a backup of the original pck
-	var output_backup_pck := []
-	var _exit_code_backup_pck := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "repack", " " + pck_name + "_backup"])
-	modloaderutils.log_debug(output_backup_pck, LOG_NAME)
-	modloaderutils.log_debug_json_print("Creating a backup of the original pck", output_backup_pck, LOG_NAME)
-
 	# Add modified binary to the pck
 	var output_add_project_binary := []
 	var _exit_code_add_project_binary := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "add", "--file", project_binary_path, "--remove-prefix", mod_loader_dir_path], true, output_add_project_binary)
