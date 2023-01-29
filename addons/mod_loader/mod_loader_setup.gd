@@ -98,6 +98,7 @@ func setup_modloader() -> void:
 		modloaderutils.log_debug("injecting the project.binary file", LOG_NAME)
 		create_project_binary()
 		inject_project_binary()
+		clean_up_project_binary_file()
 	# If no dedicated .pck file exists,it's most likely embedded into the .exe.
 	# In that case we add a override.cfg file to the base game dir.
 	else:
@@ -107,8 +108,6 @@ func setup_modloader() -> void:
 	# The game needs to be restarted first, before the loader is truly set up
 	# Set this here to check if the restart has occurred
 	ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, false)
-
-	# TODO: Remove unnecessary files after installation?
 
 	# If the loader is set up, notify the user that the game will restart
 	if is_loader_set_up() and not is_loader_setup_applied():
@@ -172,6 +171,12 @@ func inject_project_binary() -> void:
 	var output_add_project_binary := []
 	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], true, output_add_project_binary)
 	modloaderutils.log_debug_json_print("Adding custom project.binaray to res://", output_add_project_binary, LOG_NAME)
+
+
+# Removes the project.binary file
+func clean_up_project_binary_file() -> void:
+	var dir = Directory.new()
+	dir.remove(path.project_binary)
 
 
 func setup_file_data() -> void:
