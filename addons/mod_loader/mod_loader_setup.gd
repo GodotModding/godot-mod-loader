@@ -37,8 +37,8 @@ var restart_timer := Timer.new()
 
 var path := {}
 var file_name := {}
-var is_silent := false if not modloaderutils.is_running_with_command_line_arg("--silent") else true
-var is_setup_create_override_cfg := false if not modloaderutils.is_running_with_command_line_arg("--setup-create-override-cfg") else true
+var is_silent : bool = modloaderutils.is_running_with_command_line_arg("--silent")
+var is_setup_create_override_cfg : bool = modloaderutils.is_running_with_command_line_arg("--setup-create-override-cfg")
 
 
 func _init() -> void:
