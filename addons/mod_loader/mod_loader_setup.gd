@@ -37,6 +37,7 @@ var restart_timer := Timer.new()
 
 var path := {}
 var file_name := {}
+var is_silent := false if not modloaderutils.is_running_with_command_line_arg("--silent") else true
 
 func _init() -> void:
 	modloaderutils.log_debug("ModLoader setup initialized", LOG_NAME)
@@ -73,7 +74,10 @@ func try_setup_modloader() -> void:
 	# If the loader is set up, notify the user that the game will restart
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
-		restart_timer.start(4)
+		if is_silent:
+			restart_game()
+		else:
+			restart_timer.start(4)
 
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
 		var _error_save_custom_override = ProjectSettings.save_custom(modloaderutils.get_override_path())
@@ -194,6 +198,11 @@ func setup_ui() -> void:
 	root.add_child(restart_timer)
 	var _error_connect_restart_timer_timeout = restart_timer.connect("timeout", self, "_on_restart_timer_timeout")
 
+func restart_game() -> void:
+	# run the game again to apply the changed project settings
+	var _exit_code_game_start = OS.execute(OS.get_executable_path(), ["--script", path.mod_loader_dir + "mod_loader_setup.gd", "--log-debug"], false)
+	# quit the current execution
+	quit()
 
 static func is_project_setting_true(project_setting: String) -> bool:
 	return ProjectSettings.has_setting(project_setting) and\
@@ -201,8 +210,4 @@ static func is_project_setting_true(project_setting: String) -> bool:
 
 # restart the game
 func _on_restart_timer_timeout() -> void:
-	# run the game again to apply the changed project settings
-		var _exit_code_game_start = OS.execute(OS.get_executable_path(), ["--script", path.mod_loader_dir + "mod_loader_setup.gd", "--log-debug"], false)
-
-		# quit the current execution
-		quit()
+	restart_game()
