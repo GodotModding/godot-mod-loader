@@ -41,7 +41,7 @@ var file_name := {}
 func _init() -> void:
 	modloaderutils.log_debug("ModLoader setup initialized", LOG_NAME)
 	try_setup_modloader()
-	change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+	var _error_change_scene_main = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
 
 func _iteration(_delta):
 	# If the restart timer is started update the label to show that the game will be restarted
@@ -57,7 +57,7 @@ func try_setup_modloader() -> void:
 		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
 		return
 
-	# Add info label und restart timer to the scene tree
+	# Add info label and restart timer to the scene tree
 	setup_ui()
 
 	setup_file_data()
@@ -70,14 +70,13 @@ func try_setup_modloader() -> void:
 
 	setup_modloader()
 
-	# If the loader is set up, but the override is not applied yet,
-	# prompt the user to quit and restart the game.
+	# If the loader is set up, notify the user that the game will restart
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
 		restart_timer.start(4)
 
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
-		ProjectSettings.save_custom(modloaderutils.get_override_path())
+		var _error_save_custom_override = ProjectSettings.save_custom(modloaderutils.get_override_path())
 
 
 # Set up the ModLoader as an autoload and register the other global classes.
@@ -134,7 +133,7 @@ func create_project_binary() -> void:
 			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
 
 	# save the current project settings to a new project.binary
-	var _error = ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
+	var _error_save_custom_project_binary = ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
 
 
 # Add modified binary to the pck
@@ -145,7 +144,7 @@ func inject_project_binary() -> void:
 
 
 func setup_file_data() -> void:
-		# C:/path/to/game/game.exe
+	# C:/path/to/game/game.exe
 	path.exe = OS.get_executable_path()
 	# C:/path/to/game/
 	path.game_base_dir = modloaderutils.get_local_folder_dir()
@@ -193,7 +192,7 @@ func setup_ui() -> void:
 
 	restart_timer.one_shot = true
 	root.add_child(restart_timer)
-	restart_timer.connect("timeout", self, "_on_restart_timer_timeout")
+	var _error_connect_restart_timer_timeout = restart_timer.connect("timeout", self, "_on_restart_timer_timeout")
 
 
 static func is_project_setting_true(project_setting: String) -> bool:
