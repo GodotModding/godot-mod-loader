@@ -83,10 +83,7 @@ func try_setup_modloader() -> void:
 	# save the current project settings to a new project.binary
 	ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
 
-	# Add modified binary to the pck
-	var output_add_project_binary := []
-	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], true, output_add_project_binary)
-	modloaderutils.log_debug_json_print("Adding custom project.binaray to res://", output_add_project_binary, LOG_NAME)
+	inject_project_binary()
 
 	# TODO: Remove unnecessary files after installation?
 
@@ -132,6 +129,12 @@ func is_loader_setup_applied() -> bool:
 			modloaderutils.log_info("ModLoader is already set up. No self setup required.", LOG_NAME)
 		return true
 	return false
+
+# Add modified binary to the pck
+func inject_project_binary() -> void:
+	var output_add_project_binary := []
+	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], true, output_add_project_binary)
+	modloaderutils.log_debug_json_print("Adding custom project.binaray to res://", output_add_project_binary, LOG_NAME)
 
 
 func setup_file_data() -> void:
