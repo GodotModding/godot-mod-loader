@@ -38,11 +38,22 @@ var restart_timer := Timer.new()
 var path := {}
 var file_name := {}
 var is_silent := false if not modloaderutils.is_running_with_command_line_arg("--silent") else true
+var is_setup_create_override_cfg := false if not modloaderutils.is_running_with_command_line_arg("--setup-create-override-cfg") else true
 
 func _init() -> void:
 	modloaderutils.log_debug("ModLoader setup initialized", LOG_NAME)
-	try_setup_modloader()
-	var _error_change_scene_main = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+
+	# Avoid doubling the setup work
+	# Checks if the ModLoader Node is in the root of the scene tree
+	# and if the IS_LOADER_SETUP_APPLIED project setting is there
+	if is_loader_setup_applied():
+		modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
+		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
+		var _error_change_scene_main = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+		return
+
+	setup_modloader()
+
 
 func _iteration(_delta):
 	# If the restart timer is started update the label to show that the game will be restarted
@@ -51,56 +62,52 @@ func _iteration(_delta):
 
 
 # Set up the ModLoader, if it hasn't been set up yet
-func try_setup_modloader() -> void:
-	# Avoid doubling the setup work
-	if is_loader_setup_applied():
-		modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
-		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
-		return
+func setup_modloader() -> void:
+	modloaderutils.log_info("Setting up ModLoader", LOG_NAME)
 
 	# Add info label and restart timer to the scene tree
 	setup_ui()
 
 	setup_file_data()
 
-	create_project_binary()
+	# Register all new helper classes as global
+	modloaderutils.register_global_classes_from_array(new_global_classes)
 
-	inject_project_binary()
+	# Adds the ModLoader autoload at the top
+	# Only works if the pck file is not embedded in the .exe
+	# In that case create_override_cfg() is used and inject_project_binary() is skipped
+	reorder_autoloads()
+	ProjectSettings.set_setting(settings.IS_LOADER_SET_UP, true)
+
+	# If a dedicated .pck file exists, we can inject the custom project.binary
+	# If the --setup-create-override-cfg cli arg is passed always use the override.cfg
+	if modloaderutils.file_exists(path.pck) and not is_setup_create_override_cfg:
+		modloaderutils.log_debug("injecting the project.binary file", LOG_NAME)
+		create_project_binary()
+		inject_project_binary()
+	# If no dedicated .pck file exists,it's most likely embedded into the .exe.
+	# In that case we add a override.cfg file to the base game dir.
+	else:
+		modloaderutils.log_debug("using the override.cfg file", LOG_NAME)
+		create_override_cfg()
+
+	# The game needs to be restarted first, before the loader is truly set up
+	# Set this here to check if the restart has occurred
+	ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, false)
 
 	# TODO: Remove unnecessary files after installation?
-
-	setup_modloader()
 
 	# If the loader is set up, notify the user that the game will restart
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
+		# If the --silent cli argument is passed restart immediately
 		if is_silent:
 			restart_game()
+		# If not start the restart timer and show a notification
 		else:
 			restart_timer.start(4)
 
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
-		var _error_save_custom_override = ProjectSettings.save_custom(modloaderutils.get_override_path())
-
-
-# Set up the ModLoader as an autoload and register the other global classes.
-# Saved as override.cfg besides the game executable to extend the existing project settings
-func setup_modloader() -> void:
-	modloaderutils.log_info("Setting up ModLoader", LOG_NAME)
-
-	# Register all new helper classes as global
-	modloaderutils.register_global_classes_from_array(new_global_classes)
-
-	# Add ModLoader autoload (the * marks the path as autoload)
-	ProjectSettings.set_setting(settings.MOD_LOADER_AUTOLOAD, "*res://addons/mod_loader/mod_loader.gd")
-	ProjectSettings.set_setting(settings.IS_LOADER_SET_UP, true)
-
-	# The game needs to be restarted first, bofore the loader is truly set up
-	# Set this here and check it elsewhere to prompt the user for a restart
-	ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, false)
-
-	ProjectSettings.save_custom(modloaderutils.get_override_path())
-	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
 
 
 func is_loader_set_up() -> bool:
@@ -115,9 +122,19 @@ func is_loader_setup_applied() -> bool:
 	return false
 
 
-# Reorders the autoloads in the project settings, to get the ModLoader on top.
-# Then saves the project settings to a project.binary file inside the addons/mod_loader/ directory.
+# Saves the project settings to a project.binary file inside the addons/mod_loader/ directory.
 func create_project_binary() -> void:
+	var _error_save_custom_project_binary = ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
+
+
+# Saves the project settings to a overrides.cfg file inside the games base directory.
+func create_override_cfg() -> void:
+	modloaderutils.log_debug("create_override_cfg func called", LOG_NAME)
+	var _error_save_custom_override = ProjectSettings.save_custom(modloaderutils.get_override_path())
+
+
+# Reorders the autoloads in the project settings, to get the ModLoader on top.
+func reorder_autoloads() -> void:
 	# remove and re-add autoloads
 	var original_autoloads := {}
 	for prop in ProjectSettings.get_property_list():
@@ -135,9 +152,6 @@ func create_project_binary() -> void:
 	# add all previous autoloads back again
 	for autoload in original_autoloads.keys():
 			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
-
-	# save the current project settings to a new project.binary
-	var _error_save_custom_project_binary = ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
 
 
 # Add modified binary to the pck
@@ -200,7 +214,7 @@ func setup_ui() -> void:
 
 func restart_game() -> void:
 	# run the game again to apply the changed project settings
-	var _exit_code_game_start = OS.execute(OS.get_executable_path(), ["--script", path.mod_loader_dir + "mod_loader_setup.gd", "--log-debug"], false)
+	var _exit_code_game_start = OS.execute(path.exe, ["--script", path.mod_loader_dir + "mod_loader_setup.gd", "--log-debug"], false)
 	# quit the current execution
 	quit()
 
