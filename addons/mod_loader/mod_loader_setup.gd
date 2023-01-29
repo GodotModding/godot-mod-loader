@@ -40,6 +40,7 @@ var file_name := {}
 var is_silent := false if not modloaderutils.is_running_with_command_line_arg("--silent") else true
 var is_setup_create_override_cfg := false if not modloaderutils.is_running_with_command_line_arg("--setup-create-override-cfg") else true
 
+
 func _init() -> void:
 	modloaderutils.log_debug("ModLoader setup initialized", LOG_NAME)
 
@@ -48,8 +49,14 @@ func _init() -> void:
 	# and if the IS_LOADER_SETUP_APPLIED project setting is there
 	if is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
+
 		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
-		var _error_change_scene_main = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+
+		var icon := Image.new()
+		var _error_load_icon := icon.load(ProjectSettings.get_setting("application/config/icon"))
+		OS.set_icon(icon)
+
+		var _error_change_scene_main := change_scene(ProjectSettings.get_setting("application/run/main_scene"))
 		return
 
 	setup_modloader()
