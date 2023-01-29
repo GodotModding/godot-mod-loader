@@ -62,26 +62,7 @@ func try_setup_modloader() -> void:
 
 	setup_file_data()
 
-	# remove and re-add autoloads
-	var original_autoloads := {}
-	for prop in ProjectSettings.get_property_list():
-			var name: String = prop.name
-			if name.begins_with("autoload/"):
-					var value: String = ProjectSettings.get_setting(name)
-					original_autoloads[name] = value
-
-	for autoload in original_autoloads.keys():
-			ProjectSettings.set_setting(autoload, null)
-
-	# add ModLoader autoload (the * marks the path as autoload)
-	ProjectSettings.set_setting("autoload/ModLoader", "*" + "res://addons/mod_loader/mod_loader.gd")
-
-	# add all previous autoloads back again
-	for autoload in original_autoloads.keys():
-			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
-
-	# save the current project settings to a new project.binary
-	ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
+	create_project_binary()
 
 	inject_project_binary()
 
@@ -129,6 +110,32 @@ func is_loader_setup_applied() -> bool:
 			modloaderutils.log_info("ModLoader is already set up. No self setup required.", LOG_NAME)
 		return true
 	return false
+
+
+# Reorders the autoloads in the project settings, to get the ModLoader on top.
+# Then saves the project settings to a project.binary file inside the addons/mod_loader/ directory.
+func create_project_binary() -> void:
+	# remove and re-add autoloads
+	var original_autoloads := {}
+	for prop in ProjectSettings.get_property_list():
+			var name: String = prop.name
+			if name.begins_with("autoload/"):
+					var value: String = ProjectSettings.get_setting(name)
+					original_autoloads[name] = value
+
+	for autoload in original_autoloads.keys():
+			ProjectSettings.set_setting(autoload, null)
+
+	# add ModLoader autoload (the * marks the path as autoload)
+	ProjectSettings.set_setting("autoload/ModLoader", "*" + "res://addons/mod_loader/mod_loader.gd")
+
+	# add all previous autoloads back again
+	for autoload in original_autoloads.keys():
+			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
+
+	# save the current project settings to a new project.binary
+	var _error = ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
+
 
 # Add modified binary to the pck
 func inject_project_binary() -> void:
