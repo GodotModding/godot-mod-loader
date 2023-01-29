@@ -32,11 +32,21 @@ const new_global_classes := [
 # Otherwise, script compilation will break on first load since the class is not defined.
 var modloaderutils: Node = load("res://addons/mod_loader/mod_loader_utils.gd").new()
 
+var info_label := Label.new()
+var restart_timer := Timer.new()
+
+var path := {}
+var file_name := {}
 
 func _init() -> void:
 	modloaderutils.log_debug("ModLoader setup initialized", LOG_NAME)
 	try_setup_modloader()
 	change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+
+func _iteration(_delta):
+	# If the restart timer is started update the label to show that the game will be restarted
+	if !restart_timer.is_stopped():
+		info_label.text = "Mod Loader is installing - restarting in %s" % int(restart_timer.time_left)
 
 
 # Set up the ModLoader, if it hasn't been set up yet
@@ -47,40 +57,10 @@ func try_setup_modloader() -> void:
 		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
 		return
 
-	# C:/path/to/game/game.exe
-	var exe_path : String = OS.get_executable_path()
-	# can be supplied to override the exe_name
-	var cli_arg_exe_name : String = modloaderutils.get_cmd_line_arg_value("--exe-name")
-	# can be supplied to override the pck_name
-	var cli_arg_pck_name : String = modloaderutils.get_cmd_line_arg_value("--pck-name")
-	# game - or use the value of cli_arg_exe_name if there is one
-	var exe_name : String = exe_path.get_file() if cli_arg_exe_name == '' else cli_arg_exe_name
-	# game - or use the value of cli_arg_pck_name if there is one
-	# using exe_path.get_file() instead of exe_name
-	# so you don't override the pck_name with the --exe-name cli arg
-	# the main pack name is the same as the .exe name
-	# if --main-pack cli arg is not set
-	var pck_name : String = exe_path.get_file() if cli_arg_pck_name == '' else cli_arg_pck_name
-	# C:/path/to/game/
-	var game_base_dir : String = modloaderutils.get_local_folder_dir()
-	# C:/path/to/game/addons/mod_loader
-	var mod_loader_dir_path := game_base_dir + "addons/mod_loader"
-	# C:/path/to/game/addons/mod_loader/vendor/godotpcktool/godotpcktool.exe
-	var pck_tool_path := mod_loader_dir_path + "vendor/godotpcktool/godotpcktool.exe"
-	# C:/path/to/game/game.pck
-	var pck_path := game_base_dir.plus_file(exe_name + '.pck')
-	# C:/path/to/game/addons/mod_loader/project.binary
-	var project_binary_path := mod_loader_dir_path + "/project.binary"
+	# Add info label und restart timer to the scene tree
+	setup_ui()
 
-	modloaderutils.log_debug("exe_path            -> " + exe_path, LOG_NAME)
-	modloaderutils.log_debug("cli_arg_exe_name    -> " + cli_arg_exe_name, LOG_NAME)
-	modloaderutils.log_debug("exe_name            -> " + exe_name, LOG_NAME)
-	modloaderutils.log_debug("pck_name            -> " + pck_name, LOG_NAME)
-	modloaderutils.log_debug("game_base_dir       -> " + game_base_dir, LOG_NAME)
-	modloaderutils.log_debug("mod_loader_dir_path -> " + mod_loader_dir_path, LOG_NAME)
-	modloaderutils.log_debug("pck_tool_path       -> " + pck_tool_path, LOG_NAME)
-	modloaderutils.log_debug("pck_path            -> " + pck_path, LOG_NAME)
-	modloaderutils.log_debug("project_binary_path -> " + project_binary_path, LOG_NAME)
+	setup_file_data()
 
 	# remove and re-add autoloads
 	var original_autoloads := {}
@@ -101,11 +81,11 @@ func try_setup_modloader() -> void:
 			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
 
 	# save the current project settings to a new project.binary
-	ProjectSettings.save_custom(game_base_dir + "addons/mod_loader/project.binary")
+	ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
 
 	# Add modified binary to the pck
 	var output_add_project_binary := []
-	var _exit_code_add_project_binary := OS.execute(pck_tool_path, ["--pack", pck_path, "--action", "add", "--file", project_binary_path, "--remove-prefix", mod_loader_dir_path], true, output_add_project_binary)
+	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], true, output_add_project_binary)
 	modloaderutils.log_debug_json_print("Adding custom project.binaray to res://", output_add_project_binary, LOG_NAME)
 
 	# TODO: Remove unnecessary files after installation?
@@ -116,15 +96,10 @@ func try_setup_modloader() -> void:
 	# prompt the user to quit and restart the game.
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
+		restart_timer.start(4)
 
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
 		ProjectSettings.save_custom(modloaderutils.get_override_path())
-
-		# run the game again to apply the changed project settings
-		var _exit_code_game_start = OS.execute(game_base_dir + "Brotato.exe", ["--script", "addons/mod_loader/mod_loader_setup.gd", '--pck-name="Brotato.pck"', "--log-debug"], false)
-
-		# quit the current execution
-		quit()
 
 
 # Set up the ModLoader as an autoload and register the other global classes.
@@ -159,9 +134,66 @@ func is_loader_setup_applied() -> bool:
 	return false
 
 
+func setup_file_data() -> void:
+		# C:/path/to/game/game.exe
+	path.exe = OS.get_executable_path()
+	# C:/path/to/game/
+	path.game_base_dir = modloaderutils.get_local_folder_dir()
+	# C:/path/to/game/addons/mod_loader
+	path.mod_loader_dir = path.game_base_dir + "addons/mod_loader/"
+	# C:/path/to/game/addons/mod_loader/vendor/godotpcktool/godotpcktool.exe
+	path.pck_tool = path.mod_loader_dir + "vendor/godotpcktool/godotpcktool.exe"
+	# can be supplied to override the exe_name
+	file_name.cli_arg_exe = modloaderutils.get_cmd_line_arg_value("--exe-name")
+	# can be supplied to override the pck_name
+	file_name.cli_arg_pck = modloaderutils.get_cmd_line_arg_value("--pck-name")
+	# game - or use the value of cli_arg_exe_name if there is one
+	file_name.exe = modloaderutils.get_file_name_from_path(path.exe, true, true) if file_name.cli_arg_exe == '' else file_name.cli_arg_exe
+	# game - or use the value of cli_arg_pck_name if there is one
+	# using exe_path.get_file() instead of exe_name
+	# so you don't override the pck_name with the --exe-name cli arg
+	# the main pack name is the same as the .exe name
+	# if --main-pack cli arg is not set
+	file_name.pck = modloaderutils.get_file_name_from_path(path.exe, true, true)  if file_name.cli_arg_pck == '' else file_name.cli_arg_pck
+	# C:/path/to/game/game.pck
+	path.pck = path.game_base_dir.plus_file(file_name.pck + '.pck')
+	# C:/path/to/game/addons/mod_loader/project.binary
+	path.project_binary = path.mod_loader_dir + "project.binary"
+
+	modloaderutils.log_debug_json_print("path: ", path, LOG_NAME)
+	modloaderutils.log_debug_json_print("file_name: ", file_name, LOG_NAME)
+
+
+func setup_ui() -> void:
+	# setup UI for installation visualization
+	info_label.anchor_left = 0.5
+	info_label.anchor_top = 0.5
+	info_label.anchor_right = 0.5
+	info_label.anchor_bottom = 0.5
+	info_label.margin_left = -305.0
+	info_label.margin_top = -13.0
+	info_label.margin_right = 28.0
+	info_label.margin_bottom = 1.0
+	info_label.grow_horizontal = Label.GROW_DIRECTION_BOTH
+	info_label.rect_scale = Vector2( 2, 2 )
+	info_label.align = Label.ALIGN_CENTER
+	info_label.valign = Label.ALIGN_CENTER
+	info_label.text = "Mod Loader is installing - please wait.."
+	root.add_child(info_label)
+
+	restart_timer.one_shot = true
+	root.add_child(restart_timer)
+	restart_timer.connect("timeout", self, "_on_restart_timer_timeout")
+
+
 static func is_project_setting_true(project_setting: String) -> bool:
 	return ProjectSettings.has_setting(project_setting) and\
 		ProjectSettings.get_setting(project_setting)
 
+# restart the game
+func _on_restart_timer_timeout() -> void:
+	# run the game again to apply the changed project settings
+		var _exit_code_game_start = OS.execute(OS.get_executable_path(), ["--script", path.mod_loader_dir + "mod_loader_setup.gd", "--log-debug"], false)
 
-
+		# quit the current execution
+		quit()
