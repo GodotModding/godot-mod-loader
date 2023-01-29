@@ -212,15 +212,18 @@ func setup_ui() -> void:
 	root.add_child(restart_timer)
 	var _error_connect_restart_timer_timeout = restart_timer.connect("timeout", self, "_on_restart_timer_timeout")
 
+
 func restart_game() -> void:
 	# run the game again to apply the changed project settings
 	var _exit_code_game_start = OS.execute(path.exe, ["--script", path.mod_loader_dir + "mod_loader_setup.gd", "--log-debug"], false)
 	# quit the current execution
 	quit()
 
+
 static func is_project_setting_true(project_setting: String) -> bool:
 	return ProjectSettings.has_setting(project_setting) and\
 		ProjectSettings.get_setting(project_setting)
+
 
 # restart the game
 func _on_restart_timer_timeout() -> void:
