@@ -50,17 +50,7 @@ func _init() -> void:
 	# Checks if the ModLoader Node is in the root of the scene tree
 	# and if the IS_LOADER_SETUP_APPLIED project setting is there
 	if get_mod_loader_position_index() == 0:
-		modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
-
-		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
-
-		# For unknown reasons the icon gets reset to the default Godot icon when using the --script cli arg.
-		# To fix this the icon defined in the ProjectSettings is set via OS.set_icon()
-		var icon := Image.new()
-		var _error_load_icon := icon.load(ProjectSettings.get_setting("application/config/icon"))
-		OS.set_icon(icon)
-
-		var _error_change_scene_main := change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+		modded_start()
 		return
 
 	setup_modloader()
@@ -70,6 +60,20 @@ func _iteration(_delta):
 	# If the restart timer is started update the label to show that the game will be restarted
 	if !restart_timer.is_stopped():
 		info_label.text = "Mod Loader is installing - restarting in %s" % int(restart_timer.time_left)
+
+
+func modded_start() -> void:
+	modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
+
+	OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
+
+	# For unknown reasons the icon gets reset to the default Godot icon when using the --script cli arg.
+	# To fix this the icon defined in the ProjectSettings is set via OS.set_icon()
+	var icon := Image.new()
+	var _error_load_icon := icon.load(ProjectSettings.get_setting("application/config/icon"))
+	OS.set_icon(icon)
+
+	var _error_change_scene_main := change_scene(ProjectSettings.get_setting("application/run/main_scene"))
 
 
 # Set up the ModLoader, if it hasn't been set up yet
