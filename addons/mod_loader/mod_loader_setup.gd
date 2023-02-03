@@ -67,7 +67,7 @@ func setup_modloader() -> void:
 	modloaderutils.register_global_classes_from_array(new_global_classes)
 
 	# Add ModLoader autoload (the * marks the path as autoload)
-	ProjectSettings.set_setting(settings.MOD_LOADER_AUTOLOAD, "*res://addons/mod_loader/mod_loader.gd")
+	reorder_autoloads()
 	ProjectSettings.set_setting(settings.IS_LOADER_SET_UP, true)
 
 	# The game needs to be restarted first, bofore the loader is truly set up
@@ -76,6 +76,27 @@ func setup_modloader() -> void:
 
 	var _savecustom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
 	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
+
+
+# Reorders the autoloads in the project settings, to get the ModLoader on top.
+func reorder_autoloads() -> void:
+	# remove and re-add autoloads
+	var original_autoloads := {}
+	for prop in ProjectSettings.get_property_list():
+			var name: String = prop.name
+			if name.begins_with("autoload/"):
+					var value: String = ProjectSettings.get_setting(name)
+					original_autoloads[name] = value
+
+	for autoload in original_autoloads.keys():
+			ProjectSettings.set_setting(autoload, null)
+
+	# add ModLoader autoload (the * marks the path as autoload)
+	ProjectSettings.set_setting("autoload/ModLoader", "*" + "res://addons/mod_loader/mod_loader.gd")
+
+	# add all previous autoloads back again
+	for autoload in original_autoloads.keys():
+			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
 
 
 func is_loader_set_up() -> bool:
