@@ -35,6 +35,7 @@ var modloaderutils: Node = load("res://addons/mod_loader/mod_loader_utils.gd").n
 var path := {}
 var file_name := {}
 
+
 func _init() -> void:
 	try_setup_modloader()
 	var _changescene_error: int = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
@@ -48,6 +49,7 @@ func try_setup_modloader() -> void:
 		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
 		return
 
+	setup_file_data()
 	setup_modloader()
 
 	# If the loader is set up, but the override is not applied yet,
@@ -79,6 +81,9 @@ func setup_modloader() -> void:
 	var _savecustom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
 	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
 
+	create_project_binary()
+	inject_project_binary()
+
 
 # Reorders the autoloads in the project settings, to get the ModLoader on top.
 func reorder_autoloads() -> void:
@@ -99,6 +104,18 @@ func reorder_autoloads() -> void:
 	# add all previous autoloads back again
 	for autoload in original_autoloads.keys():
 			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
+
+
+# Saves the project settings to a project.binary file inside the addons/mod_loader/ directory.
+func create_project_binary() -> void:
+	var _error_save_custom_project_binary = ProjectSettings.save_custom(path.game_base_dir + "addons/mod_loader/project.binary")
+
+
+# Add modified binary to the pck
+func inject_project_binary() -> void:
+	var output_add_project_binary := []
+	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], true, output_add_project_binary)
+	modloaderutils.log_debug_json_print("Adding custom project.binary to res://", output_add_project_binary, LOG_NAME)
 
 
 # Initialize the path and file_name dictionary
