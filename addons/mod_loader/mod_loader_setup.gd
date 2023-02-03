@@ -112,14 +112,18 @@ func setup_modloader() -> void:
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
 
-		# If the --silent cli argument is passed restart immediately
+
 		match true:
+			# If the --only-setup cli argument is passed, quit with exit code 0
 			is_only_setup:
 				quit(0)
+			# If the --unattended cli argument is passed, show restart timer and auto restart
 			is_unattended:
 				restart_timer.start(4)
+			# If the --silent cli argument is passed, restart immediately
 			is_silent:
 				restart_game()
+			# If no cli argument is passed, show message with OS.alert() and user has to restart the game
 			_:
 				OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
 				quit()
