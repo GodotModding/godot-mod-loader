@@ -54,6 +54,8 @@ func _init() -> void:
 
 		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
 
+		# For unknown reasons the icon gets reset to the default Godot icon when using the --script cli arg.
+		# To fix this the icon defined in the ProjectSettings is set via OS.set_icon()
 		var icon := Image.new()
 		var _error_load_icon := icon.load(ProjectSettings.get_setting("application/config/icon"))
 		OS.set_icon(icon)
