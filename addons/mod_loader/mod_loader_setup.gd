@@ -37,6 +37,7 @@ var restart_timer := Timer.new()
 
 var path := {}
 var file_name := {}
+var is_unattended : bool = modloaderutils.is_running_with_command_line_arg("--unattended")
 var is_silent : bool = modloaderutils.is_running_with_command_line_arg("--silent")
 var is_setup_create_override_cfg : bool = modloaderutils.is_running_with_command_line_arg("--setup-create-override-cfg")
 
@@ -112,12 +113,16 @@ func setup_modloader() -> void:
 	# If the loader is set up, notify the user that the game will restart
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
+
 		# If the --silent cli argument is passed restart immediately
 		if is_silent:
 			restart_game()
 		# If not start the restart timer and show a notification
-		else:
+		elif is_unattended:
 			restart_timer.start(4)
+		else:
+			OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
+			quit()
 
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
 
