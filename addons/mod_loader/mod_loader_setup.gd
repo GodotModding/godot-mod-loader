@@ -37,6 +37,7 @@ var file_name := {}
 var is_only_setup: bool = modloaderutils.is_running_with_command_line_arg("--only-setup")
 
 
+
 func _init() -> void:
 	try_setup_modloader()
 	var _changescene_error: int = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
