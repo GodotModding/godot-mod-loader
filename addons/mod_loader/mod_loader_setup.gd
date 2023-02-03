@@ -80,7 +80,8 @@ func setup_modloader() -> void:
 	modloaderutils.log_info("Setting up ModLoader", LOG_NAME)
 
 	# Add info label and restart timer to the scene tree
-	setup_ui()
+	if is_unattended:
+		setup_ui()
 
 	setup_file_data()
 
