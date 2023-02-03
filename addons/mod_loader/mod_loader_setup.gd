@@ -65,12 +65,6 @@ func _init() -> void:
 
 	setup_modloader()
 
-	# Add the mods folder if it doesn't exist yet
-	if not modloaderutils.dir_exists(path.game_base_dir + "mods"):
-		var dir = Directory.new()
-		dir.make_dir(path.game_base_dir + "mods")
-		modloaderutils.log_debug("created mods folder" , LOG_NAME)
-
 
 func _iteration(_delta):
 	# If the restart timer is started update the label to show that the game will be restarted
