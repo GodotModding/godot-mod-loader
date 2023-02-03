@@ -83,6 +83,7 @@ func setup_modloader() -> void:
 
 	create_project_binary()
 	inject_project_binary()
+	clean_up_project_binary_file()
 
 
 # Reorders the autoloads in the project settings, to get the ModLoader on top.
@@ -116,6 +117,12 @@ func inject_project_binary() -> void:
 	var output_add_project_binary := []
 	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], true, output_add_project_binary)
 	modloaderutils.log_debug_json_print("Adding custom project.binary to res://", output_add_project_binary, LOG_NAME)
+
+
+# Removes the project.binary file
+func clean_up_project_binary_file() -> void:
+	var dir = Directory.new()
+	dir.remove(path.project_binary)
 
 
 # Initialize the path and file_name dictionary
