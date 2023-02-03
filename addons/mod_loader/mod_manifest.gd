@@ -97,17 +97,17 @@ func get_package_id() -> String:
 # A valid namespace may only use letters (any case), numbers and underscores
 # and has to be longer than 3 characters
 # a-z A-Z 0-9 _ (longer than 3 characters)
-static func is_name_or_namespace_valid(name: String) -> bool:
+static func is_name_or_namespace_valid(check_name: String) -> bool:
 	var re := RegEx.new()
-	re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
+	var _compile_error_1 = re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
 
-	if re.search(name) == null:
-		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". You may only use letters, numbers and underscores.' % name, LOG_NAME)
+	if re.search(check_name) == null:
+		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". You may only use letters, numbers and underscores.' % check_name, LOG_NAME)
 		return false
 
-	re.compile("^[a-zA-Z0-9_]{3,}$") # at least 3 long
-	if re.search(name) == null:
-		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". Must be longer than 3 characters.' % name, LOG_NAME)
+	var _compile_error_2 = re.compile("^[a-zA-Z0-9_]{3,}$") # at least 3 long
+	if re.search(check_name) == null:
+		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". Must be longer than 3 characters.' % check_name, LOG_NAME)
 		return false
 
 	return true
@@ -116,18 +116,18 @@ static func is_name_or_namespace_valid(name: String) -> bool:
 # A valid semantic version should follow this format: {mayor}.{minor}.{patch}
 # reference https://semver.org/ for details
 # {0-9}.{0-9}.{0-9} (no leading 0, shorter than 16 characters total)
-static func is_semver_valid(version_number: String) -> bool:
+static func is_semver_valid(check_version_number: String) -> bool:
 	var re := RegEx.new()
-	re.compile("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$")
+	var _compile_error = re.compile("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$")
 
-	if re.search(version_number) == null:
+	if re.search(check_version_number) == null:
 		ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +
-			'You may only use numbers without leading zero and periods following this format {mayor}.{minor}.{patch}' % version_number,
+			'You may only use numbers without leading zero and periods following this format {mayor}.{minor}.{patch}' % check_version_number,
 			LOG_NAME
 		)
 		return false
 
-	if version_number.length() > 16:
+	if check_version_number.length() > 16:
 		ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +
 			'Version number must be shorter than 16 characters.', LOG_NAME
 		)

@@ -38,7 +38,7 @@ var file_name := {}
 
 func _init() -> void:
 	try_setup_modloader()
-	change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+	var _changescene_error: int = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
 
 
 # Set up the ModLoader, if it hasn't been set up yet
@@ -58,7 +58,7 @@ func try_setup_modloader() -> void:
 		modloaderutils.log_info("ModLoader is set up, but the game needs to be restarted", LOG_NAME)
 		OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
-		ProjectSettings.save_custom(modloaderutils.get_override_path())
+		var _savecustom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
 		quit()
 
 
@@ -78,7 +78,7 @@ func setup_modloader() -> void:
 	# Set this here and check it elsewhere to prompt the user for a restart
 	ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, false)
 
-	ProjectSettings.save_custom(ModLoaderUtils.get_override_path())
+	var _savecustom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
 	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
 
 	create_project_binary()
