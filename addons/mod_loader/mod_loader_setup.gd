@@ -32,6 +32,8 @@ const new_global_classes := [
 # Otherwise, script compilation will break on first load since the class is not defined.
 var modloaderutils: Node = load("res://addons/mod_loader/mod_loader_utils.gd").new()
 
+var path := {}
+var file_name := {}
 
 func _init() -> void:
 	try_setup_modloader()
@@ -97,6 +99,37 @@ func reorder_autoloads() -> void:
 	# add all previous autoloads back again
 	for autoload in original_autoloads.keys():
 			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
+
+
+# Initialize the path and file_name dictionary
+func setup_file_data() -> void:
+	# C:/path/to/game/game.exe
+	path.exe = OS.get_executable_path()
+	# C:/path/to/game/
+	path.game_base_dir = modloaderutils.get_local_folder_dir()
+	# C:/path/to/game/addons/mod_loader
+	path.mod_loader_dir = path.game_base_dir + "addons/mod_loader/"
+	# C:/path/to/game/addons/mod_loader/vendor/godotpcktool/godotpcktool.exe
+	path.pck_tool = path.mod_loader_dir + "vendor/godotpcktool/godotpcktool.exe"
+	# can be supplied to override the exe_name
+	file_name.cli_arg_exe = modloaderutils.get_cmd_line_arg_value("--exe-name")
+	# can be supplied to override the pck_name
+	file_name.cli_arg_pck = modloaderutils.get_cmd_line_arg_value("--pck-name")
+	# game - or use the value of cli_arg_exe_name if there is one
+	file_name.exe = modloaderutils.get_file_name_from_path(path.exe, true, true) if file_name.cli_arg_exe == '' else file_name.cli_arg_exe
+	# game - or use the value of cli_arg_pck_name if there is one
+	# using exe_path.get_file() instead of exe_name
+	# so you don't override the pck_name with the --exe-name cli arg
+	# the main pack name is the same as the .exe name
+	# if --main-pack cli arg is not set
+	file_name.pck = modloaderutils.get_file_name_from_path(path.exe, true, true)  if file_name.cli_arg_pck == '' else file_name.cli_arg_pck
+	# C:/path/to/game/game.pck
+	path.pck = path.game_base_dir.plus_file(file_name.pck + '.pck')
+	# C:/path/to/game/addons/mod_loader/project.binary
+	path.project_binary = path.mod_loader_dir + "project.binary"
+
+	modloaderutils.log_debug_json_print("path: ", path, LOG_NAME)
+	modloaderutils.log_debug_json_print("file_name: ", file_name, LOG_NAME)
 
 
 func is_loader_set_up() -> bool:
