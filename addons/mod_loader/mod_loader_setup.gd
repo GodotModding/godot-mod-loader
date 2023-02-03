@@ -112,7 +112,6 @@ func setup_modloader() -> void:
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
 
-
 		match true:
 			# If the --only-setup cli argument is passed, quit with exit code 0
 			is_only_setup:
