@@ -49,7 +49,7 @@ func _init() -> void:
 	# Avoid doubling the setup work
 	# Checks if the ModLoader Node is in the root of the scene tree
 	# and if the IS_LOADER_SETUP_APPLIED project setting is there
-	if is_loader_setup_applied():
+	if get_mod_loader_position_index() == 0:
 		modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
 
 		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
@@ -89,7 +89,6 @@ func setup_modloader() -> void:
 	# Only works if the pck file is not embedded in the .exe
 	# In that case create_override_cfg() is used and inject_project_binary() is skipped
 	reorder_autoloads()
-	ProjectSettings.set_setting(settings.IS_LOADER_SET_UP, true)
 
 	# If a dedicated .pck file exists, we can inject the custom project.binary
 	# If the --setup-create-override-cfg cli arg is passed always use the override.cfg
@@ -104,42 +103,41 @@ func setup_modloader() -> void:
 		modloaderutils.log_debug("using the override.cfg file", LOG_NAME)
 		create_override_cfg()
 
-	# The game needs to be restarted first, before the loader is truly set up
-	# Set this here to check if the restart has occurred
-	ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, false)
+	# ModLoader is set up. A game restart is required to apply the ProjectSettings.
+	modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
 
-	# If the loader is set up, notify the user that the game will restart
-	if is_loader_set_up() and not is_loader_setup_applied():
-		modloaderutils.log_info("ModLoader is set up, the game will be restarted", LOG_NAME)
-
-		match true:
-			# If the --only-setup cli argument is passed, quit with exit code 0
-			is_only_setup:
-				quit(0)
-			# If the --unattended cli argument is passed, show restart timer and auto restart
-			is_unattended:
-				restart_timer.start(4)
-			# If the --silent cli argument is passed, restart immediately
-			is_silent:
-				restart_game()
-			# If no cli argument is passed, show message with OS.alert() and user has to restart the game
-			_:
-				OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
-				quit()
-
-		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
+	match true:
+		# If the --only-setup cli argument is passed, quit with exit code 0
+		is_only_setup:
+			quit(0)
+		# If the --unattended cli argument is passed, show restart timer and auto restart
+		is_unattended:
+			restart_timer.start(4)
+		# If the --silent cli argument is passed, restart immediately
+		is_silent:
+			restart_game()
+		# If no cli argument is passed, show message with OS.alert() and user has to restart the game
+		_:
+			OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
+			quit()
 
 
-func is_loader_set_up() -> bool:
-	return is_project_setting_true(settings.IS_LOADER_SET_UP)
+func get_mod_loader_position_index() -> int:
+	# Log Autoload order
+	var autoloads := {}
+	for prop in ProjectSettings.get_property_list():
+		var name: String = prop.name
+		if name.begins_with("autoload/"):
+			var value: String = ProjectSettings.get_setting(name)
+			autoloads[name] = value
 
+	var autoload_keys = autoloads.keys()
+	var mod_loader_index = autoload_keys.find("autoload/ModLoader")
 
-func is_loader_setup_applied() -> bool:
-	if not root.get_node_or_null("/root/ModLoader") == null:
-		if not is_project_setting_true(settings.IS_LOADER_SETUP_APPLIED):
-			modloaderutils.log_info("ModLoader is already set up. No self setup required.", LOG_NAME)
-		return true
-	return false
+	if(mod_loader_index != 0):
+		modloaderutils.log_debug_json_print("Autoload order", autoloads, LOG_NAME)
+
+	return mod_loader_index
 
 
 # Saves the project settings to a project.binary file inside the addons/mod_loader/ directory.
