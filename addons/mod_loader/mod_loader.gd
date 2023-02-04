@@ -461,6 +461,15 @@ func install_script_extension(child_script_path: String) -> void:
 	child_script.take_over_path(parent_script_path)
 
 
+# Register an array of classes to the global scope, since Godot only does that in the editor.
+# Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
+# You can find these easily in the project.godot file under "_global_script_classes"
+# (but you should only include classes belonging to your mod)
+func register_global_classes_from_array(new_global_classes: Array) -> void:
+	ModLoaderUtils.register_global_classes_from_array(new_global_classes)
+	var _savecustom_error: int = ProjectSettings.save_custom(ModLoaderUtils.get_override_path())
+
+
 # Add a translation file, eg "mytranslation.en.translation". The translation
 # file should have been created in Godot already: When you improt a CSV, such
 # a file will be created for you.

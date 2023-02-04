@@ -248,9 +248,6 @@ static func dir_exists(path: String) -> bool:
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
-# Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
-# You can find these easily in the project.godot file under "_global_script_classes"
-# (but you should only include classes belonging to your mod)
 static func register_global_classes_from_array(new_global_classes: Array) -> void:
 	var registered_classes: Array = ProjectSettings.get_setting("_global_script_classes")
 	var registered_class_icons: Dictionary = ProjectSettings.get_setting("_global_script_class_icons")
@@ -271,7 +268,6 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 
 	ProjectSettings.set_setting("_global_script_classes", registered_classes)
 	ProjectSettings.set_setting("_global_script_class_icons", registered_class_icons)
-	var _savecustom_error: int = ProjectSettings.save_custom(get_override_path())
 
 
 # Checks if all required fields are in the given [Dictionary]
