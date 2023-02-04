@@ -258,8 +258,13 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 	for new_class in new_global_classes:
 		if not is_valid_global_class_dict(new_class):
 			continue
-		if registered_classes.has(new_class):
-			continue
+		for old_class in registered_classes:
+			if old_class.class == new_class.class:
+				if OS.has_feature("editor"):
+					log_info('Class "%s" to be registered as global was already registered by the editor. Skipping.' % new_class.class, LOG_NAME)
+				else:
+					log_warning('Class "%s" to be registered as global already exists. Skipping.' % new_class.class, LOG_NAME)
+				continue
 
 		registered_classes.append(new_class)
 		registered_class_icons[new_class.class] = "" # empty icon, does not matter
