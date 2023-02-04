@@ -260,7 +260,7 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 				if OS.has_feature("editor"):
 					log_info('Class "%s" to be registered as global was already registered by the editor. Skipping.' % new_class.class, LOG_NAME)
 				else:
-					log_warning('Class "%s" to be registered as global already exists. Skipping.' % new_class.class, LOG_NAME)
+					log_info('Class "%s" to be registered as global already exists. Skipping.' % new_class.class, LOG_NAME)
 				continue
 
 		registered_classes.append(new_class)
