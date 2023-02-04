@@ -374,7 +374,7 @@ func _check_dependencies(mod: ModData) -> void:
 func _handle_missing_dependency(mod_dir_name: String, dependency_id: String) -> void:
 	ModLoaderUtils.log_error("Missing dependency - mod: -> %s dependency -> %s" % [mod_dir_name, dependency_id], LOG_NAME)
 	# if mod is not present in the missing dependencies array
-	if mod_missing_dependencies.has(mod_dir_name):
+	if not mod_missing_dependencies.has(mod_dir_name):
 		# add it
 		mod_missing_dependencies[mod_dir_name] = []
 
