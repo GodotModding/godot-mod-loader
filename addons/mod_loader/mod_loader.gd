@@ -1,7 +1,5 @@
 # ModLoader - A mod loader for GDScript
 #
-# Version 2.0.0
-#
 # Written in 2021 by harrygiel <harrygiel@gmail.com>,
 # in 2021 by Mariusz Chwalba <mariusz@chwalba.net>,
 # in 2022 by Vladimir Panteleev <git@cy.md>,
