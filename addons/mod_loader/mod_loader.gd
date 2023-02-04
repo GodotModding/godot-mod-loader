@@ -1,7 +1,5 @@
 # ModLoader - A mod loader for GDScript
 #
-# Version 2.0.0
-#
 # Written in 2021 by harrygiel <harrygiel@gmail.com>,
 # in 2021 by Mariusz Chwalba <mariusz@chwalba.net>,
 # in 2022 by Vladimir Panteleev <git@cy.md>,
@@ -27,6 +25,8 @@ extends Node
 
 # Most of these settings should never need to change, aside from the DEBUG_*
 # options (which should be `false` when distributing compiled PCKs)
+
+const MODLOADER_VERSION = "4.2.0"
 
 # If true, a complete array of filepaths is stored for each mod. This is
 # disabled by default because the operation can be very expensive, but may
