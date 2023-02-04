@@ -34,6 +34,7 @@ var modloaderutils: Node = load("res://addons/mod_loader/mod_loader_utils.gd").n
 
 var path := {}
 var file_name := {}
+var is_only_setup: bool = modloaderutils.is_running_with_command_line_arg("--only-setup")
 
 
 func _init() -> void:
@@ -56,10 +57,17 @@ func try_setup_modloader() -> void:
 	# prompt the user to quit and restart the game.
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, but the game needs to be restarted", LOG_NAME)
-		OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
 		var _savecustom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
-		quit()
+
+		match true:
+			# If the --only-setup cli argument is passed, quit with exit code 0
+			is_only_setup:
+				quit(0)
+			# If no cli argument is passed, show message with OS.alert() and user has to restart the game
+			_:
+				OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
+				quit(0)
 
 
 # Set up the ModLoader as an autoload and register the other global classes.
