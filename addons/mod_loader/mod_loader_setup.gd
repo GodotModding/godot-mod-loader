@@ -35,6 +35,7 @@ var modloaderutils: Node = load("res://addons/mod_loader/mod_loader_utils.gd").n
 var path := {}
 var file_name := {}
 var is_only_setup: bool = modloaderutils.is_running_with_command_line_arg("--only-setup")
+var is_setup_create_override_cfg : bool = modloaderutils.is_running_with_command_line_arg("--setup-create-override-cfg")
 
 
 
@@ -59,7 +60,11 @@ func try_setup_modloader() -> void:
 	if is_loader_set_up() and not is_loader_setup_applied():
 		modloaderutils.log_info("ModLoader is set up, but the game needs to be restarted", LOG_NAME)
 		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
-		var _savecustom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
+
+		if is_setup_create_override_cfg:
+			handle_override_cfg()
+		else:
+			handle_project_binary()
 
 		match true:
 			# If the --only-setup cli argument is passed, quit with exit code 0
@@ -83,16 +88,16 @@ func setup_modloader() -> void:
 	reorder_autoloads()
 	ProjectSettings.set_setting(settings.IS_LOADER_SET_UP, true)
 
-	# The game needs to be restarted first, bofore the loader is truly set up
+	# The game needs to be restarted first, before the loader is truly set up
 	# Set this here and check it elsewhere to prompt the user for a restart
 	ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, false)
 
-	var _savecustom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
-	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
+	if is_setup_create_override_cfg:
+		handle_override_cfg()
+	else:
+		handle_project_binary()
 
-	create_project_binary()
-	inject_project_binary()
-	clean_up_project_binary_file()
+	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
 
 
 # Reorders the autoloads in the project settings, to get the ModLoader on top.
@@ -114,6 +119,18 @@ func reorder_autoloads() -> void:
 	# add all previous autoloads back again
 	for autoload in original_autoloads.keys():
 			ProjectSettings.set_setting(autoload, original_autoloads[autoload])
+
+
+# Saves the ProjectSettings to a override.cfg file in the base game directory.
+func handle_override_cfg() -> void:
+	var _save_custom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
+
+
+# Creates the project.binary file, adds it to the pck and removes the no longer needed project.binary file.
+func handle_project_binary() -> void:
+	create_project_binary()
+	inject_project_binary()
+	clean_up_project_binary_file()
 
 
 # Saves the project settings to a project.binary file inside the addons/mod_loader/ directory.
