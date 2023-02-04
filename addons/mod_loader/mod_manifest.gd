@@ -78,6 +78,10 @@ func _init(manifest: Dictionary) -> void:
 	tags = _get_array_from_dict(godot_details, "tags")
 	config_defaults = godot_details.config_defaults
 
+	var mod_id = str(namespace, "-", name)
+	if not validate_dependencies_and_incompatibilities(mod_id, dependencies, incompatibilities):
+		return
+
 	# todo load file named icon.png when loading mods and use here
 #	image StreamTexture
 
@@ -131,6 +135,55 @@ static func is_semver_valid(check_version_number: String) -> bool:
 		ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +
 			'Version number must be shorter than 16 characters.', LOG_NAME
 		)
+		return false
+
+	return true
+
+
+static func validate_dependencies_and_incompatibilities(mod_id: String, dependencies: PoolStringArray, incompatibilities: PoolStringArray) -> bool:
+	var valid_dep = true
+	var valid_inc = true
+
+	if dependencies.size() > 0:
+		for dep in dependencies:
+			valid_dep = is_dependency_or_incompatibility_valid(mod_id, dep, "dependency")
+
+	if incompatibilities.size() > 0:
+		for inc in incompatibilities:
+			valid_inc = is_dependency_or_incompatibility_valid(mod_id, inc, "incompatibility")
+
+	if not valid_dep or not valid_inc:
+		return false
+
+	return true
+
+
+static func is_dependency_or_incompatibility_valid(original_mod_id: String, check_mod_id: String, type: String) -> bool:
+	var intro_text = "A %s for the mod '%s' is invalid: " % [type, original_mod_id]
+
+	# contains hyphen?
+	if not check_mod_id.count("-") == 1:
+		ModLoaderUtils.log_fatal(str(intro_text, 'Expected a single hypen in the mod ID, but the %s was: "%s"' % [type, check_mod_id]), LOG_NAME)
+		return false
+
+	# at least 7 long (1 for hyphen, 3 each for namespace/name)
+	var mod_id_length = check_mod_id.length()
+	if mod_id_length < 7:
+		ModLoaderUtils.log_fatal(str(intro_text, 'Mod ID for "%s" is too short. It must be at least 7 characters, but its length is: %s' % [check_mod_id, mod_id_length]), LOG_NAME)
+		return false
+
+	var split = check_mod_id.split("-")
+	var check_namespace = split[0]
+	var check_name = split[1]
+	var re := RegEx.new()
+	re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
+
+	if re.search(check_namespace) == null:
+		ModLoaderUtils.log_fatal(str(intro_text, 'Mod ID has an invalid namespace (author) for "%s". Namespace can only use letters, numbers and underscores, but was: "%s"' % [check_mod_id, check_namespace]), LOG_NAME)
+		return false
+
+	if re.search(check_name) == null:
+		ModLoaderUtils.log_fatal(str(intro_text, 'Mod ID has an invalid name for "%s". Name can only use letters, numbers and underscores, but was: "%s"' % [check_mod_id, check_name]), LOG_NAME)
 		return false
 
 	return true
