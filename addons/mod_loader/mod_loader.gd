@@ -167,14 +167,14 @@ func _init() -> void:
 func _check_first_autoload() -> void:
 	var autoloads := {}
 	var autoload_index = 0
-	var modloader_is_first = false
+	var is_mod_loader_first = false
 
 	for prop in ProjectSettings.get_property_list():
 		var name: String = prop.name
 		if name.begins_with("autoload/"):
 			if autoload_index == 0:
 				if name == "autoload/ModLoader":
-					modloader_is_first = true
+					is_mod_loader_first = true
 			var value: String = ProjectSettings.get_setting(name)
 			autoloads[name] = value
 			autoload_index += 1
@@ -190,7 +190,7 @@ func _check_first_autoload() -> void:
 	else:
 		help_msg = "If you're seeing this error, something must have gone wrong in the setup process."
 
-	if not modloader_is_first:
+	if not is_mod_loader_first:
 		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % name, help_msg), LOG_NAME)
 
 	if autoloads.size() == 0:
