@@ -78,7 +78,7 @@ func _init(manifest: Dictionary) -> void:
 	tags = _get_array_from_dict(godot_details, "tags")
 	config_defaults = godot_details.config_defaults
 
-	var mod_id = str(namespace, "-", name)
+	var mod_id = get_mod_id()
 	if not validate_dependencies_and_incompatibilities(mod_id, dependencies, incompatibilities):
 		return
 
