@@ -248,9 +248,6 @@ static func dir_exists(path: String) -> bool:
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
-# Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
-# You can find these easily in the project.godot file under "_global_script_classes"
-# (but you should only include classes belonging to your mod)
 static func register_global_classes_from_array(new_global_classes: Array) -> void:
 	var registered_classes: Array = ProjectSettings.get_setting("_global_script_classes")
 	var registered_class_icons: Dictionary = ProjectSettings.get_setting("_global_script_class_icons")
@@ -258,15 +255,19 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 	for new_class in new_global_classes:
 		if not is_valid_global_class_dict(new_class):
 			continue
-		if registered_classes.has(new_class):
-			continue
+		for old_class in registered_classes:
+			if old_class.class == new_class.class:
+				if OS.has_feature("editor"):
+					log_info('Class "%s" to be registered as global was already registered by the editor. Skipping.' % new_class.class, LOG_NAME)
+				else:
+					log_info('Class "%s" to be registered as global already exists. Skipping.' % new_class.class, LOG_NAME)
+				continue
 
 		registered_classes.append(new_class)
 		registered_class_icons[new_class.class] = "" # empty icon, does not matter
 
 	ProjectSettings.set_setting("_global_script_classes", registered_classes)
 	ProjectSettings.set_setting("_global_script_class_icons", registered_class_icons)
-	var _savecustom_error: int = ProjectSettings.save_custom(get_override_path())
 
 
 # Checks if all required fields are in the given [Dictionary]
