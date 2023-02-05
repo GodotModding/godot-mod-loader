@@ -86,6 +86,9 @@ func _init() -> void:
 	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
 		return
 
+	# Ensure ModLoader is the first autoload
+	_check_first_autoload()
+
 	# Log game install dir
 	ModLoaderUtils.log_info("game_install_directory: %s" % ModLoaderUtils.get_local_folder_dir(), LOG_NAME)
 
@@ -158,6 +161,40 @@ func _init() -> void:
 	ModLoaderUtils.log_debug_json_print("mod data", mod_data, LOG_NAME)
 
 	ModLoaderUtils.log_success("DONE: Completely finished loading mods", LOG_NAME)
+
+
+# Ensure ModLoader is the first autoload
+func _check_first_autoload() -> void:
+	var autoloads := {}
+	var autoload_index = 0
+	var is_mod_loader_first = false
+
+	for prop in ProjectSettings.get_property_list():
+		var name: String = prop.name
+		if name.begins_with("autoload/"):
+			if autoload_index == 0:
+				if name == "autoload/ModLoader":
+					is_mod_loader_first = true
+			var value: String = ProjectSettings.get_setting(name)
+			autoloads[name] = value
+			autoload_index += 1
+
+	# Log the autoloads order. Might seem superflous but could help when providing support
+	ModLoaderUtils.log_debug_json_print("Autoload order", autoloads, LOG_NAME)
+
+	var base_msg = "ModLoader needs to be the first autoload to work correctly, "
+	var help_msg = ""
+
+	if OS.has_feature("editor"):
+		help_msg = "To configure your autoloads, to go Project > Project Settings > Autoload, and add ModLoader as the first item. For more info, see the 'Godot Project Setup' page on the ModLoader GitHub wiki."
+	else:
+		help_msg = "If you're seeing this error, something must have gone wrong in the setup process."
+
+	if not is_mod_loader_first:
+		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % name, help_msg), LOG_NAME)
+
+	if autoloads.size() == 0:
+		ModLoaderUtils.log_fatal(str(base_msg, "but no autoloads are currently set up. ", help_msg), LOG_NAME)
 
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
