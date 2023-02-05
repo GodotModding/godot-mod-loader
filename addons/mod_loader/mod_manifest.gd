@@ -146,11 +146,11 @@ static func validate_dependencies_and_incompatibilities(mod_id: String, dependen
 
 	if dependencies.size() > 0:
 		for dep in dependencies:
-			valid_dep = is_dependency_or_incompatibility_valid(mod_id, dep, "dependency")
+			valid_dep = is_mod_id_valid(mod_id, dep, "dependency")
 
 	if incompatibilities.size() > 0:
 		for inc in incompatibilities:
-			valid_inc = is_dependency_or_incompatibility_valid(mod_id, inc, "incompatibility")
+			valid_inc = is_mod_id_valid(mod_id, inc, "incompatibility")
 
 	if not valid_dep or not valid_inc:
 		return false
@@ -158,8 +158,8 @@ static func validate_dependencies_and_incompatibilities(mod_id: String, dependen
 	return true
 
 
-static func is_dependency_or_incompatibility_valid(original_mod_id: String, check_mod_id: String, type: String) -> bool:
-	var intro_text = "A %s for the mod '%s' is invalid: " % [type, original_mod_id]
+static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type := "") -> bool:
+	var intro_text = "A %s for the mod '%s' is invalid: " % [type, original_mod_id] if not type == "" else ""
 
 	# contains hyphen?
 	if not check_mod_id.count("-") == 1:
