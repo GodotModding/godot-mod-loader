@@ -2,7 +2,7 @@ extends Node
 class_name ModLoaderUtils
 
 const LOG_NAME := "ModLoader:ModLoaderUtils"
-const MOD_LOG_PATH := "user://mods.log"
+const MOD_LOG_PATH := "user://logs/modloader.log"
 
 enum verbosity_level {
 	ERROR,
@@ -59,9 +59,9 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 	if is_mod_name_ignored(mod_name):
 		return
 
-	var date := "%s   " % get_date_time_string()
+	var time := "%s   " % get_time_string()
 	var prefix := "%s %s: " % [log_type.to_upper(), mod_name]
-	var log_message := date + prefix + message
+	var log_message := time + prefix + message
 
 	match log_type.to_lower():
 		"fatal-error":
@@ -101,18 +101,73 @@ static func _write_to_log_file(log_entry: String) -> void:
 	var log_file := File.new()
 
 	if not log_file.file_exists(MOD_LOG_PATH):
-		var _fileopen_error: int = log_file.open(MOD_LOG_PATH, File.WRITE)
-		log_file.store_string('%s\t Created mod.log!' % get_date_time_string())
-		log_file.close()
+		rotate_log_file()
 
-	var _error: int = log_file.open(MOD_LOG_PATH, File.READ_WRITE)
-	if not _error == OK:
-		assert(false, "Could not open log file, error code: %s" % _error)
+	var error := log_file.open(MOD_LOG_PATH, File.READ_WRITE)
+	if not error == OK:
+		assert(false, "Could not open log file, error code: %s" % error)
 		return
 
 	log_file.seek_end()
 	log_file.store_string("\n" + log_entry)
 	log_file.close()
+
+
+# Keeps log backups for every run, just like the Godot; gdscript implementation of
+# https://github.com/godotengine/godot/blob/1d14c054a12dacdc193b589e4afb0ef319ee2aae/core/io/logger.cpp#L151
+static func rotate_log_file() -> void:
+	var MAX_LOGS := int(ProjectSettings.get_setting("logging/file_logging/max_log_files"))
+	var log_file := File.new()
+
+	if log_file.file_exists(MOD_LOG_PATH):
+		if MAX_LOGS > 1:
+			var datetime := get_date_time_string().replace(":", ".")
+			var backup_name := MOD_LOG_PATH.get_basename() + "_" + datetime
+			if MOD_LOG_PATH.get_extension().length() > 0:
+				backup_name += "." + MOD_LOG_PATH.get_extension()
+
+			var dir := Directory.new()
+			if dir.dir_exists(MOD_LOG_PATH.get_base_dir()):
+				dir.copy(MOD_LOG_PATH, backup_name)
+			clear_old_log_backups()
+
+	# only File.WRITE creates a new file, File.READ_WRITE throws an error
+	var error := log_file.open(MOD_LOG_PATH, File.WRITE)
+	if not error == OK:
+		assert(false, "Could not open log file, error code: %s" % error)
+	log_file.store_string('%s Created log' % get_date_string())
+	log_file.close()
+
+
+static func clear_old_log_backups() -> void:
+	var MAX_LOGS := int(ProjectSettings.get_setting("logging/file_logging/max_log_files"))
+	var MAX_BACKUPS := MAX_LOGS - 1 # -1 for the current new log (not a backup)
+	var basename := MOD_LOG_PATH.get_file().get_basename()
+	var extension := MOD_LOG_PATH.get_extension()
+
+	var dir := Directory.new()
+	if not dir.dir_exists(MOD_LOG_PATH.get_base_dir()):
+		return
+	if not dir.open(MOD_LOG_PATH.get_base_dir()) == OK:
+		return
+
+	dir.list_dir_begin()
+	var file := dir.get_next()
+	var backups := []
+	while file.length() > 0:
+		if (not dir.current_is_dir() and
+				file.begins_with(basename) and
+				file.get_extension() == extension and
+				not file == MOD_LOG_PATH.get_file()):
+			backups.append(file)
+		file = dir.get_next()
+	dir.list_dir_end()
+
+	if backups.size() > MAX_BACKUPS:
+		backups.sort()
+		backups.resize(backups.size() - MAX_BACKUPS)
+		for file_to_delete in backups:
+			dir.remove(file_to_delete)
 
 
 static func _get_verbosity() -> int:
@@ -151,14 +206,21 @@ static func get_cmd_line_arg_value(argument: String) -> String:
 	return ""
 
 
-# Returns the current date and time as a string in the format dd.mm.yy-hh:mm:ss
-static func get_date_time_string() -> String:
+# Returns the current time as a string in the format hh:mm:ss
+static func get_time_string() -> String:
 	var date_time = Time.get_datetime_dict_from_system()
+	return "%02d:%02d:%02d" % [ date_time.hour, date_time.minute, date_time.second ]
 
-	return "%02d.%02d.%s-%02d:%02d:%02d" % [
-		date_time.day, date_time.month, date_time.year,
-		date_time.hour, date_time.minute, date_time.second
-	]
+
+# Returns the current date as a string in the format yyyy-mm-dd
+static func get_date_string() -> String:
+	var date_time = Time.get_datetime_dict_from_system()
+	return "%s-%02d-%02d" % [ date_time.year, date_time.month, date_time.day ]
+
+
+# Returns the current date and time as a string in the format yyyy-mm-dd_hh:mm:ss
+static func get_date_time_string() -> String:
+	return "%s_%s" % [ get_date_string(), get_time_string() ]
 
 
 # Get the path to a local folder. Primarily used to get the  (packed) mods

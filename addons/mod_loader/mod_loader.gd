@@ -6,7 +6,7 @@
 # in 2023 by KANA <kai@kana.jetzt>,
 # in 2023 by Darkly77,
 # in 2023 by otDan <otdanofficial@gmail.com>,
-# in 2023 by Qubus0
+# in 2023 by Qubus0/Ste
 #
 # To the extent possible under law, the author(s) have
 # dedicated all copyright and related and neighboring
@@ -85,6 +85,9 @@ func _init() -> void:
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
 		return
+
+	# Rotate the log files once on startup. Can't be checked in utils, since it's static
+	ModLoaderUtils.rotate_log_file()
 
 	# Ensure ModLoader is the first autoload
 	_check_first_autoload()
