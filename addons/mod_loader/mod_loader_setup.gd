@@ -38,7 +38,6 @@ var is_only_setup: bool = modloaderutils.is_running_with_command_line_arg("--onl
 var is_setup_create_override_cfg : bool = modloaderutils.is_running_with_command_line_arg("--setup-create-override-cfg")
 
 
-
 func _init() -> void:
 	try_setup_modloader()
 	var _changescene_error: int = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
