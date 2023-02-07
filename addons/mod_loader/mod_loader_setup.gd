@@ -98,8 +98,6 @@ func setup_modloader() -> void:
 
 	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
 
-	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
-
 
 # Reorders the autoloads in the project settings, to get the ModLoader on top.
 func reorder_autoloads() -> void:
