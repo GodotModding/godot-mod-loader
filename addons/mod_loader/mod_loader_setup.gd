@@ -39,46 +39,33 @@ var is_setup_create_override_cfg : bool = modloaderutils.is_running_with_command
 
 
 func _init() -> void:
-	try_setup_modloader()
-	var _changescene_error: int = change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+	modloaderutils.log_debug("ModLoader setup initialized", LOG_NAME)
 
-
-# Set up the ModLoader, if it hasn't been set up yet
-func try_setup_modloader() -> void:
 	# Avoid doubling the setup work
-	if is_loader_setup_applied():
-		modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
-		OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
+	# Checks if the ModLoader Node is in the root of the scene tree
+	# and if the IS_LOADER_SETUP_APPLIED project setting is there
+	if modloaderutils.get_autoload_index("ModLoader") == 0:
+		modded_start()
 		return
 
-	setup_file_data()
 	setup_modloader()
 
-	# If the loader is set up, but the override is not applied yet,
-	# prompt the user to quit and restart the game.
-	if is_loader_set_up() and not is_loader_setup_applied():
-		modloaderutils.log_info("ModLoader is set up, but the game needs to be restarted", LOG_NAME)
-		ProjectSettings.set_setting(settings.IS_LOADER_SETUP_APPLIED, true)
 
-		if is_setup_create_override_cfg:
-			handle_override_cfg()
-		else:
-			handle_project_binary()
+# ModLoader already setup - switch to the main scene
+func modded_start() -> void:
+	modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
 
-		match true:
-			# If the --only-setup cli argument is passed, quit with exit code 0
-			is_only_setup:
-				quit(0)
-			# If no cli argument is passed, show message with OS.alert() and user has to restart the game
-			_:
-				OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
-				quit(0)
+	OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
+
+	var _error_change_scene_main := change_scene(ProjectSettings.get_setting("application/run/main_scene"))
 
 
 # Set up the ModLoader as an autoload and register the other global classes.
-# Saved as override.cfg besides the game executable to extend the existing project settings
 func setup_modloader() -> void:
 	modloaderutils.log_info("Setting up ModLoader", LOG_NAME)
+
+	# Setup path and file_name dict with all required paths and file names.
+	setup_file_data()
 
 	# Register all new helper classes as global
 	modloaderutils.register_global_classes_from_array(new_global_classes)
@@ -96,7 +83,17 @@ func setup_modloader() -> void:
 	else:
 		handle_project_binary()
 
-	modloaderutils.log_info("ModLoader setup complete", LOG_NAME)
+	# ModLoader is set up. A game restart is required to apply the ProjectSettings.
+	modloaderutils.log_info("ModLoader is set up, a game restart is required.", LOG_NAME)
+
+	match true:
+		# If the --only-setup cli argument is passed, quit with exit code 0
+		is_only_setup:
+			quit(0)
+		# If no cli argument is passed, show message with OS.alert() and user has to restart the game
+		_:
+			OS.alert("The Godot ModLoader has been set up. Restart the game to apply the changes. Confirm to quit.")
+			quit(0)
 
 
 # Reorders the autoloads in the project settings, to get the ModLoader on top.
@@ -122,11 +119,13 @@ func reorder_autoloads() -> void:
 
 # Saves the ProjectSettings to a override.cfg file in the base game directory.
 func handle_override_cfg() -> void:
+	modloaderutils.log_debug("using the override.cfg file", LOG_NAME)
 	var _save_custom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
 
 
 # Creates the project.binary file, adds it to the pck and removes the no longer needed project.binary file.
 func handle_project_binary() -> void:
+	modloaderutils.log_debug("injecting the project.binary file", LOG_NAME)
 	create_project_binary()
 	inject_project_binary()
 	clean_up_project_binary_file()
@@ -179,23 +178,3 @@ func setup_file_data() -> void:
 
 	modloaderutils.log_debug_json_print("path: ", path, LOG_NAME)
 	modloaderutils.log_debug_json_print("file_name: ", file_name, LOG_NAME)
-
-
-func is_loader_set_up() -> bool:
-	return is_project_setting_true(settings.IS_LOADER_SET_UP)
-
-
-func is_loader_setup_applied() -> bool:
-	if not root.get_node_or_null("/root/ModLoader") == null:
-		if not is_project_setting_true(settings.IS_LOADER_SETUP_APPLIED):
-			modloaderutils.log_info("ModLoader is already set up. No self setup required.", LOG_NAME)
-		return true
-	return false
-
-
-static func is_project_setting_true(project_setting: String) -> bool:
-	return ProjectSettings.has_setting(project_setting) and\
-		ProjectSettings.get_setting(project_setting)
-
-
-
