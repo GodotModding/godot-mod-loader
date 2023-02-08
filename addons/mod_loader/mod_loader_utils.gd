@@ -358,7 +358,6 @@ static func get_autoload_array() -> Array:
 	for prop in ProjectSettings.get_property_list():
 		var name: String = prop.name
 		if name.begins_with("autoload/"):
-			var value: String = ProjectSettings.get_setting(name)
 			autoloads.append(name.trim_prefix("autoload/"))
 
 	return autoloads
