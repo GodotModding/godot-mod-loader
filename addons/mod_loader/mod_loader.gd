@@ -183,7 +183,7 @@ func _check_first_autoload() -> void:
 		help_msg = "If you're seeing this error, something must have gone wrong in the setup process."
 
 	if not is_mod_loader_first:
-		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % autoload_array[0].split('/')[1], help_msg), LOG_NAME)
+		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % autoload_array[0].trim_prefix("autoload/"), help_msg), LOG_NAME)
 
 	if autoload_array.size() == 0:
 		ModLoaderUtils.log_fatal(str(base_msg, "but no autoloads are currently set up. ", help_msg), LOG_NAME)
