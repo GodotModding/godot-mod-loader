@@ -6,6 +6,11 @@ class_name ModData
 
 const LOG_NAME := "ModLoader:ModData"
 
+# Controls how manifest.json data is logged for each mod
+# true  = Full JSON contents (floods the log)
+# false = Single line (default)
+const USE_EXTENDED_DEBUGLOG := false
+
 # These 2 files are always required by mods.
 # [i]mod_main.gd[/i] = The main init file for the mod
 # [i]manifest.json[/i] = Meta data for the mod, including its dependencies
@@ -51,7 +56,11 @@ func load_manifest() -> void:
 	# Load meta data file
 	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
 	var manifest_dict := ModLoaderUtils.get_json_as_dict(manifest_path)
-	ModLoaderUtils.log_debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
+
+	if USE_EXTENDED_DEBUGLOG:
+		ModLoaderUtils.log_debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
+	else:
+		ModLoaderUtils.log_debug(str("%s loaded manifest data -> " % dir_name, manifest_dict), LOG_NAME)
 
 	var mod_manifest := ModManifest.new(manifest_dict)
 
