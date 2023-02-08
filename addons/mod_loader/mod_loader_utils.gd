@@ -65,6 +65,7 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 
 	match log_type.to_lower():
 		"fatal-error":
+			push_error(message)
 			_write_to_log_file(log_message)
 			_write_to_log_file(JSON.print(get_stack(), "  "))
 			assert(false, message)
