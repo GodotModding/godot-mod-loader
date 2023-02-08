@@ -174,6 +174,9 @@ func _check_first_autoload() -> void:
 	var base_msg = "ModLoader needs to be the first autoload to work correctly, "
 	var help_msg = ""
 
+	# Log the autoloads order. Might seem superflous but could help when providing support
+	ModLoaderUtils.log_debug_json_print("Autoload order", autoload_array, LOG_NAME)
+
 	if OS.has_feature("editor"):
 		help_msg = "To configure your autoloads, to go Project > Project Settings > Autoload, and add ModLoader as the first item. For more info, see the 'Godot Project Setup' page on the ModLoader GitHub wiki."
 	else:
