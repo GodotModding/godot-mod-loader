@@ -203,14 +203,14 @@ static func get_cmd_line_arg_value(argument: String) -> String:
 
 		var key := arg.split("=")[0]
 		if key == argument:
-			# format: [code]--arg=value[/code] or [code]--arg="value"[/code]
+			# format: `--arg=value` or `--arg="value"`
 			if "=" in arg:
 				var value := arg.trim_prefix(argument + "=")
 				value = value.trim_prefix('"').trim_suffix('"')
 				value = value.trim_prefix("'").trim_suffix("'")
 				return value
 
-			# format: [code]--arg value[/code] or [code]--arg "value"[/code]
+			# format: `--arg value` or `--arg "value"`
 			elif arg_index +1 < args.size() and not args[arg_index +1].begins_with("--"):
 				return args[arg_index + 1]
 
@@ -228,7 +228,7 @@ static func fix_godot_cmdline_args_string_space_splitting(args: PoolStringArray)
 
 	var fixed_args := PoolStringArray([])
 	var fixed_arg := ""
-	# if we encounter an argument that contains [code]=[/code] followed by a quote,
+	# if we encounter an argument that contains `=` followed by a quote,
 	# take all following args and concatenate them into one until we find the closing quote
 	for arg in args:
 		var arg_string := arg as String
