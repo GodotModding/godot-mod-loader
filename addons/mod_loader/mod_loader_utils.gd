@@ -359,7 +359,7 @@ static func get_autoload_array() -> Array:
 		var name: String = prop.name
 		if name.begins_with("autoload/"):
 			var value: String = ProjectSettings.get_setting(name)
-			autoloads.append(name)
+			autoloads.append(name.trim_prefix("autoload/"))
 
 	return autoloads
 
@@ -367,7 +367,7 @@ static func get_autoload_array() -> Array:
 # Get the index of a specific autoload
 static func get_autoload_index(autoload_name: String) -> int:
 	var autoloads := get_autoload_array()
-	var autoload_index := autoloads.find("autoload/" + autoload_name)
+	var autoload_index := autoloads.find(autoload_name)
 
 	return autoload_index
 
