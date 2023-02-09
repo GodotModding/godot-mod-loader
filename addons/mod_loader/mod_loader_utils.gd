@@ -350,6 +350,27 @@ static func is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 	return true
 
 
+# Get an array of all autoloads -> ["autoload/AutoloadName", ...]
+static func get_autoload_array() -> Array:
+	var autoloads := []
+
+	# Get all autoload settings
+	for prop in ProjectSettings.get_property_list():
+		var name: String = prop.name
+		if name.begins_with("autoload/"):
+			autoloads.append(name.trim_prefix("autoload/"))
+
+	return autoloads
+
+
+# Get the index of a specific autoload
+static func get_autoload_index(autoload_name: String) -> int:
+	var autoloads := get_autoload_array()
+	var autoload_index := autoloads.find(autoload_name)
+
+	return autoload_index
+
+
 # Get a flat array of all files in the target directory. This was needed in the
 # original version of this script, before becoming deprecated. It may still be
 # used if DEBUG_ENABLE_STORING_FILEPATHS is true.
