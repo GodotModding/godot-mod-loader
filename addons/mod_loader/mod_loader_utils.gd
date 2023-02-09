@@ -222,10 +222,9 @@ static func get_fixed_cmdline_args() -> PoolStringArray:
 
 
 # Reverses a bug in Godot, which splits input strings at spaces even if they are quoted
-# e.g. --arg="some value" becomes [ --arg="some, value" ]
-# this only occurs with args in that format. --arg "some value" is safe
+# e.g. `--arg="some value" --arg-two 'more value'` becomes `[ --arg="some, value", --arg-two, 'more, value' ]`
 static func fix_godot_cmdline_args_string_space_splitting(args: PoolStringArray) -> PoolStringArray:
-	if not OS.has_feature("editor"): # only appears in editor builds
+	if not OS.has_feature("editor"): # only happens in editor builds
 		return args
 	if OS.has_feature("Windows"): # windows is unaffected
 		return args
@@ -233,18 +232,25 @@ static func fix_godot_cmdline_args_string_space_splitting(args: PoolStringArray)
 	var fixed_args := PoolStringArray([])
 	var fixed_arg := ""
 	# if we encounter an argument that contains `=` followed by a quote,
-	# take all following args and concatenate them into one until we find the closing quote
+	# or an argument that starts with a quote, take all following args and
+	# concatenate them into one, until we find the closing quote
 	for arg in args:
 		var arg_string := arg as String
-		if '="' in arg_string or '="' in fixed_arg:
-			fixed_arg += " " + arg_string
+		if '="' in arg_string or '="' in fixed_arg or \
+				arg_string.begins_with('"') or fixed_arg.begins_with('"'):
+			if not fixed_arg == "":
+				fixed_arg += " "
+			fixed_arg += arg_string
 			if arg_string.ends_with('"'):
 				fixed_args.append(fixed_arg.trim_prefix(" "))
 				fixed_arg = ""
 				continue
-
-		elif "='" in arg_string or "='" in fixed_arg:
-			fixed_arg += " " + arg_string
+		# same thing for single quotes
+		elif "='" in arg_string or "='" in fixed_arg \
+				or arg_string.begins_with("'") or fixed_arg.begins_with("'"):
+			if not fixed_arg == "":
+				fixed_arg += " "
+			fixed_arg += arg_string
 			if arg_string.ends_with("'"):
 				fixed_args.append(fixed_arg.trim_prefix(" "))
 				fixed_arg = ""
