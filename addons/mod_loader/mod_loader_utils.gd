@@ -352,24 +352,21 @@ static func is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 
 # Get an array of all autoloads -> ["autoload/AutoloadName", ...]
 static func get_autoload_array() -> Array:
-	var autoloads := {}
+	var autoloads := []
 
 	# Get all autoload settings
 	for prop in ProjectSettings.get_property_list():
 		var name: String = prop.name
 		if name.begins_with("autoload/"):
-			var value: String = ProjectSettings.get_setting(name)
-			autoloads[name] = value
+			autoloads.append(name.trim_prefix("autoload/"))
 
-	var autoload_keys := autoloads.keys()
-
-	return autoload_keys
+	return autoloads
 
 
 # Get the index of a specific autoload
 static func get_autoload_index(autoload_name: String) -> int:
 	var autoloads := get_autoload_array()
-	var autoload_index := autoloads.find("autoload/" + autoload_name)
+	var autoload_index := autoloads.find(autoload_name)
 
 	return autoload_index
 

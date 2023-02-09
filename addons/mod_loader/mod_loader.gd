@@ -169,10 +169,13 @@ func _init() -> void:
 # Ensure ModLoader is the first autoload
 func _check_first_autoload() -> void:
 	var autoload_array = ModLoaderUtils.get_autoload_array()
-	var is_mod_loader_first = autoload_array.find("autoload/ModLoader") == 0
+	var is_mod_loader_first = autoload_array.find("ModLoader") == 0
 
 	var base_msg = "ModLoader needs to be the first autoload to work correctly, "
 	var help_msg = ""
+
+	# Log the autoloads order. Might seem superflous but could help when providing support
+	ModLoaderUtils.log_debug_json_print("Autoload order", autoload_array, LOG_NAME)
 
 	if OS.has_feature("editor"):
 		help_msg = "To configure your autoloads, to go Project > Project Settings > Autoload, and add ModLoader as the first item. For more info, see the 'Godot Project Setup' page on the ModLoader GitHub wiki."
@@ -180,7 +183,7 @@ func _check_first_autoload() -> void:
 		help_msg = "If you're seeing this error, something must have gone wrong in the setup process."
 
 	if not is_mod_loader_first:
-		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % autoload_array[0].split('/')[1], help_msg), LOG_NAME)
+		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % autoload_array[0], help_msg), LOG_NAME)
 
 	if autoload_array.size() == 0:
 		ModLoaderUtils.log_fatal(str(base_msg, "but no autoloads are currently set up. ", help_msg), LOG_NAME)
