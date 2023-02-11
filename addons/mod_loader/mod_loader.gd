@@ -565,7 +565,7 @@ func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 		# No custom JSON file
 		if config_data.size() == 0:
 			error_num = 2
-			error_msg = "WARNING - No config file for %s.json." % mod_dir_name
+			error_msg = "WARNING - No config file for %s.json. " % mod_dir_name
 			if key == "":
 				data = defaults
 				error_msg += "Using defaults (extra.godot.config_defaults)"
