@@ -565,17 +565,20 @@ func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 		# No custom JSON file
 		if config_data.size() == 0:
 			error_num = 2
-			error_msg = "WARNING - No config file for %s.json. " % mod_dir_name
+			var noconfig_msg = "No config file for %s.json. " % mod_dir_name
 			if key == "":
 				data = defaults
-				error_msg += "Using defaults (extra.godot.config_defaults)"
+				error_msg += str(noconfig_msg, "Using defaults (extra.godot.config_defaults)")
 			else:
 				if defaults.has(key):
 					data = defaults[key]
-					error_msg += "Using defaults for key '%s' (extra.godot.config_defaults.%s)" % [key, key]
+					error_msg += str(noconfig_msg, "Using defaults for key '%s' (extra.godot.config_defaults.%s)" % [key, key])
 				else:
 					error_num = 3
-					error_msg += "Requested key '%s' is not present in the defaults (extra.godot.config_defaults.%s)" % [key, key]
+					error_msg += str(
+						"Could not get the requested data for %s: " % mod_dir_name,
+						"Requested key '%s' is not present in the 'config_defaults' of the mod's manifest.json file (extra.godot.config_defaults.%s). " % [key, key]
+					)
 
 		# JSON file exists
 		if error_num == 0:
@@ -586,11 +589,16 @@ func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 					data = config_data[key]
 				else:
 					error_num = 4
-					error_msg = "WARNING - Invalid key '%s' for mod ID: %s" % [key, mod_dir_name]
+					error_msg = "Invalid key '%s' for mod ID: %s" % [key, mod_dir_name]
 
 	# Log if any errors occured
 	if not error_num == 0:
-		ModLoaderUtils.log_debug("Config Error: %s" % error_msg, mod_dir_name)
+		if error_num == 2:
+			# No user config file exists. Low importance as very likely to trigger
+			ModLoaderUtils.log_debug("Config JSON Notice: %s" % error_msg, mod_dir_name)
+		else:
+			# Code error (eg. invalid mod ID)
+			ModLoaderUtils.log_fatal("Config JSON Error: %s" % error_msg, mod_dir_name)
 
 	return {
 		"error": error_num,
