@@ -199,10 +199,10 @@ func _load_mod_zips() -> int:
 
 	var dir := Directory.new()
 	if not dir.open(game_mod_folder_path) == OK:
-		ModLoaderUtils.log_error("Can't open mod folder %s." % game_mod_folder_path, LOG_NAME)
+		ModLoaderUtils.log_warning("Can't open mod folder %s." % game_mod_folder_path, LOG_NAME)
 		return -1
 	if not dir.list_dir_begin() == OK:
-		ModLoaderUtils.log_error("Can't read mod folder %s." % game_mod_folder_path, LOG_NAME)
+		ModLoaderUtils.log_warning("Can't read mod folder %s." % game_mod_folder_path, LOG_NAME)
 		return -1
 
 	var has_shown_editor_warning := false
