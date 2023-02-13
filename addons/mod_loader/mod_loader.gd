@@ -536,7 +536,7 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 	_saved_objects.append(packed_scene)
 
 
-enum MLConfigError {
+enum MLConfigStatus {
 	OK,                  # 0 = No errors
 	INVALID_MOD_ID,      # 1 = Invalid mod ID
 	NO_JSON_OK,          # 2 = No custom JSON. File probably does not exist. Defaults will be used if available
@@ -549,62 +549,62 @@ enum MLConfigError {
 # Data (`data`) is either the full config, or data from a specific key if one was specified.
 # Error (`error`) is 0 if there were no errors, or > 0 if the setting could not be retrieved:
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
-	var error_num = MLConfigError.OK
-	var error_msg := ""
+	var status_code = MLConfigStatus.OK
+	var status_msg := ""
 	var data = {} # can be anything
 	var defaults := {}
 
 	# Invalid mod ID
 	if not mod_data.has(mod_dir_name):
-		error_num = MLConfigError.INVALID_MOD_ID
-		error_msg = "ERROR - Mod ID was invalid: %s" % mod_dir_name
+		status_code = MLConfigStatus.INVALID_MOD_ID
+		status_msg = "ERROR - Mod ID was invalid: %s" % mod_dir_name
 
 	# Mod ID is valid
-	if error_num == MLConfigError.OK:
+	if status_code == MLConfigStatus.OK:
 		var mod := mod_data[mod_dir_name] as ModData
 		var config_data := mod.config
 		defaults = mod.manifest.config_defaults
 
 		# No custom JSON file
-		if config_data.size() == MLConfigError.OK:
-			error_num = MLConfigError.NO_JSON_OK
+		if config_data.size() == MLConfigStatus.OK:
+			status_code = MLConfigStatus.NO_JSON_OK
 			var noconfig_msg = "No config file for %s.json. " % mod_dir_name
 			if key == "":
 				data = defaults
-				error_msg += str(noconfig_msg, "Using defaults (extra.godot.config_defaults)")
+				status_msg += str(noconfig_msg, "Using defaults (extra.godot.config_defaults)")
 			else:
 				if defaults.has(key):
 					data = defaults[key]
-					error_msg += str(noconfig_msg, "Using defaults for key '%s' (extra.godot.config_defaults.%s)" % [key, key])
+					status_msg += str(noconfig_msg, "Using defaults for key '%s' (extra.godot.config_defaults.%s)" % [key, key])
 				else:
-					error_num = MLConfigError.NO_JSON_INVALID_KEY
-					error_msg += str(
+					status_code = MLConfigStatus.NO_JSON_INVALID_KEY
+					status_msg += str(
 						"Could not get the requested data for %s: " % mod_dir_name,
 						"Requested key '%s' is not present in the 'config_defaults' of the mod's manifest.json file (extra.godot.config_defaults.%s). " % [key, key]
 					)
 
 		# JSON file exists
-		if error_num == MLConfigError.OK:
+		if status_code == MLConfigStatus.OK:
 			if key == "":
 				data = config_data
 			else:
 				if config_data.has(key):
 					data = config_data[key]
 				else:
-					error_num = MLConfigError.INVALID_KEY
-					error_msg = "Invalid key '%s' for mod ID: %s" % [key, mod_dir_name]
+					status_code = MLConfigStatus.INVALID_KEY
+					status_msg = "Invalid key '%s' for mod ID: %s" % [key, mod_dir_name]
 
 	# Log if any errors occured
-	if not error_num == MLConfigError.OK:
-		if error_num == MLConfigError.NO_JSON_OK:
+	if not status_code == MLConfigStatus.OK:
+		if status_code == MLConfigStatus.NO_JSON_OK:
 			# No user config file exists. Low importance as very likely to trigger
-			ModLoaderUtils.log_debug("Config JSON Notice: %s" % error_msg, mod_dir_name)
+			ModLoaderUtils.log_debug("Config JSON Notice: %s" % status_msg, mod_dir_name)
 		else:
 			# Code error (eg. invalid mod ID)
-			ModLoaderUtils.log_fatal("Config JSON Error (%s): %s" % [error_num, error_msg], mod_dir_name)
+			ModLoaderUtils.log_fatal("Config JSON Error (%s): %s" % [status_code, status_msg], mod_dir_name)
 
 	return {
-		"error": error_num,
-		"error_msg": error_msg,
+		"status_code": status_code,
+		"status_msg": status_msg,
 		"data": data,
 	}
