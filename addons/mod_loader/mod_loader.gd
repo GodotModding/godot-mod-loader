@@ -557,7 +557,7 @@ func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	# Invalid mod ID
 	if not mod_data.has(mod_dir_name):
 		status_code = MLConfigStatus.INVALID_MOD_ID
-		status_msg = "ERROR - Mod ID was invalid: %s" % mod_dir_name
+		status_msg = "Mod ID was invalid: %s" % mod_dir_name
 
 	# Mod ID is valid
 	if status_code == MLConfigStatus.OK:
