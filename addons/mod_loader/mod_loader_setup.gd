@@ -41,10 +41,18 @@ var is_setup_create_override_cfg : bool = modloaderutils.is_running_with_command
 func _init() -> void:
 	modloaderutils.log_debug("ModLoader setup initialized", LOG_NAME)
 
+	var mod_loader_index: int = modloaderutils.get_autoload_index("ModLoader")
+
 	# Avoid doubling the setup work
 	# Checks if the ModLoader Node is in the root of the scene tree
 	# and if the IS_LOADER_SETUP_APPLIED project setting is there
-	if modloaderutils.get_autoload_index("ModLoader") == 0:
+	if mod_loader_index == 0:
+		modded_start()
+		return
+
+	# Check if --setup-create-override-cfg is passed,
+	# in that case the ModLoader just has to be somewhere in the autoloads.
+	if is_setup_create_override_cfg and mod_loader_index != -1:
 		modded_start()
 		return
 
