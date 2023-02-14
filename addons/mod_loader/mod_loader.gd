@@ -169,24 +169,31 @@ func _init() -> void:
 # Ensure ModLoader is the first autoload
 func _check_first_autoload() -> void:
 	var autoload_array = ModLoaderUtils.get_autoload_array()
-	var is_mod_loader_first = autoload_array.find("ModLoader") == 0
+	var mod_loader_index = autoload_array.find("ModLoader")
+	var is_mod_loader_first = mod_loader_index == 0
 
-	var base_msg = "ModLoader needs to be the first autoload to work correctly, "
-	var help_msg = ""
+	var override_cfg_path = ModLoaderUtils.get_override_path()
+	var is_override_cfg_setup =  ModLoaderUtils.file_exists(override_cfg_path)
 
 	# Log the autoloads order. Might seem superflous but could help when providing support
 	ModLoaderUtils.log_debug_json_print("Autoload order", autoload_array, LOG_NAME)
 
+	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
+	# In that case the ModLoader will be the last entry in the autoload array
+	if is_override_cfg_setup:
+		ModLoaderUtils.log_info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
+		return
+
+	var base_msg = "ModLoader needs to be the first autoload to work correctly, "
+	var help_msg = ""
+
 	if OS.has_feature("editor"):
-		help_msg = "To configure your autoloads, to go Project > Project Settings > Autoload, and add ModLoader as the first item. For more info, see the 'Godot Project Setup' page on the ModLoader GitHub wiki."
+		help_msg = "To configure your autoloads, go to Project > Project Settings > Autoload, and add ModLoader as the first item. For more info, see the 'Godot Project Setup' page on the ModLoader GitHub wiki."
 	else:
 		help_msg = "If you're seeing this error, something must have gone wrong in the setup process."
 
 	if not is_mod_loader_first:
 		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % autoload_array[0], help_msg), LOG_NAME)
-
-	if autoload_array.size() == 0:
-		ModLoaderUtils.log_fatal(str(base_msg, "but no autoloads are currently set up. ", help_msg), LOG_NAME)
 
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
