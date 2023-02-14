@@ -195,9 +195,6 @@ func _check_first_autoload() -> void:
 	if not is_mod_loader_first:
 		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % autoload_array[0], help_msg), LOG_NAME)
 
-	if autoload_array.size() == 0:
-		ModLoaderUtils.log_fatal(str(base_msg, "but no autoloads are currently set up. ", help_msg), LOG_NAME)
-
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
 # (UNPACKED_DIR)
