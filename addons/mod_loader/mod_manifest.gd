@@ -23,6 +23,7 @@ var authors: PoolStringArray = []
 var compatible_game_version: PoolStringArray = []
 # only used for information
 var incompatibilities: PoolStringArray = []
+var load_before: PoolStringArray = []
 var tags : PoolStringArray = []
 var config_defaults := {}
 var description_rich := ""
@@ -70,9 +71,10 @@ func _init(manifest: Dictionary) -> void:
 	website_url = manifest.website_url
 	dependencies = manifest.dependencies
 
-	var 	godot_details: Dictionary = manifest.extra.godot
+	var godot_details: Dictionary = manifest.extra.godot
 	authors = _get_array_from_dict(godot_details, "authors")
 	incompatibilities = _get_array_from_dict(godot_details, "incompatibilities")
+	load_before = _get_array_from_dict(godot_details, "load_before")
 	compatible_game_version = _get_array_from_dict(godot_details, "compatible_game_version")
 	description_rich = _get_string_from_dict(godot_details, "description_rich")
 	tags = _get_array_from_dict(godot_details, "tags")

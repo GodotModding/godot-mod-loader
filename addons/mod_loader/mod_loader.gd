@@ -145,6 +145,13 @@ func _init() -> void:
 			continue
 		_check_dependencies(mod)
 
+	# Check for mods with load_before
+	for dir_name in mod_data:
+		var mod: ModData = mod_data[dir_name]
+		if not mod.is_loadable:
+			continue
+		_check_load_before(mod)
+
 	# Sort mod_load_order by the importance score of the mod
 	mod_load_order = _get_load_order(mod_data.values())
 
@@ -408,6 +415,31 @@ func _handle_missing_dependency(mod_dir_name: String, dependency_id: String) -> 
 		mod_missing_dependencies[mod_dir_name] = []
 
 	mod_missing_dependencies[mod_dir_name].append(dependency_id)
+
+
+# Run load before check on a mod, checking any load_before entries it lists in its
+# mod_manifest (ie. its manifest.json file). If one entry has a higher importance
+# then the mod, the mods importance score will be set to the importance of the
+# entry with the highest importance + 1.
+func _check_load_before(mod: ModData) -> void:
+	# Skip if no entries in load_before
+	if mod.manifest.load_before.size() == 0:
+		return
+
+	var highest_importance := 0
+
+	# Get highest importance of load_before mods
+	for load_before_id in mod.manifest.load_before:
+		# Grab the importance of the specified mod
+		var load_before_mod_importance = mod_data[load_before_id].importance
+		if highest_importance < load_before_mod_importance:
+			highest_importance = load_before_mod_importance
+
+	# Set the mod to the importance score of the load_before mod with the highest importance + 1
+	# If the own importance is not already higher.
+	if mod.importance < highest_importance:
+		mod.importance = highest_importance + 1
+		ModLoaderUtils.log_debug("Load before detected -> Set importance for %s to %s, it will load before %s" % [mod.dir_name, mod.importance, mod.manifest.load_before], LOG_NAME)
 
 
 # Get the load order of mods, using a custom sorter
