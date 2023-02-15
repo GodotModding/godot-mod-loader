@@ -376,8 +376,17 @@ func _init_mod_data(mod_folder_path: String) -> void:
 # Run dependency checks on a mod, checking any dependencies it lists in its
 # mod_manifest (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded.
-func _check_dependencies(mod: ModData) -> void:
+func _check_dependencies(mod: ModData, dependency_chain_start := '') -> void:
 	ModLoaderUtils.log_debug("Checking dependencies - mod_id: %s dependencies: %s" % [mod.dir_name, mod.manifest.dependencies], LOG_NAME)
+
+	# Check for circular dependency
+	if dependency_chain_start == mod.dir_path:
+		ModLoaderUtils.log_debug("Dependency check - circular dependency detected.", LOG_NAME)
+		return
+
+	# Set dependency_chain_start to the first mod id
+	if dependency_chain_start == '':
+		dependency_chain_start = mod.dir_path
 
 	# loop through each dependency
 	for dependency_id in mod.manifest.dependencies:
@@ -396,7 +405,7 @@ func _check_dependencies(mod: ModData) -> void:
 
 		# check if dependency has dependencies
 		if dependency.manifest.dependencies.size() > 0:
-			_check_dependencies(dependency)
+			_check_dependencies(dependency, dependency_chain_start)
 
 
 # Handle missing dependencies: Sets `is_loadable` to false and logs an error
