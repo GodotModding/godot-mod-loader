@@ -154,6 +154,13 @@ func _init() -> void:
 			continue
 		_check_dependencies(mod)
 
+	# Check for mods with load_before
+	for dir_name in mod_data:
+		var mod: ModData = mod_data[dir_name]
+		if not mod.is_loadable:
+			continue
+		_check_load_before(mod)
+
 	# Sort mod_load_order by the importance score of the mod
 	mod_load_order = _get_load_order(mod_data.values())
 
