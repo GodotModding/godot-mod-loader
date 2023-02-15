@@ -444,9 +444,9 @@ func _check_load_before(mod: ModData) -> void:
 		if highest_importance < load_before_mod_importance:
 			highest_importance = load_before_mod_importance
 
-	# Set the mod to the importance score of the load_before mod with the highest importance + 1
+	# Set the mod to the importance score of the load_before mod with the same or higher importance + 1
 	# If the own importance is not already higher.
-	if mod.importance < highest_importance:
+	if mod.importance <= highest_importance:
 		mod.importance = highest_importance + 1
 		ModLoaderUtils.log_debug("Load before detected -> Set importance for %s to %s, it will load before %s" % [mod.dir_name, mod.importance, mod.manifest.load_before], LOG_NAME)
 
