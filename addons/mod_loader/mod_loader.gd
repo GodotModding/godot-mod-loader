@@ -510,6 +510,10 @@ func register_global_classes_from_array(new_global_classes: Array) -> void:
 # file should have been created in Godot already: When you improt a CSV, such
 # a file will be created for you.
 func add_translation_from_resource(resource_path: String) -> void:
+	if not File.new().file_exists(resource_path):
+		ModLoaderUtils.log_fatal("Tried to load a translation resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
+		return
+
 	var translation_object: Translation = load(resource_path)
 	TranslationServer.add_translation(translation_object)
 	ModLoaderUtils.log_info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
