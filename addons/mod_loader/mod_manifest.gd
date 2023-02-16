@@ -2,6 +2,7 @@ extends Resource
 # Stores and validates contents of the manifest set by the user
 class_name ModManifest
 
+const LOG_NAME := "ModLoader:ModManifest"
 
 # Mod name.
 # Validated by [method is_name_or_namespace_valid]
@@ -15,15 +16,15 @@ var version_number := "0.0.0"
 var description := ""
 var website_url := ""
 # Used to determine mod load order
-var dependencies := []				# Array[String]
+var dependencies: PoolStringArray = []
 
-var authors := [] 					# Array[String]
+var authors: PoolStringArray = []
 # only used for information
-var compatible_game_version := [] 	# Array[String]
+var compatible_game_version: PoolStringArray = []
 # only used for information
-var incompatibilities := [] 			# Array[String]
-var tags := [] 						# Array[String]
-var config_defaults := []           # Array[String]
+var incompatibilities: PoolStringArray = []
+var tags : PoolStringArray = []
+var config_defaults := {}
 var description_rich := ""
 var image: StreamTexture
 
@@ -75,7 +76,11 @@ func _init(manifest: Dictionary) -> void:
 	compatible_game_version = _get_array_from_dict(godot_details, "compatible_game_version")
 	description_rich = _get_string_from_dict(godot_details, "description_rich")
 	tags = _get_array_from_dict(godot_details, "tags")
-	config_defaults = _get_array_from_dict(godot_details, "config_defaults")
+	config_defaults = godot_details.config_defaults
+
+	var mod_id = get_mod_id()
+	if not validate_dependencies_and_incompatibilities(mod_id, dependencies, incompatibilities):
+		return
 
 	# todo load file named icon.png when loading mods and use here
 #	image StreamTexture
@@ -95,18 +100,18 @@ func get_package_id() -> String:
 
 # A valid namespace may only use letters (any case), numbers and underscores
 # and has to be longer than 3 characters
-# /^[a-zA-Z0-9_]{3,}$/
-static func is_name_or_namespace_valid(name: String) -> bool:
+# a-z A-Z 0-9 _ (longer than 3 characters)
+static func is_name_or_namespace_valid(check_name: String) -> bool:
 	var re := RegEx.new()
-	re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
+	var _compile_error_1 = re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
 
-	if re.search(name) == null:
-		printerr('Invalid name or namespace: "%s". You may only use letters, numbers and underscores.' % name)
+	if re.search(check_name) == null:
+		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". You may only use letters, numbers and underscores.' % check_name, LOG_NAME)
 		return false
 
-	re.compile("^[a-zA-Z0-9_]{3,}$") # at least 3 long
-	if re.search(name) == null:
-		printerr('Invalid name or namespace: "%s". Must be longer than 3 characters.' % name)
+	var _compile_error_2 = re.compile("^[a-zA-Z0-9_]{3,}$") # at least 3 long
+	if re.search(check_name) == null:
+		ModLoaderUtils.log_fatal('Invalid name or namespace: "%s". Must be longer than 3 characters.' % check_name, LOG_NAME)
 		return false
 
 	return true
@@ -114,14 +119,71 @@ static func is_name_or_namespace_valid(name: String) -> bool:
 
 # A valid semantic version should follow this format: {mayor}.{minor}.{patch}
 # reference https://semver.org/ for details
-# /^[0-9]+\\.[0-9]+\\.[0-9]+$/
-static func is_semver_valid(version_number: String) -> bool:
+# {0-9}.{0-9}.{0-9} (no leading 0, shorter than 16 characters total)
+static func is_semver_valid(check_version_number: String) -> bool:
 	var re := RegEx.new()
-	re.compile("^[0-9]+\\.[0-9]+\\.[0-9]+$")
+	var _compile_error = re.compile("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$")
 
-	if re.search(version_number) == null:
-		printerr('Invalid semantic version: "%s". ' +
-		'You may only use numbers and periods in this format {mayor}.{minor}.{patch}' % version_number)
+	if re.search(check_version_number) == null:
+		ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +
+			'You may only use numbers without leading zero and periods following this format {mayor}.{minor}.{patch}' % check_version_number,
+			LOG_NAME
+		)
+		return false
+
+	if check_version_number.length() > 16:
+		ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +
+			'Version number must be shorter than 16 characters.', LOG_NAME
+		)
+		return false
+
+	return true
+
+
+static func validate_dependencies_and_incompatibilities(mod_id: String, dependencies: PoolStringArray, incompatibilities: PoolStringArray) -> bool:
+	var valid_dep = true
+	var valid_inc = true
+
+	if dependencies.size() > 0:
+		for dep in dependencies:
+			valid_dep = is_mod_id_valid(mod_id, dep, "dependency")
+
+	if incompatibilities.size() > 0:
+		for inc in incompatibilities:
+			valid_inc = is_mod_id_valid(mod_id, inc, "incompatibility")
+
+	if not valid_dep or not valid_inc:
+		return false
+
+	return true
+
+
+static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type := "") -> bool:
+	var intro_text = "A %s for the mod '%s' is invalid: " % [type, original_mod_id] if not type == "" else ""
+
+	# contains hyphen?
+	if not check_mod_id.count("-") == 1:
+		ModLoaderUtils.log_fatal(str(intro_text, 'Expected a single hypen in the mod ID, but the %s was: "%s"' % [type, check_mod_id]), LOG_NAME)
+		return false
+
+	# at least 7 long (1 for hyphen, 3 each for namespace/name)
+	var mod_id_length = check_mod_id.length()
+	if mod_id_length < 7:
+		ModLoaderUtils.log_fatal(str(intro_text, 'Mod ID for "%s" is too short. It must be at least 7 characters, but its length is: %s' % [check_mod_id, mod_id_length]), LOG_NAME)
+		return false
+
+	var split = check_mod_id.split("-")
+	var check_namespace = split[0]
+	var check_name = split[1]
+	var re := RegEx.new()
+	re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
+
+	if re.search(check_namespace) == null:
+		ModLoaderUtils.log_fatal(str(intro_text, 'Mod ID has an invalid namespace (author) for "%s". Namespace can only use letters, numbers and underscores, but was: "%s"' % [check_mod_id, check_namespace]), LOG_NAME)
+		return false
+
+	if re.search(check_name) == null:
+		ModLoaderUtils.log_fatal(str(intro_text, 'Mod ID has an invalid name for "%s". Name can only use letters, numbers and underscores, but was: "%s"' % [check_mod_id, check_name]), LOG_NAME)
 		return false
 
 	return true
@@ -151,7 +213,7 @@ static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
 			missing_fields.erase(key)
 
 	if missing_fields.size() > 0:
-		printerr("Mod data is missing required fields: " + str(missing_fields))
+		ModLoaderUtils.log_fatal("Mod manifest is missing required fields: %s" % missing_fields, LOG_NAME)
 		return false
 
 	return true

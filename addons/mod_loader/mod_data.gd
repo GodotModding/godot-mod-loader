@@ -6,6 +6,11 @@ class_name ModData
 
 const LOG_NAME := "ModLoader:ModData"
 
+# Controls how manifest.json data is logged for each mod
+# true  = Full JSON contents (floods the log)
+# false = Single line (default)
+const USE_EXTENDED_DEBUGLOG := false
+
 # These 2 files are always required by mods.
 # [i]mod_main.gd[/i] = The main init file for the mod
 # [i]manifest.json[/i] = Meta data for the mod, including its dependencies
@@ -14,12 +19,18 @@ enum required_mod_files {
 	MANIFEST,
 }
 
+enum optional_mod_files {
+	OVERWRITES
+}
+
 # Directory of the mod. Has to be identical to [method ModManifest.get_mod_id]
 var dir_name := ""
 # Path to the Mod's Directory
 var dir_path := ""
 # False if any data is invalid
 var is_loadable := true
+# True if overwrites.gd exists
+var is_overwrite := false
 # Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
 # Contents of the manifest
@@ -28,7 +39,7 @@ var manifest: ModManifest
 var config := {}
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
-var file_paths := []
+var file_paths: PoolStringArray = []
 
 
 func _init(_dir_path: String) -> void:
@@ -45,7 +56,11 @@ func load_manifest() -> void:
 	# Load meta data file
 	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
 	var manifest_dict := ModLoaderUtils.get_json_as_dict(manifest_path)
-	ModLoaderUtils.log_debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
+
+	if USE_EXTENDED_DEBUGLOG:
+		ModLoaderUtils.log_debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
+	else:
+		ModLoaderUtils.log_debug(str("%s loaded manifest data -> " % dir_name, manifest_dict), LOG_NAME)
 
 	var mod_manifest := ModManifest.new(manifest_dict)
 
@@ -95,6 +110,11 @@ func get_required_mod_file_path(required_file: int) -> String:
 			return dir_path.plus_file("manifest.json")
 	return ""
 
+func get_optional_mod_file_path(optional_file: int) -> String:
+	match optional_file:
+		optional_mod_files.OVERWRITES:
+			return dir_path.plus_file("overwrites.gd")
+	return ""
 
 #func _to_string() -> String:
 	# todo if we want it pretty printed
