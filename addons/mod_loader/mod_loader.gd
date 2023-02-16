@@ -26,7 +26,7 @@ extends Node
 # Most of these settings should never need to change, aside from the DEBUG_*
 # options (which should be `false` when distributing compiled PCKs)
 
-const MODLOADER_VERSION = "5.0.0"
+const MODLOADER_VERSION = "5.0.1"
 
 # If true, a complete array of filepaths is stored for each mod. This is
 # disabled by default because the operation can be very expensive, but may
@@ -39,7 +39,6 @@ const MOD_LOG_PATH := "user://mods.log"
 
 # This is where mod ZIPs are unpacked to
 const UNPACKED_DIR := "res://mods-unpacked/"
-
 
 # Set to true to require using "--enable-mods" to enable them
 const REQUIRE_CMD_LINE := false
@@ -510,6 +509,10 @@ func register_global_classes_from_array(new_global_classes: Array) -> void:
 # file should have been created in Godot already: When you improt a CSV, such
 # a file will be created for you.
 func add_translation_from_resource(resource_path: String) -> void:
+	if not File.new().file_exists(resource_path):
+		ModLoaderUtils.log_fatal("Tried to load a translation resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
+		return
+
 	var translation_object: Translation = load(resource_path)
 	TranslationServer.add_translation(translation_object)
 	ModLoaderUtils.log_info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
