@@ -511,13 +511,13 @@ func handle_script_extensions()->void:
 			ModLoaderUtils.log_error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 			continue 
 		
-		var child_script 	= ResourceLoader.load(extension_path)
+		var child_script = ResourceLoader.load(extension_path)
 		
 		# this could be done during install_script_extension() ?
 		var mod_id = extension_path.replace(UNPACKED_DIR, "").get_slice("/", 0)
 		
 		var parent_script = child_script.get_base_script()
-		var parent_script_path = parent_script.resource_path
+		var parent_script_path:String = parent_script.resource_path
 		
 		if not loaded_vanilla_parents.keys().has(parent_script_path):
 			loaded_vanilla_parents[parent_script_path] = parent_script
