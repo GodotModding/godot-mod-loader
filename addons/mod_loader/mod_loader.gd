@@ -473,14 +473,185 @@ func _init_mod(mod: ModData) -> void:
 # {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 # Note that your extender script doesn't have to follow the same directory path
 # as the vanilla file, but it's good practice to do so.
-func install_script_extension(child_script_path: String) -> void:
+
+
+
+# Helpers
+# =============================================================================
+
+# Helper functions to build mods
+
+# Add a script that extends a vanilla script. `child_script_path` should point
+# to your mod's extender script, eg "MOD/extensions/singletons/utils.gd".
+# Inside that extender script, it should include "extends {target}", where
+# {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
+# Note that your extender script doesn't have to follow the same directory path
+# as the vanilla file, but it's good practice to do so.
+func install_script_extension(child_script_path:String):
+
+	script_extensions.push_back(child_script_path)
+
+
+
+
+
+# stores all extenders paths
+var script_extensions = []
+
+# this is for caching purposes during the sorting.
+var loaded_vanilla_parents = {}
+
+func handle_script_extensions()->void:
+
+	# couple the extension paths with the parent paths and the extension's mod id
+	var parent_paths = []
+	for extension_path in script_extensions:
+		
+		if not File.new().file_exists(extension_path):
+			ModLoaderUtils.log_error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
+			continue 
+		
+		var child_script 	= ResourceLoader.load(extension_path)
+		
+		# this could be done during install_script_extension() ?
+		var mod_id = extension_path.replace(UNPACKED_DIR, "").get_slice("/", 0)
+		
+		var parent_script = child_script.get_base_script()
+		var parent_script_path = parent_script.resource_path
+		
+		if not loaded_vanilla_parents.keys().has(parent_script_path):
+			loaded_vanilla_parents[parent_script_path] = parent_script
+		
+		parent_paths.push_back([extension_path, parent_script_path, mod_id])
+	
+	
+	# sort the extensions based on dependencies then inheritance
+	parent_paths = sort_w_dependencies(parent_paths)
+	# inheritance is more important so this called last
+	parent_paths.sort_custom(self, "check_inheritances")
+	
+	# useless but maybe not
+	loaded_vanilla_parents.clear()
+	
+	# load and install all extensions
+	for extension in parent_paths:
+		var scr = apply_extension(extension[0])
+		reload_vanilla_child_classes_for(scr, extension[2])
+		
+	
+func sort_w_dependencies(extensions:Array)->Array:
+
+	# what this does :
+	#
+	# adds independent mod_ids to new_arr
+	# iterate and append to extensions_sorted every mod that has all their dependencies in new_arr
+	# remove those from mods_sorted and loop till mods_sorted is empty
+	# extensions_sorted ends up sorted with every dependency before the mods using them
+	
+	# probably should be optimized because i think n²?
+
+	# array to unpopulate on each iteration
+	var all_mods = mod_data.keys()
+	# array to populate on each iteration
+	var mods_sorted = []
+	# when all_mods is empty, fill this following mods_sorted order
+	var extensions_sorted = []
+
+	# add independent mods
+	for mod_id in mod_data.keys():
+		if mod_data[mod_id].manifest.dependencies.empty():
+			mods_sorted.push_back(mod_id)
+			all_mods.erase(mod_id)
+
+	# iterate till all mods have been sorted
+	while not all_mods.empty():
+		var to_remove = []
+		for mod_id in all_mods:
+			
+			var dependencies = mod_data[mod_id].manifest.dependencies
+			for i in dependencies.size():
+				
+				var dependency = dependencies[i]
+				
+				# skip if any dependency isn't in mods_sorted already
+				if not mods_sorted.has(dependency):
+					break
+				
+				# transfer if all dependencies are in mods_sorted
+				if i == dependencies.size() - 1:
+					mods_sorted.push_back(mod_id)
+					to_remove.push_back(mod_id)
+	
+		for mod_id in to_remove:
+			all_mods.erase(mod_id)
+	
+	# populate extensions_sorted following the dependency order
+	for mod_id in mods_sorted:
+		for script in extensions:
+			if script[2] == mod_id:
+				extensions_sorted.push_front(script)
+	
+	
+	return extensions_sorted
+
+
+# goes up a's inheritance tree to find if any parent shares the same path as b
+func check_inheritances(a:Array, b:Array)->bool:
+	var a_child_script
+	if loaded_vanilla_parents.keys().has(a[1]):
+		a_child_script = ResourceLoader.load(a[1])
+	else:
+		a_child_script = ResourceLoader.load(a[1])
+		loaded_vanilla_parents[a[1]] = a_child_script
+
+	var a_parent_script = a_child_script.get_base_script()
+	if a_parent_script == null:
+		return true
+
+	var a_parent_script_path = a_parent_script.resource_path
+	if a_parent_script_path == b[1]:
+		return false
+	else:
+		return check_inheritances([a[0], a_parent_script_path, a[2]], b)
+
+# calling reload() on all of extender's children seem to allow them to be extended
+# e.g if B is a child class of A, reloading B after apply an extender of A allows extenders of B to properly extend B, taking A's extender(s) into account
+# this is useless if B's extenders are installed before A's
+func reload_vanilla_child_classes_for(script:Script, mod_name:String)->void:
+
+	var child_classes = []
+	var current_child_classes = []
+	var actual_path = script.get_base_script().resource_path
+	var classes = ProjectSettings.get_setting("_global_script_classes")
+
+	for _class in classes:
+
+		if _class.path == actual_path:
+			current_child_classes.push_back(_class)
+			break
+	while not current_child_classes.empty():
+		var new_child_classes = []
+		
+		for _class in current_child_classes:
+			for child_class in classes:
+				if child_class.base == _class.class:
+					
+					new_child_classes.push_back(child_class)
+					child_classes.push_back(child_class)
+					
+					load(child_class.path).reload()
+		
+		current_child_classes = new_child_classes
+
+
+func apply_extension(extension_path)->Script:
 	# Check path to file exists
-	if not File.new().file_exists(child_script_path):
-		ModLoaderUtils.log_error("The child script path '%s' does not exist" % [child_script_path], LOG_NAME)
-		return
-
-	var child_script := ResourceLoader.load(child_script_path)
-
+	if not File.new().file_exists(extension_path):
+		ModLoaderUtils.log_error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
+		return null
+	
+	var child_script = ResourceLoader.load(extension_path)
+	
 	# Force Godot to compile the script now.
 	# We need to do this here to ensure that the inheritance chain is
 	# properly set up, and multiple mods can chain-extend the same
@@ -489,11 +660,15 @@ func install_script_extension(child_script_path: String) -> void:
 	# when creating singletons.
 	# The actual instance is thrown away.
 	child_script.new()
-
+	
 	var parent_script = child_script.get_base_script()
-	var parent_script_path: String = parent_script.resource_path
-	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, child_script_path], LOG_NAME)
+	var parent_script_path = parent_script.resource_path
+	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
+	
+	return child_script
+
+
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
