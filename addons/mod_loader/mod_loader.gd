@@ -462,17 +462,6 @@ func _init_mod(mod: ModData) -> void:
 	add_child(mod_main_instance, true)
 
 
-# Helpers
-# =============================================================================
-
-# Helper functions to build mods
-
-# Add a script that extends a vanilla script. `child_script_path` should point
-# to your mod's extender script, eg "MOD/extensions/singletons/utils.gd".
-# Inside that extender script, it should include "extends {target}", where
-# {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
-# Note that your extender script doesn't have to follow the same directory path
-# as the vanilla file, but it's good practice to do so.
 
 
 
