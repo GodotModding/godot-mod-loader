@@ -662,7 +662,7 @@ func apply_extension(extension_path)->Script:
 	child_script.new()
 	
 	var parent_script = child_script.get_base_script()
-	var parent_script_path:String = parent_script.resource_path
+	var parent_script_path: String = parent_script.resource_path
 	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
 	
