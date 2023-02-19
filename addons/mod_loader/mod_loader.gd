@@ -76,6 +76,12 @@ var mod_missing_dependencies := {}
 # Things to keep to ensure they are not garbage collected (used by `save_scene`)
 var _saved_objects := []
 
+# Store all extenders paths
+var script_extensions := []
+
+# Store vanilla classes for script extension sorting
+var loaded_vanilla_parents_cache := {}
+
 
 # Main
 # =============================================================================
@@ -163,6 +169,8 @@ func _init() -> void:
 	ModLoaderUtils.log_debug_json_print("mod data", mod_data, LOG_NAME)
 
 	ModLoaderUtils.log_success("DONE: Completely finished loading mods", LOG_NAME)
+	
+	handle_script_extensions()
 
 
 # Ensure ModLoader is the first autoload
@@ -416,26 +424,61 @@ func _handle_missing_dependency(mod_dir_name: String, dependency_id: String) -> 
 	mod_missing_dependencies[mod_dir_name].append(dependency_id)
 
 
-# Get the load order of mods, using a custom sorter
-func _get_load_order(mod_data_array: Array) -> Array:
-
-	# Add loadable mods to the mod load order array
-	for mod in mod_data_array:
-		mod = mod as ModData
-		if mod.is_loadable:
-			mod_load_order.append(mod)
-
-	# Sort mods by the importance value
-	mod_load_order.sort_custom(self, "_compare_importance")
-	return  mod_load_order
-
-
-# Custom sorter that orders mods by important
-func _compare_importance(a: ModData, b: ModData) -> bool:
-	if a.importance > b.importance:
-		return true # a -> b
-	else:
-		return false # b -> a
+func _get_load_order()->void:
+	
+	# Order logic :
+	#
+	# Add independent mod_ids to mod_load_order
+	# Iterate and append to mod_load_order every mod that has all their dependencies in mod_load_order
+	# Remove those from all_mods and loop until all_mods is empty
+	# mod_load_order ends up sorted with every dependency being before the mods using them
+	
+	# probably should be optimized because i think n²?
+	
+	# Array to unpopulate on each iteration
+	var all_mods:Array = mod_data.keys()
+	
+	# For mods that aren't loadable and mods that need those
+	var not_loadable_mods := []
+	
+	# Add independent mods
+	for mod_id in mod_data.keys():
+		var _mod_data = mod_data[mod_id]
+		if mod_data[mod_id].manifest.dependencies.empty():
+			if _mod_data.is_loadable:
+				mod_load_order.push_back(_mod_data)
+			else:
+				not_loadable_mods.push_back(mod_id)
+			all_mods.erase(mod_id)
+	
+	# Iterate until all mods have been sorted
+	while not all_mods.empty():
+		var to_remove := []
+		for mod_id in all_mods:
+			
+			var dependencies:Array = mod_data[mod_id].manifest.dependencies
+			for dependency_index in dependencies.size():
+				
+				var dependency:String = dependencies[dependency_index]
+				
+				# Ignore the mod if one dependency isn't loadable
+				# Also make sure mods that depend on it don't get loaded either
+				if not mod_data.keys().has(dependency) or not_loadable_mods.has(dependency):
+					not_loadable_mods.push_back(mod_id)
+					to_remove.push_back(mod_id)
+					break
+				
+				# Skip if any dependency isn't already in mod_load_order
+				if not mod_load_order.has(mod_data[dependency]):
+					break
+				
+				# Transfer if all dependencies are in mod_load_order
+				if dependency_index == dependencies.size() - 1:
+					mod_load_order.push_back(mod_data[mod_id])
+					to_remove.push_back(mod_id)
+		
+		for mod_id in to_remove:
+			all_mods.erase(mod_id)
 
 
 # Instance every mod and add it as a node to the Mod Loader.
@@ -462,9 +505,6 @@ func _init_mod(mod: ModData) -> void:
 	add_child(mod_main_instance, true)
 
 
-
-
-
 # Helpers
 # =============================================================================
 
@@ -477,23 +517,15 @@ func _init_mod(mod: ModData) -> void:
 # Note that your extender script doesn't have to follow the same directory path
 # as the vanilla file, but it's good practice to do so.
 func install_script_extension(child_script_path:String):
-
+	
 	script_extensions.push_back(child_script_path)
 
 
-
-
-
-# stores all extenders paths
-var script_extensions = []
-
-# this is for caching purposes during the sorting.
-var loaded_vanilla_parents = {}
-
 func handle_script_extensions()->void:
-
+	
 	# couple the extension paths with the parent paths and the extension's mod id
-	var parent_paths = []
+	
+	var parent_paths := []
 	for extension_path in script_extensions:
 		
 		if not File.new().file_exists(extension_path):
@@ -502,132 +534,94 @@ func handle_script_extensions()->void:
 		
 		var child_script = ResourceLoader.load(extension_path)
 		
-		# this could be done during install_script_extension() ?
-		var mod_id = extension_path.replace(UNPACKED_DIR, "").get_slice("/", 0)
+		var mod_id:String = extension_path.replace(UNPACKED_DIR, "").get_slice("/", 0)
 		
-		var parent_script = child_script.get_base_script()
+		var parent_script:Script = child_script.get_base_script()
 		var parent_script_path:String = parent_script.resource_path
 		
-		if not loaded_vanilla_parents.keys().has(parent_script_path):
-			loaded_vanilla_parents[parent_script_path] = parent_script
+		if not loaded_vanilla_parents_cache.keys().has(parent_script_path):
+			loaded_vanilla_parents_cache[parent_script_path] = parent_script
 		
-		parent_paths.push_back([extension_path, parent_script_path, mod_id])
+		parent_paths.push_back(
+			ScriptExtensionData.new(extension_path, parent_script_path, mod_id)
+		)
 	
-	
-	# sort the extensions based on dependencies then inheritance
-	parent_paths = sort_w_dependencies(parent_paths)
-	# inheritance is more important so this called last
+	# Sort the extensions based on dependencies
+	parent_paths = sort_extensions_from_load_order(parent_paths)
+	# Inheritance is more important so this called last
 	parent_paths.sort_custom(self, "check_inheritances")
 	
-	# useless but maybe not
-	loaded_vanilla_parents.clear()
+	# Maybe useless, i think this saved some bugs in the past. 
+	loaded_vanilla_parents_cache.clear()
 	
-	# load and install all extensions
+	# Load and install all extensions
 	for extension in parent_paths:
-		var scr = apply_extension(extension[0])
-		reload_vanilla_child_classes_for(scr, extension[2])
-		
-	
-func sort_w_dependencies(extensions:Array)->Array:
+		var script:Script = apply_extension(extension["extension_path"])
+		reload_vanilla_child_classes_for(script)
 
-	# what this does :
-	#
-	# adds independent mod_ids to new_arr
-	# iterate and append to extensions_sorted every mod that has all their dependencies in new_arr
-	# remove those from mods_sorted and loop till mods_sorted is empty
-	# extensions_sorted ends up sorted with every dependency before the mods using them
-	
-	# probably should be optimized because i think n²?
 
-	# array to unpopulate on each iteration
-	var all_mods = mod_data.keys()
-	# array to populate on each iteration
-	var mods_sorted = []
-	# when all_mods is empty, fill this following mods_sorted order
-	var extensions_sorted = []
-
-	# add independent mods
-	for mod_id in mod_data.keys():
-		if mod_data[mod_id].manifest.dependencies.empty():
-			mods_sorted.push_back(mod_id)
-			all_mods.erase(mod_id)
-
-	# iterate till all mods have been sorted
-	while not all_mods.empty():
-		var to_remove = []
-		for mod_id in all_mods:
-			
-			var dependencies = mod_data[mod_id].manifest.dependencies
-			for i in dependencies.size():
-				
-				var dependency = dependencies[i]
-				
-				# skip if any dependency isn't in mods_sorted already
-				if not mods_sorted.has(dependency):
-					break
-				
-				# transfer if all dependencies are in mods_sorted
-				if i == dependencies.size() - 1:
-					mods_sorted.push_back(mod_id)
-					to_remove.push_back(mod_id)
+func sort_extensions_from_load_order(extensions:Array)->Array:
 	
-		for mod_id in to_remove:
-			all_mods.erase(mod_id)
+	# Populate extensions_sorted following the dependency order
+	var extensions_sorted := []
 	
-	# populate extensions_sorted following the dependency order
-	for mod_id in mods_sorted:
+	for _mod_data in mod_load_order:
 		for script in extensions:
-			if script[2] == mod_id:
+			if script["mod_id"] == _mod_data.dir_name:
 				extensions_sorted.push_front(script)
-	
 	
 	return extensions_sorted
 
 
-# goes up a's inheritance tree to find if any parent shares the same path as b
-func check_inheritances(a:Array, b:Array)->bool:
-	var a_child_script
-	if loaded_vanilla_parents.keys().has(a[1]):
-		a_child_script = ResourceLoader.load(a[1])
+# Inheritance sorting
+# Go up extension_a's inheritance tree to find if any parent shares the same vanilla path as extension_b
+func check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
+	
+	var a_child_script:Script
+	
+	if loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
+		a_child_script = ResourceLoader.load(extension_a.parent_script_path)
 	else:
-		a_child_script = ResourceLoader.load(a[1])
-		loaded_vanilla_parents[a[1]] = a_child_script
+		a_child_script = ResourceLoader.load(extension_a.parent_script_path)
+		loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
 
-	var a_parent_script = a_child_script.get_base_script()
+	var a_parent_script:Script = a_child_script.get_base_script()
+	
 	if a_parent_script == null:
 		return true
 
 	var a_parent_script_path = a_parent_script.resource_path
-	if a_parent_script_path == b[1]:
+	if a_parent_script_path == extension_b.parent_script_path:
 		return false
+	
 	else:
-		return check_inheritances([a[0], a_parent_script_path, a[2]], b)
+		return check_inheritances(ScriptExtensionData.new(extension_a.extension_path, a_parent_script_path, extension_a.mod_id), extension_b)
 
-# calling reload() on all of extender's children seem to allow them to be extended
+
+# Reload all children classes of the vanilla class we just extended
+# Calling reload() the children of an extended class seems to allow them to be extended
 # e.g if B is a child class of A, reloading B after apply an extender of A allows extenders of B to properly extend B, taking A's extender(s) into account
-# this is useless if B's extenders are installed before A's
-func reload_vanilla_child_classes_for(script:Script, mod_name:String)->void:
-
-	var child_classes = []
-	var current_child_classes = []
-	var actual_path = script.get_base_script().resource_path
-	var classes = ProjectSettings.get_setting("_global_script_classes")
+func reload_vanilla_child_classes_for(script:Script)->void:
+	
+	if script == null:
+		return
+	var current_child_classes := []
+	var actual_path:String = script.get_base_script().resource_path
+	var classes:Array = ProjectSettings.get_setting("_global_script_classes")
 
 	for _class in classes:
-
 		if _class.path == actual_path:
 			current_child_classes.push_back(_class)
 			break
+	
 	while not current_child_classes.empty():
-		var new_child_classes = []
+		var new_child_classes := []
 		
 		for _class in current_child_classes:
 			for child_class in classes:
+				
 				if child_class.base == _class.class:
-					
 					new_child_classes.push_back(child_class)
-					child_classes.push_back(child_class)
-					
 					load(child_class.path).reload()
 		
 		current_child_classes = new_child_classes
@@ -639,7 +633,7 @@ func apply_extension(extension_path)->Script:
 		ModLoaderUtils.log_error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 		return null
 	
-	var child_script = ResourceLoader.load(extension_path)
+	var child_script:Script = ResourceLoader.load(extension_path)
 	
 	# Force Godot to compile the script now.
 	# We need to do this here to ensure that the inheritance chain is
@@ -650,14 +644,12 @@ func apply_extension(extension_path)->Script:
 	# The actual instance is thrown away.
 	child_script.new()
 	
-	var parent_script = child_script.get_base_script()
-	var parent_script_path: String = parent_script.resource_path
+	var parent_script:Script = child_script.get_base_script()
+	var parent_script_path:String = parent_script.resource_path
 	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
 	
 	return child_script
-
-
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
