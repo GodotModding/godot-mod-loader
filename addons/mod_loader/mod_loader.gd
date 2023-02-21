@@ -504,7 +504,7 @@ func handle_script_extensions()->void:
 	# Couple the extension paths with the parent paths and the extension's mod id
 	# in a ScriptExtensionData resource
 	
-	var script_extension_datas := []
+	var script_extension_data_array := []
 	for extension_path in script_extensions:
 		
 		if not File.new().file_exists(extension_path):
@@ -513,7 +513,7 @@ func handle_script_extensions()->void:
 		
 		var child_script = ResourceLoader.load(extension_path)
 		
-		var mod_id:String = extension_path.replace(UNPACKED_DIR, "").get_slice("/", 0)
+		var mod_id:String = extension_path.trim_prefix(UNPACKED_DIR).get_slice("/", 0)
 		
 		var parent_script:Script = child_script.get_base_script()
 		var parent_script_path:String = parent_script.resource_path
@@ -521,22 +521,22 @@ func handle_script_extensions()->void:
 		if not loaded_vanilla_parents_cache.keys().has(parent_script_path):
 			loaded_vanilla_parents_cache[parent_script_path] = parent_script
 		
-		script_extension_datas.push_back(
+		script_extension_data_array.push_back(
 			ScriptExtensionData.new(extension_path, parent_script_path, mod_id)
 		)
 	
 	# Sort the extensions based on dependencies
-	script_extension_datas = sort_extensions_from_load_order(script_extension_datas)
+	script_extension_data_array = sort_extensions_from_load_order(script_extension_data_array)
 	
 	# Inheritance is more important so this called last
-	script_extension_datas.sort_custom(self, "check_inheritances")
+	script_extension_data_array.sort_custom(self, "check_inheritances")
 	
 	# This saved some bugs in the past. 
 	loaded_vanilla_parents_cache.clear()
 	
 	# Load and install all extensions
-	for extension in script_extension_datas:
-		var script:Script = apply_extension(extension["extension_path"])
+	for extension in script_extension_data_array:
+		var script:Script = apply_extension(extension.extension_path)
 		reload_vanilla_child_classes_for(script)
 
 
@@ -547,7 +547,7 @@ func sort_extensions_from_load_order(extensions:Array)->Array:
 	
 	for _mod_data in mod_load_order:
 		for script in extensions:
-			if script["mod_id"] == _mod_data.dir_name:
+			if script.mod_id == _mod_data.dir_name:
 				extensions_sorted.push_front(script)
 	
 	return extensions_sorted
