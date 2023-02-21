@@ -588,17 +588,11 @@ func reload_vanilla_child_classes_for(script:Script)->void:
 			current_child_classes.push_back(_class)
 			break
 	
-	while not current_child_classes.empty():
-		var new_child_classes := []
-		
-		for _class in current_child_classes:
-			for child_class in classes:
-				
-				if child_class.base == _class.class:
-					new_child_classes.push_back(child_class)
-					load(child_class.path).reload()
-		
-		current_child_classes = new_child_classes
+	for _class in current_child_classes:
+		for child_class in classes:
+			
+			if child_class.base == _class.class:
+				load(child_class.path).reload()
 
 
 func apply_extension(extension_path)->Script:
