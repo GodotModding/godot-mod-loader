@@ -424,61 +424,26 @@ func _handle_missing_dependency(mod_dir_name: String, dependency_id: String) -> 
 	mod_missing_dependencies[mod_dir_name].append(dependency_id)
 
 
-func _get_load_order()->void:
-	
-	# Order logic :
-	#
-	# Add independent mod_ids to mod_load_order
-	# Iterate and append to mod_load_order every mod that has all their dependencies in mod_load_order
-	# Remove those from all_mods and loop until all_mods is empty
-	# mod_load_order ends up sorted with every dependency being before the mods using them
-	
-	# probably should be optimized because i think n²?
-	
-	# Array to unpopulate on each iteration
-	var all_mods:Array = mod_data.keys()
-	
-	# For mods that aren't loadable and mods that need those
-	var not_loadable_mods := []
-	
-	# Add independent mods
-	for mod_id in mod_data.keys():
-		var _mod_data = mod_data[mod_id]
-		if mod_data[mod_id].manifest.dependencies.empty():
-			if _mod_data.is_loadable:
-				mod_load_order.push_back(_mod_data)
-			else:
-				not_loadable_mods.push_back(mod_id)
-			all_mods.erase(mod_id)
-	
-	# Iterate until all mods have been sorted
-	while not all_mods.empty():
-		var to_remove := []
-		for mod_id in all_mods:
-			
-			var dependencies:Array = mod_data[mod_id].manifest.dependencies
-			for dependency_index in dependencies.size():
-				
-				var dependency:String = dependencies[dependency_index]
-				
-				# Ignore the mod if one dependency isn't loadable
-				# Also make sure mods that depend on it don't get loaded either
-				if not mod_data.keys().has(dependency) or not_loadable_mods.has(dependency):
-					not_loadable_mods.push_back(mod_id)
-					to_remove.push_back(mod_id)
-					break
-				
-				# Skip if any dependency isn't already in mod_load_order
-				if not mod_load_order.has(mod_data[dependency]):
-					break
-				
-				# Transfer if all dependencies are in mod_load_order
-				if dependency_index == dependencies.size() - 1:
-					mod_load_order.push_back(mod_data[mod_id])
-					to_remove.push_back(mod_id)
-		
-		for mod_id in to_remove:
-			all_mods.erase(mod_id)
+# Get the load order of mods, using a custom sorter
+func _get_load_order(mod_data_array: Array) -> Array:
+
+	# Add loadable mods to the mod load order array
+	for mod in mod_data_array:
+		mod = mod as ModData
+		if mod.is_loadable:
+			mod_load_order.append(mod)
+
+	# Sort mods by the importance value
+	mod_load_order.sort_custom(self, "_compare_importance")
+	return  mod_load_order
+
+
+# Custom sorter that orders mods by important
+func _compare_importance(a: ModData, b: ModData) -> bool:
+	if a.importance > b.importance:
+		return true # a -> b
+	else:
+		return false # b -> a
 
 
 # Instance every mod and add it as a node to the Mod Loader.
