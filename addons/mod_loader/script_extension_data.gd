@@ -1,11 +1,15 @@
 class_name ScriptExtensionData
 extends Resource
 
+# Stores all Data defining a script extension
 
+# Full path to the extension file
 var extension_path:String
 
+# Full path to the vanilla script extended
 var parent_script_path:String
 
+# Mod requesting the extension
 var mod_id:String
 
 

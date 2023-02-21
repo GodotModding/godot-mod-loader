@@ -523,9 +523,10 @@ func install_script_extension(child_script_path:String):
 
 func handle_script_extensions()->void:
 	
-	# couple the extension paths with the parent paths and the extension's mod id
+	# Couple the extension paths with the parent paths and the extension's mod id
+	# in a ScriptExtensionData resource
 	
-	var parent_paths := []
+	var script_extension_datas := []
 	for extension_path in script_extensions:
 		
 		if not File.new().file_exists(extension_path):
@@ -542,20 +543,21 @@ func handle_script_extensions()->void:
 		if not loaded_vanilla_parents_cache.keys().has(parent_script_path):
 			loaded_vanilla_parents_cache[parent_script_path] = parent_script
 		
-		parent_paths.push_back(
+		script_extension_datas.push_back(
 			ScriptExtensionData.new(extension_path, parent_script_path, mod_id)
 		)
 	
 	# Sort the extensions based on dependencies
-	parent_paths = sort_extensions_from_load_order(parent_paths)
-	# Inheritance is more important so this called last
-	parent_paths.sort_custom(self, "check_inheritances")
+	script_extension_datas = sort_extensions_from_load_order(script_extension_datas)
 	
-	# Maybe useless, i think this saved some bugs in the past. 
+	# Inheritance is more important so this called last
+	script_extension_datas.sort_custom(self, "check_inheritances")
+	
+	# This saved some bugs in the past. 
 	loaded_vanilla_parents_cache.clear()
 	
 	# Load and install all extensions
-	for extension in parent_paths:
+	for extension in script_extension_datas:
 		var script:Script = apply_extension(extension["extension_path"])
 		reload_vanilla_child_classes_for(script)
 
