@@ -518,7 +518,14 @@ func _init_mod(mod: ModData) -> void:
 # as the vanilla file, but it's good practice to do so.
 func install_script_extension(child_script_path:String):
 	
-	script_extensions.push_back(child_script_path)
+	# If this is called during initialization, add it with the other 
+	# extensions to be installed taking inheritance chain into account
+	if not ModLoader:
+		script_extensions.push_back(child_script_path)
+	
+	# If not, apply the extension directly
+	else:
+		apply_extension(child_script_path)
 
 
 func handle_script_extensions()->void:
