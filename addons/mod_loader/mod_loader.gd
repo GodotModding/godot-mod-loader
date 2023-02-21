@@ -82,6 +82,10 @@ var script_extensions := []
 # Store vanilla classes for script extension sorting
 var loaded_vanilla_parents_cache := {}
 
+# Set to false after _init()
+# Helps to decide whether a script extension should go throught the handle_script_extensions process
+var is_initializing := true
+
 
 # Main
 # =============================================================================
@@ -171,6 +175,8 @@ func _init() -> void:
 	ModLoaderUtils.log_success("DONE: Completely finished loading mods", LOG_NAME)
 	
 	handle_script_extensions()
+	
+	is_initializing = false
 
 
 # Ensure ModLoader is the first autoload
@@ -485,7 +491,7 @@ func install_script_extension(child_script_path:String):
 	
 	# If this is called during initialization, add it with the other 
 	# extensions to be installed taking inheritance chain into account
-	if not ModLoader:
+	if is_initializing:
 		script_extensions.push_back(child_script_path)
 	
 	# If not, apply the extension directly
