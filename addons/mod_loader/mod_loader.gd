@@ -590,7 +590,7 @@ func _apply_extension(extension_path)->Script:
 	# when creating singletons.
 	# The actual instance is thrown away.
 	child_script.new()
-	
+
 	var parent_script:Script = child_script.get_base_script()
 	var parent_script_path:String = parent_script.resource_path
 	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
