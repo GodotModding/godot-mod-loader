@@ -83,7 +83,7 @@ var script_extensions := []
 var loaded_vanilla_parents_cache := {}
 
 # Set to false after _init()
-# Helps to decide whether a script extension should go throught the handle_script_extensions process
+# Helps to decide whether a script extension should go through the _handle_script_extensions process
 var is_initializing := true
 
 
@@ -174,7 +174,7 @@ func _init() -> void:
 
 	ModLoaderUtils.log_success("DONE: Completely finished loading mods", LOG_NAME)
 	
-	handle_script_extensions()
+	_handle_script_extensions()
 	
 	is_initializing = false
 
@@ -476,34 +476,9 @@ func _init_mod(mod: ModData) -> void:
 	add_child(mod_main_instance, true)
 
 
-# Helpers
-# =============================================================================
-
-# Helper functions to build mods
-
-# Add a script that extends a vanilla script. `child_script_path` should point
-# to your mod's extender script, eg "MOD/extensions/singletons/utils.gd".
-# Inside that extender script, it should include "extends {target}", where
-# {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
-# Note that your extender script doesn't have to follow the same directory path
-# as the vanilla file, but it's good practice to do so.
-func install_script_extension(child_script_path:String):
-	
-	# If this is called during initialization, add it with the other 
-	# extensions to be installed taking inheritance chain into account
-	if is_initializing:
-		script_extensions.push_back(child_script_path)
-	
-	# If not, apply the extension directly
-	else:
-		apply_extension(child_script_path)
-
-
-func handle_script_extensions()->void:
-	
-	# Couple the extension paths with the parent paths and the extension's mod id
-	# in a ScriptExtensionData resource
-	
+# Couple the extension paths with the parent paths and the extension's mod id
+# in a ScriptExtensionData resource
+func _handle_script_extensions()->void:
 	var script_extension_data_array := []
 	for extension_path in script_extensions:
 		
@@ -526,7 +501,7 @@ func handle_script_extensions()->void:
 		)
 	
 	# Sort the extensions based on dependencies
-	script_extension_data_array = sort_extensions_from_load_order(script_extension_data_array)
+	script_extension_data_array = _sort_extensions_from_load_order(script_extension_data_array)
 	
 	# Inheritance is more important so this called last
 	script_extension_data_array.sort_custom(self, "check_inheritances")
@@ -536,13 +511,12 @@ func handle_script_extensions()->void:
 	
 	# Load and install all extensions
 	for extension in script_extension_data_array:
-		var script:Script = apply_extension(extension.extension_path)
-		reload_vanilla_child_classes_for(script)
+		var script:Script = _apply_extension(extension.extension_path)
+		_reload_vanilla_child_classes_for(script)
 
 
-func sort_extensions_from_load_order(extensions:Array)->Array:
-	
-	# Populate extensions_sorted following the dependency order
+# Sort an array of ScriptExtensionData following the load order
+func _sort_extensions_from_load_order(extensions:Array)->Array:
 	var extensions_sorted := []
 	
 	for _mod_data in mod_load_order:
@@ -555,8 +529,7 @@ func sort_extensions_from_load_order(extensions:Array)->Array:
 
 # Inheritance sorting
 # Go up extension_a's inheritance tree to find if any parent shares the same vanilla path as extension_b
-func check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
-	
+func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
 	var a_child_script:Script
 	
 	if loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
@@ -575,13 +548,13 @@ func check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExten
 		return false
 	
 	else:
-		return check_inheritances(ScriptExtensionData.new(extension_a.extension_path, a_parent_script_path, extension_a.mod_id), extension_b)
+		return _check_inheritances(ScriptExtensionData.new(extension_a.extension_path, a_parent_script_path, extension_a.mod_id), extension_b)
 
 
 # Reload all children classes of the vanilla class we just extended
 # Calling reload() the children of an extended class seems to allow them to be extended
 # e.g if B is a child class of A, reloading B after apply an extender of A allows extenders of B to properly extend B, taking A's extender(s) into account
-func reload_vanilla_child_classes_for(script:Script)->void:
+func _reload_vanilla_child_classes_for(script:Script)->void:
 	
 	if script == null:
 		return
@@ -601,7 +574,7 @@ func reload_vanilla_child_classes_for(script:Script)->void:
 				load(child_class.path).reload()
 
 
-func apply_extension(extension_path)->Script:
+func _apply_extension(extension_path)->Script:
 	# Check path to file exists
 	if not File.new().file_exists(extension_path):
 		ModLoaderUtils.log_error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
@@ -624,6 +597,29 @@ func apply_extension(extension_path)->Script:
 	child_script.take_over_path(parent_script_path)
 	
 	return child_script
+
+
+# Helpers
+# =============================================================================
+
+# Helper functions to build mods
+
+# Add a script that extends a vanilla script. `child_script_path` should point
+# to your mod's extender script, eg "MOD/extensions/singletons/utils.gd".
+# Inside that extender script, it should include "extends {target}", where
+# {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
+# Note that your extender script doesn't have to follow the same directory path
+# as the vanilla file, but it's good practice to do so.
+func install_script_extension(child_script_path:String):
+	
+	# If this is called during initialization, add it with the other 
+	# extensions to be installed taking inheritance chain into account
+	if is_initializing:
+		script_extensions.push_back(child_script_path)
+	
+	# If not, apply the extension directly
+	else:
+		_apply_extension(child_script_path)
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
