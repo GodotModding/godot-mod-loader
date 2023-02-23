@@ -177,6 +177,8 @@ func _init() -> void:
 	
 	_handle_script_extensions()
 	
+	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
+	
 	is_initializing = false
 
 
