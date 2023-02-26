@@ -87,6 +87,9 @@ var loaded_vanilla_parents_cache := {}
 # Helps to decide whether a script extension should go through the _handle_script_extensions process
 var is_initializing := true
 
+# Keeps track of logged messages, to avoid flooding the log with duplicate notices
+var logged_messages := []
+
 
 # Main
 # =============================================================================
@@ -737,7 +740,11 @@ func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	if not status_code == MLConfigStatus.OK:
 		if status_code == MLConfigStatus.NO_JSON_OK:
 			# No user config file exists. Low importance as very likely to trigger
-			ModLoaderUtils.log_debug("Config JSON Notice: %s" % status_msg, mod_dir_name)
+			var full_msg = "Config JSON Notice: %s" % status_msg
+			# Only log this once, to avoid flooding the log
+			if not logged_messages.has(full_msg):
+				ModLoaderUtils.log_debug(full_msg, mod_dir_name)
+				logged_messages.push_back(full_msg)
 		else:
 			# Code error (eg. invalid mod ID)
 			ModLoaderUtils.log_fatal("Config JSON Error (%s): %s" % [status_code, status_msg], mod_dir_name)
