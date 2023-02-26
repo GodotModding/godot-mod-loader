@@ -115,8 +115,3 @@ func get_optional_mod_file_path(optional_file: int) -> String:
 		optional_mod_files.OVERWRITES:
 			return dir_path.plus_file("overwrites.gd")
 	return ""
-
-#func _to_string() -> String:
-	# todo if we want it pretty printed
-
-
