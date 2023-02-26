@@ -150,10 +150,14 @@ static func validate_dependencies_and_incompatibilities(mod_id: String, dependen
 
 	if dependencies.size() > 0:
 		for dep in dependencies:
+			if dep == mod_id:
+				ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as a dependency in its own manifest.json file" % mod_id, LOG_NAME)
 			valid_dep = is_mod_id_valid(mod_id, dep, "dependency", is_silent)
 
 	if incompatibilities.size() > 0:
 		for inc in incompatibilities:
+			if inc == mod_id:
+				ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as an incompatible mod in its own manifest.json file" % mod_id, LOG_NAME)
 			valid_inc = is_mod_id_valid(mod_id, inc, "incompatibility", is_silent)
 
 	if not valid_dep or not valid_inc:
