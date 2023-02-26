@@ -677,9 +677,9 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 
 enum MLConfigStatus {
 	OK,                  # 0 = No errors
-	INVALID_MOD_ID,      # 1 = Invalid mod ID
-	NO_JSON_OK,          # 2 = No custom JSON. File probably does not exist. Defaults will be used if available
-	NO_JSON_INVALID_KEY, # 3 = No custom JSON, and key was invalid when trying to get the default from your manifest defaults (`extra.godot.config_defaults`)
+	NO_JSON_OK,          # 1 = No custom JSON (file probably does not exist). Uses defaults from manifest, if available
+	INVALID_MOD_ID,      # 2 = Invalid mod ID
+	NO_JSON_INVALID_KEY, # 3 = Invalid key, and no custom JSON was specified in the manifest defaults (`extra.godot.config_defaults`)
 	INVALID_KEY          # 4 = Invalid key, although config data does exists
 }
 
