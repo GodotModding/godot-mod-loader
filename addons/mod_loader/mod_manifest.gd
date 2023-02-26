@@ -82,9 +82,6 @@ func _init(manifest: Dictionary) -> void:
 	if not validate_dependencies_and_incompatibilities(mod_id, dependencies, incompatibilities):
 		return
 
-	# todo load file named icon.png when loading mods and use here
-#	image StreamTexture
-
 
 # Mod ID used in the mod loader
 # Format: {namespace}-{name}
@@ -225,8 +222,3 @@ static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
 		return false
 
 	return true
-
-
-#func _to_json()	-> String:
-#	return ""
-
