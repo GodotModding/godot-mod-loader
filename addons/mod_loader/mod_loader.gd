@@ -93,6 +93,10 @@ var has_shown_editor_warning := false
 # Can be used in the editor to load mods from your Steam workshop directory
 var workshop_path_override := ""
 
+# If true, ModLoader will load mod ZIPs from the Steam workshop directory,
+# instead of the default location (res://mods)
+var use_workshop := false
+
 
 # Main
 # =============================================================================
@@ -222,7 +226,6 @@ func _check_first_autoload() -> void:
 # (UNPACKED_DIR)
 func _load_mod_zips()->int:
 	var zipped_mods_count := 0
-	var use_workshop := true
 
 	if not use_workshop:
 		# Path to the games mod folder
