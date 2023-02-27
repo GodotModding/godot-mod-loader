@@ -14,7 +14,7 @@ const new_global_classes := [
 		"base": "Resource",
 		"class": "ModData",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/mod_data.gd"
+		"path": "res://addons/mod_loader/classes/mod_data.gd"
 	}, {
 		"base": "Node",
 		"class": "ModLoaderUtils",
@@ -24,12 +24,12 @@ const new_global_classes := [
 		"base": "Resource",
 		"class": "ModManifest",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/mod_manifest.gd"
+		"path": "res://addons/mod_loader/classes/mod_manifest.gd"
 	}, {
 		"base": "Resource",
 		"class": "ScriptExtensionData",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/script_extension_data.gd"
+		"path": "res://addons/mod_loader/classes/script_extension_data.gd"
 	}
 ]
 
