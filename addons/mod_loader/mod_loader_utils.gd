@@ -63,6 +63,14 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 	var prefix := "%s %s: " % [log_type.to_upper(), mod_name]
 	var log_message := time + prefix + message
 
+	code_note(str(
+		"If you are seeing this after trying to run the game, there is an error in your mod somewhere.",
+		"Check the Debugger tab (below) to see the error.",
+		"Click through the files listed in Stack Frames to trace where the error originated.",
+		"View Godot's documentation for more info:",
+		"https://docs.godotengine.org/en/stable/tutorials/scripting/debug/debugger_panel.html#doc-debugger-panel"
+	))
+
 	match log_type.to_lower():
 		"fatal-error":
 			push_error(message)
@@ -86,6 +94,13 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 			if _get_verbosity() >= verbosity_level.DEBUG:
 				print(prefix + message)
 				_write_to_log_file(log_message)
+
+
+# This is a dummy func. It is exclusively used to show notes in the code that
+# stay visible after decompiling a PCK, as is primarily intended to assist new
+# modders in understanding and troubleshooting issues
+static func code_note(_msg:String):
+	pass
 
 
 static func is_mod_name_ignored(mod_name: String) -> bool:
