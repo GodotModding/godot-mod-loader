@@ -733,6 +733,9 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 	_saved_objects.append(packed_scene)
 
 
+# Helpers - Config JSON
+# =============================================================================
+
 enum MLConfigStatus {
 	OK,                  # 0 = No errors
 	NO_JSON_OK,          # 1 = No custom JSON (file probably does not exist). Uses defaults from manifest, if available
@@ -805,3 +808,58 @@ func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 		"status_msg": status_msg,
 		"data": data,
 	}
+
+
+# Returns a bool indicating if a retrieved mod config is valid.
+# Requires the full config object (ie. the dictionary that's returned by
+# `get_mod_config`)
+func is_mod_config_data_valid(config_obj: Dictionary) -> bool:
+	return config_obj.status_code <= MLConfigStatus.NO_JSON_OK
+
+
+# Saves a full dictionary object to a mod's custom config file, as JSON.
+# Overwrites any existing data in the file.
+# Optionally updates the config object that's stored in memory (true by default).
+# Returns a bool indicating success or failure.
+# WARNING: Provides no validation
+func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_config: bool = true) -> bool:
+	# Use `get_mod_config` to check if a custom JSON file already exists.
+	# This has the added benefit of logging a fatal error if mod_name is
+	# invalid (as it already happens in `get_mod_config`)
+	var config_obj := get_mod_config(mod_id)
+
+	if not is_mod_config_data_valid(config_obj):
+		ModLoaderUtils.log_warning("Could not save the config JSON file because the config data was invalid", mod_id)
+		return false
+
+	var data_original: Dictionary = config_obj.data
+	var data_new := {}
+
+	# Merge
+	if update_config:
+		# Update the config held in memory
+		data_original.merge(data, true)
+		data_new = data_original
+	else:
+		# Don't update the config in memory
+		data_new = data_original.duplicate(true)
+		data_new.merge(data, true)
+
+	# Note: This bit of code is duped from `_load_mod_configs`
+	var configs_path := ModLoaderUtils.get_local_folder_dir("configs")
+	if not os_configs_path_override == "":
+		configs_path = os_configs_path_override
+
+	var json_path := configs_path.plus_file(mod_id + ".json")
+
+	return ModLoaderUtils.save_dictionary_to_file(data_new, json_path)
+
+
+# Saves a single settings to a mod's custom config file.
+# Returns a bool indicating success or failure.
+func save_mod_config_setting(mod_id: String, key:String, value, update_config: bool = true) -> bool:
+	var new_data = {
+		key: value
+	}
+
+	return save_mod_config_dictionary(mod_id, new_data, update_config)
