@@ -87,13 +87,36 @@ var loaded_vanilla_parents_cache := {}
 # Helps to decide whether a script extension should go through the _handle_script_extensions process
 var is_initializing := true
 
+# These variables handle various settings, which can be changed via Godot's GUI
+# by adding a ModLoaderSettings resource to the resource file specified by
+# `ml_settings_path`. See res://addons/mod_loader/settings_examples for some
+# resource files you can add to the settings_curent file.
+# See: res://addons/mod_loader/settings/settings_data.gd
+# See: res://addons/mod_loader/settings/settings_current_data.gd
+var ml_settings_path = "res://addons/mod_loader/settings/settings_current.tres"
+var ml_settings := {
+	enable_mods = true,
+	log_level = ModLoaderDebugLevel.DEBUG,
+	path_to_mods = "res://mods",
+	path_to_configs = "res://configs",
+	use_workshop_mods_paths = false,
+}
+
+enum ModLoaderDebugLevel {WARNING, INFO, DEBUG}
+
 
 # Main
 # =============================================================================
 
 func _init() -> void:
+	_update_ml_settings()
+
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
+		return
+
+	if not ml_settings.enable_mods:
+		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
@@ -180,6 +203,20 @@ func _init() -> void:
 	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
 
 	is_initializing = false
+
+
+# Update ModLoader's settings, via the custom settings resource
+func _update_ml_settings() -> void:
+	# Get user settings for ModLoader
+	if File.new().file_exists(ml_settings_path):
+		var settings_resource = load(ml_settings_path)
+		if not settings_resource.current_settings == null:
+			var current_settings = settings_resource.current_settings
+			# Update from the settings in the resource
+			for key in ml_settings:
+				ml_settings[key] = current_settings[key]
+	else:
+		ModLoaderUtils.log_fatal(str("A critical file is missing: ", ml_settings_path), LOG_NAME)
 
 
 # Ensure ModLoader is the first autoload
