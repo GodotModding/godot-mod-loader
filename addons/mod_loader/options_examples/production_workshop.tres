@@ -1,6 +1,6 @@
 [gd_resource type="Resource" load_steps=2 format=2]
 
-[ext_resource path="res://addons/mod_loader/settings/settings_data.gd" type="Script" id=1]
+[ext_resource path="res://addons/mod_loader/options/options_data.gd" type="Script" id=1]
 
 [resource]
 script = ExtResource( 1 )
@@ -8,4 +8,4 @@ enable_mods = true
 log_level = 1
 path_to_mods = "res://mods"
 path_to_configs = "res://configs"
-use_steam_workshop_path = false
+use_steam_workshop_path = true

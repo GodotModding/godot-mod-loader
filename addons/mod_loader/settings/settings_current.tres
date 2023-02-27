@@ -1,8 +1,0 @@
-[gd_resource type="Resource" load_steps=3 format=2]
-
-[ext_resource path="res://addons/mod_loader/settings/settings_current_data.gd" type="Script" id=1]
-[ext_resource path="res://addons/mod_loader/settings_examples/default.tres" type="Resource" id=2]
-
-[resource]
-script = ExtResource( 1 )
-current_settings = ExtResource( 2 )
