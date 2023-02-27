@@ -1,7 +1,7 @@
 [gd_resource type="Resource" load_steps=3 format=2]
 
-[ext_resource path="res://addons/mod_loader/options/options_current_data.gd" type="Script" id=1]
-[ext_resource path="res://addons/mod_loader/options_examples/current.tres" type="Resource" id=2]
+[ext_resource path="res://addons/mod_loader/options/classes/options_current.gd" type="Script" id=1]
+[ext_resource path="res://addons/mod_loader/options/profiles/current.tres" type="Resource" id=2]
 
 [resource]
 script = ExtResource( 1 )

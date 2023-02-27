@@ -91,7 +91,7 @@ var is_initializing := true
 # by adding a ModLoaderOptions resource to the resource file specified by
 # `ml_options_path`. See res://addons/mod_loader/options_examples for some
 # resource files you can add to the options_curent file.
-# See: res://addons/mod_loader/options/options_data.gd
+# See: res://addons/mod_loader/options/classes/options_profile.gd
 # See: res://addons/mod_loader/options/options_current_data.gd
 var ml_options_path = "res://addons/mod_loader/options/options_current.tres"
 var ml_options := {
