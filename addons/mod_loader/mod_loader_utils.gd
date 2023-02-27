@@ -492,3 +492,38 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 			dir.list_dir_end()
 	return data
 
+
+# Saves a dictionary to a file, as a JSON string
+static func save_string_to_file(save_string: String, filepath: String) -> bool:
+	# Create directory if it doesn't exist yet
+	var file_directory := filepath.get_base_dir()
+	var dir := Directory.new()
+	if not dir.dir_exists(file_directory):
+		var makedir_error = dir.make_dir_recursive(file_directory)
+		if not makedir_error == OK:
+			# @todo: Uncomment when PR #139 is merged: https://github.com/GodotModding/godot-mod-loader/pull/139
+			#code_note("View error codes here: https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#enum-globalscope-error")
+			log_fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
+			return false
+
+	var file = File.new()
+
+	# Save data to the file
+	var fileopen_error = file.open(filepath, File.WRITE)
+
+	if not fileopen_error == OK:
+		# @todo: Uncomment when PR #139 is merged: https://github.com/GodotModding/godot-mod-loader/pull/139
+		#code_note("View error codes here: https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#enum-globalscope-error")
+		log_fatal("Encountered an error (%s) when attempting to write to a file, with the path: %s" % [fileopen_error, filepath], LOG_NAME)
+		return false
+
+	file.store_string(save_string)
+	file.close()
+
+	return true
+
+
+# Saves a dictionary to a file, as a JSON string
+static func save_dictionary_to_file(data: Dictionary, filepath: String) -> bool:
+	var json_string = JSON.print(data, "\t")
+	return save_string_to_file(json_string, filepath)
