@@ -477,3 +477,26 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 			dir.list_dir_end()
 	return data
 
+
+# Gets the steam app ID from steam_data.json, which should be in the root
+# directory (ie. res://steam_data.json). This file is used by Godot Workshop
+# Utility (GWU), which was developed by Brotato developer Blobfish:
+# https://github.com/thomasgvd/godot-workshop-utility
+static func get_steam_app_id()->String:
+	var game_install_directory = get_local_folder_dir()
+	var steam_app_id = ""
+	var file = File.new()
+
+	if file.open(game_install_directory.plus_file("steam_data.json"), File.READ) == OK:
+		var file_content:Dictionary = parse_json(file.get_as_text())
+		file.close()
+
+		if not file_content.has("app_id"):
+			log_error("The steam_data file does not contain an app ID. Mod uploading will not work.", LOG_NAME)
+			return ""
+
+		steam_app_id = file_content.app_id
+	else :
+		log_error("Can't open steam_data file, \"%s\". Please make sure the file exists and is valid." % game_install_directory.plus_file("steam_data.json"), LOG_NAME)
+
+	return steam_app_id
