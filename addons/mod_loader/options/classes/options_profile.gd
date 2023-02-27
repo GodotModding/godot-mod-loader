@@ -1,4 +1,4 @@
-class_name ModLoaderSettings
+class_name ModLoaderOptionsProfile
 extends Resource
 
 # export (String) var my_string := ""
