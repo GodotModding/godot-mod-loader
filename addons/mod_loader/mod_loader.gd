@@ -775,7 +775,7 @@ func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_config:
 		return false
 
 	var data_original: Dictionary = config_obj.data
-	var data_new = {}
+	var data_new := {}
 
 	# Merge
 	if update_config:
