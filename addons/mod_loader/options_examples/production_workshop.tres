@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource( 1 )
 enable_mods = true
-log_level = 1
+log_level = 2
 path_to_mods = "res://mods"
 path_to_configs = "res://configs"
 use_steam_workshop_path = true

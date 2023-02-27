@@ -5,7 +5,7 @@ extends Resource
 # export (Resource) var upgrade_to_process_icon = null
 # export (Array, Resource) var elites: = []
 
-enum ModLoaderDebugLevel {WARNING, INFO, DEBUG}
+enum ModLoaderDebugLevel { ERROR, WARNING, INFO, DEBUG }
 
 export (bool) var enable_mods = true
 export (ModLoaderDebugLevel) var log_level: = ModLoaderDebugLevel.DEBUG

@@ -102,7 +102,7 @@ var ml_options := {
 	use_steam_workshop_path = false,
 }
 
-enum ModLoaderDebugLevel {WARNING, INFO, DEBUG}
+enum ModLoaderDebugLevel { ERROR, WARNING, INFO, DEBUG }
 
 
 # Main
