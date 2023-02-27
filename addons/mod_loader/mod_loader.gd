@@ -759,7 +759,7 @@ func is_mod_config_data_valid(config_obj: Dictionary) -> bool:
 	return config_obj.status_code <= MLConfigStatus.NO_JSON_OK
 
 
-# Saves a full dictionary object to a mod's custon config file, as JSON.
+# Saves a full dictionary object to a mod's custom config file, as JSON.
 # Overwrites any existing data in the file.
 # Optionally updates the config object that's stored in memory (true by default).
 # Returns a bool indicating success or failure.
