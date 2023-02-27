@@ -524,6 +524,6 @@ static func save_string_to_file(save_string: String, filepath: String) -> bool:
 
 
 # Saves a dictionary to a file, as a JSON string
-static func save_dictionary_to_file(data: Dictionary, filepath: String) -> bool:
+static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> bool:
 	var json_string = JSON.print(data, "\t")
 	return save_string_to_file(json_string, filepath)
