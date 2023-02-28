@@ -93,16 +93,14 @@ var is_initializing := true
 # resource files you can add to the options_curent file.
 # See: res://addons/mod_loader/options/classes/options_profile.gd
 # See: res://addons/mod_loader/options/options_current_data.gd
-var ml_options_path = "res://addons/mod_loader/options/options_current.tres"
+var ml_options_path := "res://addons/mod_loader/options/options_current.tres"
 var ml_options := {
 	enable_mods = true,
-	log_level = ModLoaderDebugLevel.DEBUG,
+	log_level = ModLoaderUtils.verbosity_level.DEBUG,
 	path_to_mods = "res://mods",
 	path_to_configs = "res://configs",
 	use_steam_workshop_path = false,
 }
-
-enum ModLoaderDebugLevel { ERROR, WARNING, INFO, DEBUG }
 
 
 # Main
@@ -209,9 +207,9 @@ func _init() -> void:
 func _update_ml_options() -> void:
 	# Get user options for ModLoader
 	if File.new().file_exists(ml_options_path):
-		var options_resource = load(ml_options_path)
+		var options_resource := load(ml_options_path)
 		if not options_resource.current_options == null:
-			var current_options = options_resource.current_options
+			var current_options: Resource = options_resource.current_options
 			# Update from the options in the resource
 			for key in ml_options:
 				ml_options[key] = current_options[key]
