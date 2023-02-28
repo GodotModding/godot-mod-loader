@@ -63,6 +63,14 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 	var prefix := "%s %s: " % [log_type.to_upper(), mod_name]
 	var log_message := time + prefix + message
 
+	code_note(str(
+		"If you are seeing this after trying to run the game, there is an error in your mod somewhere.",
+		"Check the Debugger tab (below) to see the error.",
+		"Click through the files listed in Stack Frames to trace where the error originated.",
+		"View Godot's documentation for more info:",
+		"https://docs.godotengine.org/en/stable/tutorials/scripting/debug/debugger_panel.html#doc-debugger-panel"
+	))
+
 	match log_type.to_lower():
 		"fatal-error":
 			push_error(message)
@@ -86,6 +94,13 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 			if _get_verbosity() >= verbosity_level.DEBUG:
 				print(prefix + message)
 				_write_to_log_file(log_message)
+
+
+# This is a dummy func. It is exclusively used to show notes in the code that
+# stay visible after decompiling a PCK, as is primarily intended to assist new
+# modders in understanding and troubleshooting issues
+static func code_note(_msg:String):
+	pass
 
 
 static func is_mod_name_ignored(mod_name: String) -> bool:
@@ -477,3 +492,40 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 			dir.list_dir_end()
 	return data
 
+
+# Saves a dictionary to a file, as a JSON string
+static func save_string_to_file(save_string: String, filepath: String) -> bool:
+	# Create directory if it doesn't exist yet
+	var file_directory := filepath.get_base_dir()
+	var dir := Directory.new()
+
+	code_note(str(
+		"View error codes here:",
+		"https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#enum-globalscope-error"
+	))
+
+	if not dir.dir_exists(file_directory):
+		var makedir_error = dir.make_dir_recursive(file_directory)
+		if not makedir_error == OK:
+			log_fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
+			return false
+
+	var file = File.new()
+
+	# Save data to the file
+	var fileopen_error = file.open(filepath, File.WRITE)
+
+	if not fileopen_error == OK:
+		log_fatal("Encountered an error (%s) when attempting to write to a file, with the path: %s" % [fileopen_error, filepath], LOG_NAME)
+		return false
+
+	file.store_string(save_string)
+	file.close()
+
+	return true
+
+
+# Saves a dictionary to a file, as a JSON string
+static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> bool:
+	var json_string = JSON.print(data, "\t")
+	return save_string_to_file(json_string, filepath)

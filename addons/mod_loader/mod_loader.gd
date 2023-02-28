@@ -90,13 +90,34 @@ var is_initializing := true
 # Keeps track of logged messages, to avoid flooding the log with duplicate notices
 var logged_messages := []
 
+# These variables handle various options, which can be changed via Godot's GUI
+# by adding a ModLoaderOptions resource to the resource file specified by
+# `ml_options_path`. See res://addons/mod_loader/options_examples for some
+# resource files you can add to the options_curent file.
+# See: res://addons/mod_loader/options/classes/options_profile.gd
+# See: res://addons/mod_loader/options/options_current_data.gd
+var ml_options_path := "res://addons/mod_loader/options/options_current.tres"
+var ml_options := {
+	enable_mods = true,
+	log_level = ModLoaderUtils.verbosity_level.DEBUG,
+	path_to_mods = "res://mods",
+	path_to_configs = "res://configs",
+	use_steam_workshop_path = false,
+}
+
 
 # Main
 # =============================================================================
 
 func _init() -> void:
+	_update_ml_options()
+
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
+		return
+
+	if not ml_options.enable_mods:
+		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
@@ -183,6 +204,20 @@ func _init() -> void:
 	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
 
 	is_initializing = false
+
+
+# Update ModLoader's options, via the custom options resource
+func _update_ml_options() -> void:
+	# Get user options for ModLoader
+	if File.new().file_exists(ml_options_path):
+		var options_resource := load(ml_options_path)
+		if not options_resource.current_options == null:
+			var current_options: Resource = options_resource.current_options
+			# Update from the options in the resource
+			for key in ml_options:
+				ml_options[key] = current_options[key]
+	else:
+		ModLoaderUtils.log_fatal(str("A critical file is missing: ", ml_options_path), LOG_NAME)
 
 
 # Ensure ModLoader is the first autoload
@@ -678,11 +713,14 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 	_saved_objects.append(packed_scene)
 
 
+# Helpers - Config JSON
+# =============================================================================
+
 enum MLConfigStatus {
 	OK,                  # 0 = No errors
-	INVALID_MOD_ID,      # 1 = Invalid mod ID
-	NO_JSON_OK,          # 2 = No custom JSON. File probably does not exist. Defaults will be used if available
-	NO_JSON_INVALID_KEY, # 3 = No custom JSON, and key was invalid when trying to get the default from your manifest defaults (`extra.godot.config_defaults`)
+	NO_JSON_OK,          # 1 = No custom JSON (file probably does not exist). Uses defaults from manifest, if available
+	INVALID_MOD_ID,      # 2 = Invalid mod ID
+	NO_JSON_INVALID_KEY, # 3 = Invalid key, and no custom JSON was specified in the manifest defaults (`extra.godot.config_defaults`)
 	INVALID_KEY          # 4 = Invalid key, although config data does exists
 }
 
@@ -754,3 +792,58 @@ func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 		"status_msg": status_msg,
 		"data": data,
 	}
+
+
+# Returns a bool indicating if a retrieved mod config is valid.
+# Requires the full config object (ie. the dictionary that's returned by
+# `get_mod_config`)
+func is_mod_config_data_valid(config_obj: Dictionary) -> bool:
+	return config_obj.status_code <= MLConfigStatus.NO_JSON_OK
+
+
+# Saves a full dictionary object to a mod's custom config file, as JSON.
+# Overwrites any existing data in the file.
+# Optionally updates the config object that's stored in memory (true by default).
+# Returns a bool indicating success or failure.
+# WARNING: Provides no validation
+func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_config: bool = true) -> bool:
+	# Use `get_mod_config` to check if a custom JSON file already exists.
+	# This has the added benefit of logging a fatal error if mod_name is
+	# invalid (as it already happens in `get_mod_config`)
+	var config_obj := get_mod_config(mod_id)
+
+	if not is_mod_config_data_valid(config_obj):
+		ModLoaderUtils.log_warning("Could not save the config JSON file because the config data was invalid", mod_id)
+		return false
+
+	var data_original: Dictionary = config_obj.data
+	var data_new := {}
+
+	# Merge
+	if update_config:
+		# Update the config held in memory
+		data_original.merge(data, true)
+		data_new = data_original
+	else:
+		# Don't update the config in memory
+		data_new = data_original.duplicate(true)
+		data_new.merge(data, true)
+
+	# Note: This bit of code is duped from `_load_mod_configs`
+	var configs_path := ModLoaderUtils.get_local_folder_dir("configs")
+	if not os_configs_path_override == "":
+		configs_path = os_configs_path_override
+
+	var json_path := configs_path.plus_file(mod_id + ".json")
+
+	return ModLoaderUtils.save_dictionary_to_file(data_new, json_path)
+
+
+# Saves a single settings to a mod's custom config file.
+# Returns a bool indicating success or failure.
+func save_mod_config_setting(mod_id: String, key:String, value, update_config: bool = true) -> bool:
+	var new_data = {
+		key: value
+	}
+
+	return save_mod_config_dictionary(mod_id, new_data, update_config)
