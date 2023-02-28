@@ -87,13 +87,34 @@ var loaded_vanilla_parents_cache := {}
 # Helps to decide whether a script extension should go through the _handle_script_extensions process
 var is_initializing := true
 
+# These variables handle various options, which can be changed via Godot's GUI
+# by adding a ModLoaderOptions resource to the resource file specified by
+# `ml_options_path`. See res://addons/mod_loader/options_examples for some
+# resource files you can add to the options_curent file.
+# See: res://addons/mod_loader/options/classes/options_profile.gd
+# See: res://addons/mod_loader/options/options_current_data.gd
+var ml_options_path := "res://addons/mod_loader/options/options_current.tres"
+var ml_options := {
+	enable_mods = true,
+	log_level = ModLoaderUtils.verbosity_level.DEBUG,
+	path_to_mods = "res://mods",
+	path_to_configs = "res://configs",
+	use_steam_workshop_path = false,
+}
+
 
 # Main
 # =============================================================================
 
 func _init() -> void:
+	_update_ml_options()
+
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
+		return
+
+	if not ml_options.enable_mods:
+		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
@@ -180,6 +201,20 @@ func _init() -> void:
 	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
 
 	is_initializing = false
+
+
+# Update ModLoader's options, via the custom options resource
+func _update_ml_options() -> void:
+	# Get user options for ModLoader
+	if File.new().file_exists(ml_options_path):
+		var options_resource := load(ml_options_path)
+		if not options_resource.current_options == null:
+			var current_options: Resource = options_resource.current_options
+			# Update from the options in the resource
+			for key in ml_options:
+				ml_options[key] = current_options[key]
+	else:
+		ModLoaderUtils.log_fatal(str("A critical file is missing: ", ml_options_path), LOG_NAME)
 
 
 # Ensure ModLoader is the first autoload
