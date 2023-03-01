@@ -110,10 +110,10 @@ var ml_options := {
 
 # If true, ModLoader will load mod ZIPs from the Steam workshop directory,
 # instead of the default location (res://mods)
-var use_workshop := false
+var use_steam_workshop := false
 
 # Can be used in the editor to load mods from your Steam workshop directory
-var workshop_path_override := ""
+var steam_workshop_path_override := ""
 
 
 # Main
@@ -265,7 +265,7 @@ func _check_first_autoload() -> void:
 func _load_mod_zips()->int:
 	var zipped_mods_count := 0
 
-	if not use_workshop:
+	if not use_steam_workshop:
 		# Path to the games mod folder
 		var mods_folder_path := ModLoaderUtils.get_local_folder_dir("mods")
 
@@ -273,7 +273,7 @@ func _load_mod_zips()->int:
 		zipped_mods_count += _load_zips_in_folder(mods_folder_path)
 	else:
 		# If we're using Steam workshop, loop over the workshop item directories
-		zipped_mods_count += _load_workshop_zips()
+		zipped_mods_count += _load_steam_workshop_zips()
 
 	return zipped_mods_count
 
@@ -349,12 +349,12 @@ func _load_zips_in_folder(folder_path: String) -> int:
 # Load mod ZIPs from Steam workshop folders. Uses 2 loops: One for each
 # workshop item's folder, with another inside that which loops over the ZIPs
 # inside each workshop item's folder
-func _load_workshop_zips() -> int:
+func _load_steam_workshop_zips() -> int:
 	var temp_zipped_mods_count := 0
 	var workshop_folder_path := ModLoaderUtils.get_steam_workshop_dir()
 
-	if not workshop_path_override == "":
-		workshop_folder_path = workshop_path_override
+	if not steam_workshop_path_override == "":
+		workshop_folder_path = steam_workshop_path_override
 
 	ModLoaderUtils.log_info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 
