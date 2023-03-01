@@ -335,7 +335,7 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		# If there was an error loading the mod zip file
 		if not is_mod_loaded_successfully:
 			# Log the error and continue with the next file
-			ModLoaderUtils.log_error(str(mod_zip_file_name, " failed to load."), LOG_NAME)
+			ModLoaderUtils.log_error("%s failed to load." % mod_zip_file_name, LOG_NAME)
 			continue
 
 		# Mod successfully loaded!
