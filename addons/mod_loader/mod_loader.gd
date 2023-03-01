@@ -313,7 +313,7 @@ func _load_zips_in_folder(folder_path: String) -> int:
 
 		var mod_folder_path := folder_path.plus_file(mod_zip_file_name)
 		var mod_folder_global_path := ProjectSettings.globalize_path(mod_folder_path)
-		var is_mod_loaded_success := ProjectSettings.load_resource_pack(mod_folder_global_path, false)
+		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_folder_global_path, false)
 
 		# Notifies developer of an issue with Godot, where using `load_resource_pack`
 		# in the editor WIPES the entire virtual res:// directory the first time you
@@ -332,7 +332,7 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		ModLoaderUtils.log_debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
 
 		# If there was an error loading the mod zip file
-		if not is_mod_loaded_success:
+		if not is_mod_loaded_successfully:
 			# Log the error and continue with the next file
 			ModLoaderUtils.log_error(str(mod_zip_file_name, " failed to load."), LOG_NAME)
 			continue
