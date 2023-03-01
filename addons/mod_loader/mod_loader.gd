@@ -298,12 +298,12 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		var mod_zip_file_name := mod_dir.get_next()
 
 		# If there is no more file
-		if mod_zip_file_name == '':
+		if mod_zip_file_name == "":
 			# Stop loading mod zip files
 			break
 
 		# Ignore files that aren't ZIP or PCK
-		if mod_zip_file_name.get_extension() != "zip" && mod_zip_file_name.get_extension() != "pck":
+		if not mod_zip_file_name.get_extension() == "zip" and not mod_zip_file_name.get_extension() == "pck":
 			continue
 
 		# If the current file is a directory
@@ -360,11 +360,11 @@ func _load_workshop_zips() -> int:
 
 	var workshop_dir := Directory.new()
 	var workshop_dir_open_error := workshop_dir.open(workshop_folder_path)
-	if workshop_dir_open_error != OK:
+	if not workshop_dir_open_error == OK:
 		ModLoaderUtils.log_error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_open_error], LOG_NAME)
 		return -1
 	var workshop_dir_listdir_error = workshop_dir.list_dir_begin()
-	if workshop_dir_listdir_error != OK:
+	if not workshop_dir_listdir_error == OK:
 		ModLoaderUtils.log_error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
 		return -1
 
