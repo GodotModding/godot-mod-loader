@@ -547,11 +547,11 @@ static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> 
 #   GAME     = Steam/steamapps/common/Brotato
 #   WORKSHOP = Steam/steamapps/workshop/content/1942280
 static func get_steam_workshop_dir() -> String:
-	var game_install_directory = get_local_folder_dir()
-	var path = ""
+	var game_install_directory := get_local_folder_dir()
+	var path := ""
 
 	# Traverse up to the steamapps directory (ie. `cd ..\..\` on Windows)
-	var path_array = game_install_directory.split("/")
+	var path_array := game_install_directory.split("/")
 	path_array.resize(path_array.size() - 2)
 
 	# Reconstruct the path, now that it has "common/GameName" removed
@@ -567,13 +567,13 @@ static func get_steam_workshop_dir() -> String:
 # directory (ie. res://steam_data.json). This file is used by Godot Workshop
 # Utility (GWU), which was developed by Brotato developer Blobfish:
 # https://github.com/thomasgvd/godot-workshop-utility
-static func get_steam_app_id()->String:
+static func get_steam_app_id() -> String:
 	var game_install_directory := get_local_folder_dir()
 	var steam_app_id := ""
 	var file := File.new()
 
 	if file.open(game_install_directory.plus_file("steam_data.json"), File.READ) == OK:
-		var file_content:Dictionary = parse_json(file.get_as_text())
+		var file_content: Dictionary = parse_json(file.get_as_text())
 		file.close()
 
 		if not file_content.has("app_id"):

@@ -262,7 +262,7 @@ func _check_first_autoload() -> void:
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
 # (UNPACKED_DIR)
-func _load_mod_zips()->int:
+func _load_mod_zips() -> int:
 	var zipped_mods_count := 0
 
 	if not use_steam_workshop:
@@ -287,7 +287,7 @@ func _load_zips_in_folder(folder_path: String) -> int:
 	if not mod_dir_open_error == OK:
 		ModLoaderUtils.log_error("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
 		return -1
-	var mod_dir_listdir_error = mod_dir.list_dir_begin()
+	var mod_dir_listdir_error := mod_dir.list_dir_begin()
 	if not mod_dir_listdir_error == OK:
 		ModLoaderUtils.log_error("Can't read mod folder %s (Error: %s)" % [folder_path, mod_dir_listdir_error], LOG_NAME)
 		return -1
@@ -338,7 +338,7 @@ func _load_zips_in_folder(folder_path: String) -> int:
 			continue
 
 		# Mod successfully loaded!
-		ModLoaderUtils.log_success(str(mod_zip_file_name, " loaded."), LOG_NAME)
+		ModLoaderUtils.log_success("%s loaded." % mod_zip_file_name, LOG_NAME)
 		temp_zipped_mods_count += 1
 
 	mod_dir.list_dir_end()
@@ -363,7 +363,7 @@ func _load_steam_workshop_zips() -> int:
 	if not workshop_dir_open_error == OK:
 		ModLoaderUtils.log_error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_open_error], LOG_NAME)
 		return -1
-	var workshop_dir_listdir_error = workshop_dir.list_dir_begin()
+	var workshop_dir_listdir_error := workshop_dir.list_dir_begin()
 	if not workshop_dir_listdir_error == OK:
 		ModLoaderUtils.log_error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
 		return -1
