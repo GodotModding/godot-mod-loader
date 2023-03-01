@@ -493,6 +493,9 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 	return data
 
 
+# Saving (Files)
+# =============================================================================
+
 # Saves a dictionary to a file, as a JSON string
 static func save_string_to_file(save_string: String, filepath: String) -> bool:
 	# Create directory if it doesn't exist yet
@@ -529,3 +532,56 @@ static func save_string_to_file(save_string: String, filepath: String) -> bool:
 static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> bool:
 	var json_string = JSON.print(data, "\t")
 	return save_string_to_file(json_string, filepath)
+
+
+# Steam
+# =============================================================================
+
+# Get the path to the Steam workshop folder. Only works for Steam games, as it
+# traverses directories relative to where a Steam game and its workshop content
+# would be installed. Based on code by Blobfish (developer of Brotato).
+# For reference, these are the paths of a Steam game and its workshop folder:
+#   GAME     = Steam/steamapps/common/GameName
+#   WORKSHOP = Steam/steamapps/workshop/content/AppID
+# Eg. Brotato:
+#   GAME     = Steam/steamapps/common/Brotato
+#   WORKSHOP = Steam/steamapps/workshop/content/1942280
+static func get_steam_workshop_dir() -> String:
+	var game_install_directory := get_local_folder_dir()
+	var path := ""
+
+	# Traverse up to the steamapps directory (ie. `cd ..\..\` on Windows)
+	var path_array := game_install_directory.split("/")
+	path_array.resize(path_array.size() - 2)
+
+	# Reconstruct the path, now that it has "common/GameName" removed
+	path = "/".join(path_array)
+
+	# Append the workgame's workshop path
+	path = path.plus_file("workshop/content/" + get_steam_app_id())
+
+	return path
+
+
+# Gets the steam app ID from steam_data.json, which should be in the root
+# directory (ie. res://steam_data.json). This file is used by Godot Workshop
+# Utility (GWU), which was developed by Brotato developer Blobfish:
+# https://github.com/thomasgvd/godot-workshop-utility
+static func get_steam_app_id() -> String:
+	var game_install_directory := get_local_folder_dir()
+	var steam_app_id := ""
+	var file := File.new()
+
+	if file.open(game_install_directory.plus_file("steam_data.json"), File.READ) == OK:
+		var file_content: Dictionary = parse_json(file.get_as_text())
+		file.close()
+
+		if not file_content.has("app_id"):
+			log_error("The steam_data file does not contain an app ID. Mod uploading will not work.", LOG_NAME)
+			return ""
+
+		steam_app_id = file_content.app_id
+	else :
+		log_error("Can't open steam_data file, \"%s\". Please make sure the file exists and is valid." % game_install_directory.plus_file("steam_data.json"), LOG_NAME)
+
+	return steam_app_id
