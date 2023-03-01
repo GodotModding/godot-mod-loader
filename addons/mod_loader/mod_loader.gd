@@ -279,7 +279,7 @@ func _load_mod_zips()->int:
 
 
 # Load the mod ZIP from the provided directory
-func _load_zips_in_folder(folder_path) -> int:
+func _load_zips_in_folder(folder_path: String) -> int:
 	var temp_zipped_mods_count := 0
 
 	var mod_dir := Directory.new()
@@ -311,9 +311,9 @@ func _load_zips_in_folder(folder_path) -> int:
 			# Go to the next file
 			continue
 
-		var mod_folder_path = folder_path.plus_file(mod_zip_file_name)
-		var mod_folder_global_path = ProjectSettings.globalize_path(mod_folder_path)
-		var is_mod_loaded_success = ProjectSettings.load_resource_pack(mod_folder_global_path, false)
+		var mod_folder_path := folder_path.plus_file(mod_zip_file_name)
+		var mod_folder_global_path := ProjectSettings.globalize_path(mod_folder_path)
+		var is_mod_loaded_success := ProjectSettings.load_resource_pack(mod_folder_global_path, false)
 
 		# Notifies developer of an issue with Godot, where using `load_resource_pack`
 		# in the editor WIPES the entire virtual res:// directory the first time you
