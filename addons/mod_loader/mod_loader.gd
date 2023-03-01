@@ -93,27 +93,28 @@ var has_shown_editor_warning := false
 # Keeps track of logged messages, to avoid flooding the log with duplicate notices
 var logged_messages := []
 
+# Path to the options resource
+# See: res://addons/mod_loader/options/options_current_data.gd
+var ml_options_path := "res://addons/mod_loader/options/options_current.tres"
+
 # These variables handle various options, which can be changed via Godot's GUI
 # by adding a ModLoaderOptions resource to the resource file specified by
 # `ml_options_path`. See res://addons/mod_loader/options_examples for some
 # resource files you can add to the options_curent file.
 # See: res://addons/mod_loader/options/classes/options_profile.gd
-# See: res://addons/mod_loader/options/options_current_data.gd
-var ml_options_path := "res://addons/mod_loader/options/options_current.tres"
 var ml_options := {
 	enable_mods = true,
 	log_level = ModLoaderUtils.verbosity_level.DEBUG,
 	path_to_mods = "res://mods",
 	path_to_configs = "res://configs",
-	use_steam_workshop_path = false,
+
+	# If true, ModLoader will load mod ZIPs from the Steam workshop directory,
+	# instead of the default location (res://mods)
+	steam_workshop_enabled = false,
+
+	# Can be used in the editor to load mods from your Steam workshop directory
+	steam_workshop_path_override = ""
 }
-
-# If true, ModLoader will load mod ZIPs from the Steam workshop directory,
-# instead of the default location (res://mods)
-var use_steam_workshop := false
-
-# Can be used in the editor to load mods from your Steam workshop directory
-var steam_workshop_path_override := ""
 
 
 # Main
@@ -265,7 +266,7 @@ func _check_first_autoload() -> void:
 func _load_mod_zips() -> int:
 	var zipped_mods_count := 0
 
-	if not use_steam_workshop:
+	if not ml_options.steam_workshop_enabled:
 		# Path to the games mod folder
 		var mods_folder_path := ModLoaderUtils.get_local_folder_dir("mods")
 
@@ -353,8 +354,8 @@ func _load_steam_workshop_zips() -> int:
 	var temp_zipped_mods_count := 0
 	var workshop_folder_path := ModLoaderUtils.get_steam_workshop_dir()
 
-	if not steam_workshop_path_override == "":
-		workshop_folder_path = steam_workshop_path_override
+	if not ml_options.steam_workshop_path_override == "":
+		workshop_folder_path = ml_options.steam_workshop_path_override
 
 	ModLoaderUtils.log_info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 

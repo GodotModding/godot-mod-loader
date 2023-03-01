@@ -8,4 +8,5 @@ enable_mods = false
 log_level = 3
 path_to_mods = "res://mods"
 path_to_configs = "res://configs"
-use_steam_workshop_path = false
+steam_workshop_enabled = false
+steam_workshop_path_override = ""
