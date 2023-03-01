@@ -1,5 +1,5 @@
-extends Resource
 class_name ModData
+extends Resource
 
 # Stores and validates all Data required to load a mod successfully
 # If some of the data is invalid, [member is_loadable] will be false
