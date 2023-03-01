@@ -546,16 +546,18 @@ static func save_dictionary_to_file(data: Dictionary, filepath: String) -> bool:
 #   WORKSHOP = Steam/steamapps/workshop/content/1942280
 static func get_steam_workshop_dir() -> String:
 	var game_install_directory = get_local_folder_dir()
+	var path = ""
 
 	# Traverse up to the steamapps directory (ie. `cd ..\..\` on Windows)
 	var path_array = game_install_directory.split("/")
 	path_array.resize(path_array.size() - 2)
-	# Reconstruct the path, as it now has "common/GameName" removed
-	var path = ""
-	for folder in path_array:
-		path += folder + "/"
+
+	# Reconstruct the path, now that it has "common/GameName" removed
+	path = "/".join(path_array)
+
 	# Append the workgame's workshop path
-	path += "workshop/content/" + get_steam_app_id()
+	path = path.plus_file("workshop/content/" + get_steam_app_id())
+
 	return path
 
 
@@ -564,9 +566,9 @@ static func get_steam_workshop_dir() -> String:
 # Utility (GWU), which was developed by Brotato developer Blobfish:
 # https://github.com/thomasgvd/godot-workshop-utility
 static func get_steam_app_id()->String:
-	var game_install_directory = get_local_folder_dir()
-	var steam_app_id = ""
-	var file = File.new()
+	var game_install_directory := get_local_folder_dir()
+	var steam_app_id := ""
+	var file := File.new()
 
 	if file.open(game_install_directory.plus_file("steam_data.json"), File.READ) == OK:
 		var file_content:Dictionary = parse_json(file.get_as_text())
