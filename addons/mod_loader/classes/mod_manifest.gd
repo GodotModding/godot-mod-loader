@@ -96,6 +96,25 @@ func get_package_id() -> String:
 	return "%s-%s-%s" % [namespace, name, version_number]
 
 
+# Returns the Manifest values as a dictionary
+func get_as_dict() -> Dictionary:
+	return {
+		"name": name,
+		"namespace": namespace,
+		"version_number": version_number,
+		"description": description,
+		"website_url": website_url,
+		"dependencies": dependencies,
+		"authors": authors,
+		"compatible_game_version": compatible_game_version,
+		"incompatibilities": incompatibilities,
+		"tags": tags,
+		"config_defaults": config_defaults,
+		"description_rich": description_rich,
+		"image": image,
+	}
+
+
 # A valid namespace may only use letters (any case), numbers and underscores
 # and has to be longer than 3 characters
 # a-z A-Z 0-9 _ (longer than 3 characters)
