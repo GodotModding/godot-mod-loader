@@ -11,3 +11,4 @@ export (String, DIR) var path_to_mods = "res://mods"
 export (String, DIR) var path_to_configs = "res://configs"
 export (bool) var steam_workshop_enabled = false
 export (String, DIR) var steam_workshop_path_override = ""
+export (Array, String) var disabled_mods = []
