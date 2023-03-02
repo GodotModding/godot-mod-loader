@@ -95,7 +95,7 @@ var logged_messages := []
 
 # Path to the options resource
 # See: res://addons/mod_loader/options/options_current_data.gd
-var ml_options_path := "res://addons/mod_loader/options/options_current.tres"
+var ml_options_path := "res://addons/mod_loader/options/options.tres"
 
 # These variables handle various options, which can be changed via Godot's GUI
 # by adding a ModLoaderOptions resource to the resource file specified by
