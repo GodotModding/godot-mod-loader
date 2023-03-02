@@ -34,17 +34,27 @@ const new_global_classes := [
 		"base": "Resource",
 		"class": "ModLoaderCurrentOptions",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/options/classes/options_current.gd"
+		"path": "res://addons/mod_loader/classes/options_current.gd"
 	}, {
 		"base": "Resource",
 		"class": "ModLoaderOptionsProfile",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/options/classes/options_profile.gd"
+		"path": "res://addons/mod_loader/classes/options_profile.gd"
 	}, {
 		"base": "Node",
 		"class": "ModLoaderConfig",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/config.gd"
+	}, {
+		"base": "Node",
+		"class": "ModLoaderDeprecated",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/api/deprecated.gd"
+	}, {
+		"base": "Node",
+		"class": "ModLoaderSteam",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/api/third_party/steam.gd"
 	}
 ]
 
