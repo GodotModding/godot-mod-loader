@@ -794,16 +794,4 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
 	return ModLoaderConfig.get_mod_config(mod_dir_name, key)
-
-func is_mod_config_data_valid(config_obj: Dictionary) -> bool:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.is_mod_config_data_valid", "ModLoaderConfig.is_mod_config_data_valid", "6.0.0")
-	return ModLoaderConfig.is_mod_config_data_valid(config_obj)
-
-func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_config: bool = true) -> bool:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.save_mod_config_dictionary", "ModLoaderConfig.save_mod_config_dictionary", "6.0.0")
-	return ModLoaderConfig.save_mod_config_dictionary(mod_id, data, update_config)
-
-func save_mod_config_setting(mod_id: String, key:String, value, update_config: bool = true) -> bool:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.save_mod_config_setting", "ModLoaderConfig.save_mod_config_setting", "6.0.0")
-	return ModLoaderConfig.save_mod_config_setting(mod_id, key, value, update_config)
 """
