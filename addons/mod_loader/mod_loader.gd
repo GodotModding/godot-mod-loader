@@ -113,7 +113,10 @@ var ml_options := {
 	steam_workshop_enabled = false,
 
 	# Can be used in the editor to load mods from your Steam workshop directory
-	steam_workshop_path_override = ""
+	steam_workshop_path_override = "",
+
+	# Array of mod ID strings to skip in `_setup_mods`
+	disabled_mods = []
 }
 
 
@@ -423,6 +426,10 @@ func _setup_mods() -> int:
 			continue
 
 		if mod_dir_name == "." or mod_dir_name == "..":
+			continue
+
+		if ml_options.disabled_mods.has(mod_dir_name):
+			ModLoaderUtils.log_info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
 			continue
 
 		# Init the mod data

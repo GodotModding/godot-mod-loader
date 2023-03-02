@@ -11,3 +11,4 @@ path_to_mods = "res://mods"
 path_to_configs = "res://configs"
 steam_workshop_enabled = false
 steam_workshop_path_override = ""
+disabled_mods = [  ]
