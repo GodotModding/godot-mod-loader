@@ -352,7 +352,7 @@ func _load_zips_in_folder(folder_path: String) -> int:
 # inside each workshop item's folder
 func _load_steam_workshop_zips() -> int:
 	var temp_zipped_mods_count := 0
-	var workshop_folder_path := ModLoaderUtils.get_steam_workshop_dir()
+	var workshop_folder_path := ModLoaderSteam.get_steam_workshop_dir()
 
 	if not ml_options.steam_workshop_path_override == "":
 		workshop_folder_path = ml_options.steam_workshop_path_override
