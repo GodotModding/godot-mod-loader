@@ -789,6 +789,5 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 # =============================================================================
 
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
-	# Uncomment: pending #156
-	# ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
+	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
 	return ModLoaderConfig.get_mod_config(mod_dir_name, key)
