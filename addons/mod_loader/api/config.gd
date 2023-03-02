@@ -1,5 +1,5 @@
 class_name ModLoaderConfig
-extends Node
+extends Object
 
 # Handles loading and saving per-mod JSON configs
 
