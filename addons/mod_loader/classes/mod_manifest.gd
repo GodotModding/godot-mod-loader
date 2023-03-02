@@ -218,17 +218,25 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 	return true
 
 
-# Returns an empty String if the key does not exist
+# Returns an empty String if the key does not exist or is not type of String
 static func _get_string_from_dict(dict: Dictionary, key: String) -> String:
 	if not dict.has(key):
 		return ""
+
+	if not dict[key] is String:
+		return ""
+
 	return dict[key]
 
 
-# Returns an empty Array if the key does not exist
+# Returns an empty Array if the key does not exist or is not type of Array
 static func _get_array_from_dict(dict: Dictionary, key: String) -> Array:
 	if not dict.has(key):
 		return []
+
+	if not dict[key] is Array:
+		return []
+
 	return dict[key]
 
 
