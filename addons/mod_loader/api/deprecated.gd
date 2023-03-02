@@ -30,5 +30,5 @@ static func deprecated_removed(old_method: String, since_version: String, show_r
 # Freeform deprecation message.
 # Allows you to add a deprecation comment without specifying the old/new method
 static func deprecated_message(msg: String, since_version: String = ""):
-	var since_text := " (since version %s)" % since_version if not since_version == "" else ""
+	var since_text := " (since version %s)" % since_version if since_version else ""
 	ModLoaderUtils.log_fatal(str("DEPRECATED: ", msg, since_text), LOG_NAME)
