@@ -1,5 +1,5 @@
-extends Node
 class_name ModLoaderUtils
+extends Node
 
 const LOG_NAME := "ModLoader:ModLoaderUtils"
 const MOD_LOG_PATH := "user://logs/modloader.log"

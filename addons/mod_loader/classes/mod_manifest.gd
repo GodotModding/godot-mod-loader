@@ -1,6 +1,7 @@
-extends Resource
-# Stores and validates contents of the manifest set by the user
 class_name ModManifest
+extends Resource
+
+# Stores and validates contents of the manifest set by the user
 
 const LOG_NAME := "ModLoader:ModManifest"
 
