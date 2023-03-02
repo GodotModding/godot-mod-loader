@@ -41,7 +41,7 @@ const new_global_classes := [
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/classes/options_profile.gd"
 	}, {
-		"base": "Node",
+		"base": "Object",
 		"class": "ModLoaderConfig",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/config.gd"
