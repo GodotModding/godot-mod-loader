@@ -111,6 +111,7 @@ func get_as_dict() -> Dictionary:
 		"dependencies": dependencies,
 		"authors": authors,
 		"compatible_game_version": compatible_game_version,
+		"compatible_mod_loader_version": compatible_mod_loader_version,
 		"incompatibilities": incompatibilities,
 		"tags": tags,
 		"config_defaults": config_defaults,
