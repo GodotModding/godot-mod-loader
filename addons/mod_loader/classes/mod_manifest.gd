@@ -23,6 +23,9 @@ var authors: PoolStringArray = []
 # only used for information
 var compatible_game_version: PoolStringArray = []
 # only used for information
+# Validated by [method _handle_compatible_mod_loader_version]
+var compatible_mod_loader_version: PoolStringArray = []
+# only used for information
 var incompatibilities: PoolStringArray = []
 var tags : PoolStringArray = []
 var config_defaults := {}
@@ -71,10 +74,11 @@ func _init(manifest: Dictionary) -> void:
 	website_url = manifest.website_url
 	dependencies = manifest.dependencies
 
-	var 	godot_details: Dictionary = manifest.extra.godot
+	var godot_details: Dictionary = manifest.extra.godot
 	authors = _get_array_from_dict(godot_details, "authors")
 	incompatibilities = _get_array_from_dict(godot_details, "incompatibilities")
 	compatible_game_version = _get_array_from_dict(godot_details, "compatible_game_version")
+	compatible_mod_loader_version = _handle_compatible_mod_loader_version(godot_details)
 	description_rich = _get_string_from_dict(godot_details, "description_rich")
 	tags = _get_array_from_dict(godot_details, "tags")
 	config_defaults = godot_details.config_defaults
@@ -107,12 +111,48 @@ func get_as_dict() -> Dictionary:
 		"dependencies": dependencies,
 		"authors": authors,
 		"compatible_game_version": compatible_game_version,
+		"compatible_mod_loader_version": compatible_mod_loader_version,
 		"incompatibilities": incompatibilities,
 		"tags": tags,
 		"config_defaults": config_defaults,
 		"description_rich": description_rich,
 		"image": image,
 	}
+
+
+# Handles deprecation of the single string value in the compatible_mod_loader_version.
+func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
+	var link_manifest_docs := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Files#manifestjson"
+	var array_value := _get_array_from_dict(godot_details, "compatible_mod_loader_version")
+
+	# If there are array values
+	if array_value.size() > 0:
+		# Check for valid versions
+		for value in array_value:
+			var value_string := str(value)
+			if not is_semver_valid(value_string):
+				return []
+
+		return array_value
+
+	# If the array is empty check if a string was passed
+	var string_value := _get_string_from_dict(godot_details, "compatible_mod_loader_version")
+	# If an empty string was passed
+	if string_value == "":
+		ModLoaderUtils.log_error(
+			"\"compatible_mod_loader_version\" is a required field." +
+			" For more details visit " + link_manifest_docs,
+			LOG_NAME
+		)
+		return []
+
+	# If a string was passed
+	ModLoaderDeprecated.deprecated_message(
+		"The single String value for \"compatible_mod_loader_version\" is deprecated." +
+		" Please provide an Array. For more details visit " + link_manifest_docs,
+		"6.0.0"
+	)
+	return [string_value]
 
 
 # A valid namespace may only use letters (any case), numbers and underscores
@@ -145,8 +185,13 @@ static func is_semver_valid(check_version_number: String, is_silent := false) ->
 
 	if re.search(check_version_number) == null:
 		if not is_silent:
-			ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +
-				'You may only use numbers without leading zero and periods following this format {mayor}.{minor}.{patch}' % check_version_number,
+			# Using str() here because format strings cause an error
+			ModLoaderUtils.log_fatal(
+				str(
+					'Invalid semantic version: "%s".',
+					'You may only use numbers without leading zero and periods',
+					'following this format {mayor}.{minor}.{patch}'
+				)  % check_version_number,
 				LOG_NAME
 			)
 		return false
