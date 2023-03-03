@@ -125,8 +125,14 @@ func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
 	var link_manifest_docs := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Files#manifestjson"
 	var array_value := _get_array_from_dict(godot_details, "compatible_mod_loader_version")
 
-	# If there are array values just return them
+	# If there are array values
 	if array_value.size() > 0:
+		# Check for valid versions
+		for value in array_value:
+			var value_string := str(value)
+			if not is_semver_valid(value_string):
+				return []
+
 		return array_value
 
 	# If the array is empty check if a string was passed
@@ -179,8 +185,13 @@ static func is_semver_valid(check_version_number: String, is_silent := false) ->
 
 	if re.search(check_version_number) == null:
 		if not is_silent:
-			ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +
-				'You may only use numbers without leading zero and periods following this format {mayor}.{minor}.{patch}' % check_version_number,
+			# Using str() here because format strings cause an error
+			ModLoaderUtils.log_fatal(
+				str(
+					'Invalid semantic version: "%s".',
+					'You may only use numbers without leading zero and periods',
+					'following this format {mayor}.{minor}.{patch}'
+				)  % check_version_number,
 				LOG_NAME
 			)
 		return false
