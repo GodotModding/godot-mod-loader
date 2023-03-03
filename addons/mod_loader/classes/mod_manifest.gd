@@ -131,11 +131,19 @@ func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
 	var string_value := _get_string_from_dict(godot_details, "compatible_mod_loader_version")
 	# If an empty string was passed
 	if string_value == "":
-		ModLoaderUtils.log_error("compatible_mod_loader_version is a required field. For more details visit " + link_manifest_docs, LOG_NAME)
+		ModLoaderUtils.log_error(
+			'"compatible_mod_loader_version" is a required field.' +
+			' For more details visit ' + link_manifest_docs,
+			LOG_NAME
+		)
 		return []
 
 	# If a string was passed
-	ModLoaderDeprecated.deprecated_message("The single String value for 'compatible_mod_loader_version' is deprecated. Please provide an Array. For more details visit " + link_manifest_docs, "6.0.0")
+	ModLoaderDeprecated.deprecated_message(
+		'The single String value for "compatible_mod_loader_version" is deprecated.' +
+		' Please provide an Array. For more details visit ' + link_manifest_docs,
+		"6.0.0"
+	)
 	return [string_value]
 
 
