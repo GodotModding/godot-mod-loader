@@ -23,6 +23,7 @@ var authors: PoolStringArray = []
 # only used for information
 var compatible_game_version: PoolStringArray = []
 # only used for information
+# Validated by [method _handle_compatible_mod_loader_version]
 var compatible_mod_loader_version: PoolStringArray = []
 # only used for information
 var incompatibilities: PoolStringArray = []
