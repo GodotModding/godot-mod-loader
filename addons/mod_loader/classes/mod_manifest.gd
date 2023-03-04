@@ -234,7 +234,7 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 	# contains hyphen?
 	if not check_mod_id.count("-") == 1:
 		if not is_silent:
-			ModLoaderUtils.log_fatal(str(intro_text, 'Expected a single hypen in the mod ID, but the %s was: "%s"' % [type, check_mod_id]), LOG_NAME)
+			ModLoaderUtils.log_fatal(str(intro_text, 'Expected a single hyphen in the mod ID, but the %s was: "%s"' % [type, check_mod_id]), LOG_NAME)
 		return false
 
 	# at least 7 long (1 for hyphen, 3 each for namespace/name)
