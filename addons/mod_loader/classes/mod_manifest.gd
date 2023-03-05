@@ -128,10 +128,8 @@ func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
 	# If there are array values
 	if array_value.size() > 0:
 		# Check for valid versions
-		for value in array_value:
-			var value_string := str(value)
-			if not is_semver_valid(value_string):
-				return []
+		if not is_semver_version_array_valid(array_value):
+			return []
 
 		return array_value
 
