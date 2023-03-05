@@ -176,6 +176,17 @@ static func is_name_or_namespace_valid(check_name: String, is_silent := false) -
 	return true
 
 
+static func is_semver_version_array_valid(version_array: PoolStringArray, is_silent := false) -> bool:
+	var is_valid := true
+
+	for version in version_array:
+		if not is_semver_valid(version, is_silent):
+			is_valid = false
+			break
+
+	return is_valid
+
+
 # A valid semantic version should follow this format: {mayor}.{minor}.{patch}
 # reference https://semver.org/ for details
 # {0-9}.{0-9}.{0-9} (no leading 0, shorter than 16 characters total)
