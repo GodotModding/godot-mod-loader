@@ -128,10 +128,8 @@ func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
 	# If there are array values
 	if array_value.size() > 0:
 		# Check for valid versions
-		for value in array_value:
-			var value_string := str(value)
-			if not is_semver_valid(value_string):
-				return []
+		if not is_semver_version_array_valid(array_value):
+			return []
 
 		return array_value
 
@@ -174,6 +172,16 @@ static func is_name_or_namespace_valid(check_name: String, is_silent := false) -
 		return false
 
 	return true
+
+
+static func is_semver_version_array_valid(version_array: PoolStringArray, is_silent := false) -> bool:
+	var is_valid := true
+
+	for version in version_array:
+		if not is_semver_valid(version, is_silent):
+			is_valid = false
+
+	return is_valid
 
 
 # A valid semantic version should follow this format: {mayor}.{minor}.{patch}
