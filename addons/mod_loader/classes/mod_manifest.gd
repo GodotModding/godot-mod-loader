@@ -217,7 +217,7 @@ static func validate_dependencies_and_incompatibilities(mod_id: String, dependen
 
 
 static func validate_dependencies(mod_id: String, dependencies: PoolStringArray, is_silent := false) -> bool:
-	return is_mod_id_array_valid(mod_id, dependencies,"dependency", is_silent)
+	return is_mod_id_array_valid(mod_id, dependencies, "dependency", is_silent)
 
 
 static func validate_incompatibilities(mod_id: String, incompatibilities: PoolStringArray, is_silent := false) -> bool:
