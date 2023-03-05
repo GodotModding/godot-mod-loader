@@ -240,10 +240,6 @@ static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringAr
 			if not is_mod_id_valid(own_mod_id, mod_id, mod_id_array_description, is_silent):
 				is_valid = false
 
-			# Break the loop if a non valid id is detected
-			if not is_valid:
-				break
-
 	return is_valid
 
 
