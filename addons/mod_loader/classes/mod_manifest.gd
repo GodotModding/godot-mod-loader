@@ -207,25 +207,40 @@ static func is_semver_valid(check_version_number: String, is_silent := false) ->
 
 
 static func validate_dependencies_and_incompatibilities(mod_id: String, dependencies: PoolStringArray, incompatibilities: PoolStringArray, is_silent := false) -> bool:
-	var valid_dep = true
-	var valid_inc = true
+	var valid_dependencies := validate_dependencies(mod_id, dependencies, is_silent)
+	var valid_incompatibilities := validate_incompatibilities(mod_id, incompatibilities, is_silent)
 
-	if dependencies.size() > 0:
-		for dep in dependencies:
-			if dep == mod_id:
-				ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as a dependency in its own manifest.json file" % mod_id, LOG_NAME)
-			valid_dep = is_mod_id_valid(mod_id, dep, "dependency", is_silent)
-
-	if incompatibilities.size() > 0:
-		for inc in incompatibilities:
-			if inc == mod_id:
-				ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as an incompatible mod in its own manifest.json file" % mod_id, LOG_NAME)
-			valid_inc = is_mod_id_valid(mod_id, inc, "incompatibility", is_silent)
-
-	if not valid_dep or not valid_inc:
+	if not valid_dependencies or not valid_incompatibilities:
 		return false
 
 	return true
+
+
+static func validate_dependencies(mod_id: String, dependencies: PoolStringArray, is_silent := false) -> bool:
+	return is_mod_id_array_valid(mod_id, dependencies, "dependency", is_silent)
+
+
+static func validate_incompatibilities(mod_id: String, incompatibilities: PoolStringArray, is_silent := false) -> bool:
+	return is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility", is_silent)
+
+
+static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
+	var is_valid := true
+
+	# If there are mod ids
+	if mod_id_array.size() > 0:
+		for mod_id in mod_id_array:
+			# Check if mod id is the same as the mods mod id.
+			if mod_id == own_mod_id:
+				is_valid = false
+				if not is_silent:
+					ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as \"%s\" in its own manifest.json file" % [mod_id, mod_id_array_description], LOG_NAME)
+
+			# Check if the mod id is a valid mod id.
+			if not is_mod_id_valid(own_mod_id, mod_id, mod_id_array_description, is_silent):
+				is_valid = false
+
+	return is_valid
 
 
 static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type := "", is_silent := false) -> bool:
