@@ -225,7 +225,7 @@ static func validate_dependencies_and_incompatibilities(mod_id: String, dependen
 
 
 static func validate_dependencies(mod_id: String, dependencies: PoolStringArray, is_silent := false) -> bool:
-	return is_mod_id_array_valid(mod_id, dependencies,"dependency", is_silent)
+	return is_mod_id_array_valid(mod_id, dependencies, "dependency", is_silent)
 
 
 static func validate_incompatibilities(mod_id: String, incompatibilities: PoolStringArray, is_silent := false) -> bool:
@@ -242,15 +242,11 @@ static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringAr
 			if mod_id == own_mod_id:
 				is_valid = false
 				if not is_silent:
-					ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as an incompatible mod in its own manifest.json file" % mod_id, LOG_NAME)
+					ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as \"%s\" in its own manifest.json file" % [mod_id, mod_id_array_description], LOG_NAME)
 
 			# Check if the mod id is a valid mod id.
 			if not is_mod_id_valid(own_mod_id, mod_id, mod_id_array_description, is_silent):
 				is_valid = false
-
-			# Break the loop if a non valid id is detected
-			if not is_valid:
-				break
 
 	return is_valid
 
@@ -261,7 +257,7 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 	# contains hyphen?
 	if not check_mod_id.count("-") == 1:
 		if not is_silent:
-			ModLoaderUtils.log_fatal(str(intro_text, 'Expected a single hypen in the mod ID, but the %s was: "%s"' % [type, check_mod_id]), LOG_NAME)
+			ModLoaderUtils.log_fatal(str(intro_text, 'Expected a single hyphen in the mod ID, but the %s was: "%s"' % [type, check_mod_id]), LOG_NAME)
 		return false
 
 	# at least 7 long (1 for hyphen, 3 each for namespace/name)
