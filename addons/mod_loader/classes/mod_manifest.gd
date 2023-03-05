@@ -180,7 +180,6 @@ static func is_semver_version_array_valid(version_array: PoolStringArray, is_sil
 	for version in version_array:
 		if not is_semver_valid(version, is_silent):
 			is_valid = false
-			break
 
 	return is_valid
 
