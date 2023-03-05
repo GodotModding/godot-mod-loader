@@ -234,7 +234,7 @@ static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringAr
 			if mod_id == own_mod_id:
 				is_valid = false
 				if not is_silent:
-					ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as an incompatible mod in its own manifest.json file" % mod_id, LOG_NAME)
+					ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as \"%s\" in its own manifest.json file" % [mod_id, mod_id_array_description], LOG_NAME)
 
 			# Check if the mod id is a valid mod id.
 			if not is_mod_id_valid(own_mod_id, mod_id, mod_id_array_description, is_silent):
