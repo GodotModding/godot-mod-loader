@@ -57,19 +57,6 @@ var mod_data := {}
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order := []
 
-# Override for the path mods are loaded from. Only set if the CLI arg is present.
-# Can be tested in the editor via: Project Settings > Display> Editor > Main Run Args
-# Default: "res://mods"
-# Set via: --mods-path
-# Example: --mods-path="C://path/mods"
-var os_mods_path_override := ""
-
-# Override for the path config JSONs are loaded from
-# Default: "res://configs"
-# Set via: --configs-path
-# Example: --configs-path="C://path/configs"
-var os_configs_path_override := ""
-
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies := {}
@@ -87,73 +74,27 @@ var loaded_vanilla_parents_cache := {}
 # Helps to decide whether a script extension should go through the _handle_script_extensions process
 var is_initializing := true
 
-# True if ModLoader has displayed the warning about using zipped mods
-var has_shown_editor_warning := false
-
-# Keeps track of logged messages, to avoid flooding the log with duplicate notices
-var logged_messages := []
-
-# Path to the options resource
-# See: res://addons/mod_loader/options/options_current_data.gd
-var ml_options_path := "res://addons/mod_loader/options/options.tres"
-
-# These variables handle various options, which can be changed via Godot's GUI
-# by adding a ModLoaderOptions resource to the resource file specified by
-# `ml_options_path`. See res://addons/mod_loader/options_examples for some
-# resource files you can add to the options_curent file.
-# See: res://addons/mod_loader/options/classes/options_profile.gd
-var ml_options := {
-	enable_mods = true,
-	log_level = ModLoaderUtils.verbosity_level.DEBUG,
-	path_to_mods = "res://mods",
-	path_to_configs = "res://configs",
-
-	# If true, ModLoader will load mod ZIPs from the Steam workshop directory,
-	# instead of the default location (res://mods)
-	steam_workshop_enabled = false,
-
-	# Can be used in the editor to load mods from your Steam workshop directory
-	steam_workshop_path_override = "",
-
-	# Array of mod ID strings to skip in `_setup_mods`
-	disabled_mods = []
-}
-
 
 # Main
 # =============================================================================
 
 func _init() -> void:
-	_update_ml_options()
-
 	# if mods are not enabled - don't load mods
 	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
 		return
 
-	if not ml_options.enable_mods:
+	if not ModLoaderStore.ml_options.enable_mods:
 		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
 	ModLoaderUtils.rotate_log_file()
 
-	# Ensure ModLoader is the first autoload
-	_check_first_autoload()
+	# Ensure ModLoaderStore and ModLoader are the 1st and 2nd autoloads
+	_check_autoload_positions()
 
 	# Log game install dir
 	ModLoaderUtils.log_info("game_install_directory: %s" % ModLoaderUtils.get_local_folder_dir(), LOG_NAME)
-
-	# check if we want to use a different mods path that is provided as a command line argument
-	var cmd_line_mod_path := ModLoaderUtils.get_cmd_line_arg_value("--mods-path")
-	if not cmd_line_mod_path == "":
-		os_mods_path_override = cmd_line_mod_path
-		ModLoaderUtils.log_info("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
-
-	# Check for the CLI arg that overrides the configs path
-	var cmd_line_configs_path := ModLoaderUtils.get_cmd_line_arg_value("--configs-path")
-	if not cmd_line_configs_path == "":
-		os_configs_path_override = cmd_line_configs_path
-		ModLoaderUtils.log_info("The path configs are loaded from has been changed via the CLI arg `--configs-path`, to: " + cmd_line_configs_path, LOG_NAME)
 
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
@@ -220,48 +161,39 @@ func _init() -> void:
 	is_initializing = false
 
 
-# Update ModLoader's options, via the custom options resource
-func _update_ml_options() -> void:
-	# Get user options for ModLoader
-	if File.new().file_exists(ml_options_path):
-		var options_resource := load(ml_options_path)
-		if not options_resource.current_options == null:
-			var current_options: Resource = options_resource.current_options
-			# Update from the options in the resource
-			for key in ml_options:
-				ml_options[key] = current_options[key]
-	else:
-		ModLoaderUtils.log_fatal(str("A critical file is missing: ", ml_options_path), LOG_NAME)
-
-
-# Ensure ModLoader is the first autoload
-func _check_first_autoload() -> void:
+# Check the index position of the provided autoload (0 = 1st, 1 = 2nd, etc).
+# Returns a bool if the position does not match
+func _check_autoload_position(autoload_name: String, position_index: int, trigger_error: bool = false) -> bool:
 	var autoload_array = ModLoaderUtils.get_autoload_array()
-	var mod_loader_index = autoload_array.find("ModLoader")
-	var is_mod_loader_first = mod_loader_index == 0
+	var autoload_index = autoload_array.find(autoload_name) # mod_loader_index
+	var position_matches = autoload_index == position_index
 
-	var override_cfg_path = ModLoaderUtils.get_override_path()
-	var is_override_cfg_setup =  ModLoaderUtils.file_exists(override_cfg_path)
+	if not position_matches and trigger_error:
+		var msg = "Expected %s to be the autoload in position %s, but this is currently %s" % [autoload_name, str(position_index), autoload_array[position_index]]
+		ModLoaderUtils.log_fatal(msg, LOG_NAME)
 
-	# Log the autoloads order. Might seem superflous but could help when providing support
-	ModLoaderUtils.log_debug_json_print("Autoload order", autoload_array, LOG_NAME)
+	return position_matches
+
+
+# Check autoload positions:
+# Ensure 1st autoload is `ModLoaderStore`, and 2nd is `ModLoader`.
+func _check_autoload_positions() -> void:
+	# Log the autoloads order. Helpful when providing support to players
+	ModLoaderUtils.log_debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
+
+	var trigger_error := true
+	var override_cfg_path := ModLoaderUtils.get_override_path()
+	var is_override_cfg_setup :=  ModLoaderUtils.file_exists(override_cfg_path)
 
 	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
 	# In that case the ModLoader will be the last entry in the autoload array
 	if is_override_cfg_setup:
+		trigger_error = false
 		ModLoaderUtils.log_info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
 		return
 
-	var base_msg = "ModLoader needs to be the first autoload to work correctly, "
-	var help_msg = ""
-
-	if OS.has_feature("editor"):
-		help_msg = "To configure your autoloads, go to Project > Project Settings > Autoload, and add ModLoader as the first item. For more info, see the 'Godot Project Setup' page on the ModLoader GitHub wiki."
-	else:
-		help_msg = "If you're seeing this error, something must have gone wrong in the setup process."
-
-	if not is_mod_loader_first:
-		ModLoaderUtils.log_fatal(str(base_msg, 'but the first autoload is currently: "%s". ' % autoload_array[0], help_msg), LOG_NAME)
+	var _pos_ml_store := ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, trigger_error)
+	var _pos_ml_core := ModLoaderGodot.check_autoload_position("ModLoader", 1, trigger_error)
 
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
@@ -269,9 +201,8 @@ func _check_first_autoload() -> void:
 func _load_mod_zips() -> int:
 	var zipped_mods_count := 0
 
-	if not ml_options.steam_workshop_enabled:
-		# Path to the games mod folder
-		var mods_folder_path := ModLoaderUtils.get_local_folder_dir("mods")
+	if not ModLoaderStore.ml_options.steam_workshop_enabled:
+		var mods_folder_path := ModLoaderUtils.get_path_to_mods()
 
 		# If we're not using Steam workshop, just loop over the mod ZIPs.
 		zipped_mods_count += _load_zips_in_folder(mods_folder_path)
@@ -326,12 +257,12 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		# "don't use ZIPs with unpacked mods!"
 		# https://github.com/godotengine/godot/issues/19815
 		# https://github.com/godotengine/godot/issues/16798
-		if OS.has_feature("editor") and not has_shown_editor_warning:
+		if OS.has_feature("editor") and not ModLoaderStore.ml_data.has_shown_editor_warning:
 			ModLoaderUtils.log_warning(str(
 				"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
-			has_shown_editor_warning = true
+			ModLoaderStore.ml_data.has_shown_editor_warning = true
 
 		ModLoaderUtils.log_debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
 
@@ -355,10 +286,7 @@ func _load_zips_in_folder(folder_path: String) -> int:
 # inside each workshop item's folder
 func _load_steam_workshop_zips() -> int:
 	var temp_zipped_mods_count := 0
-	var workshop_folder_path := ModLoaderSteam.get_steam_workshop_dir()
-
-	if not ml_options.steam_workshop_path_override == "":
-		workshop_folder_path = ml_options.steam_workshop_path_override
+	var workshop_folder_path := ModLoaderSteam.get_path_to_workshop()
 
 	ModLoaderUtils.log_info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 
@@ -428,7 +356,7 @@ func _setup_mods() -> int:
 		if mod_dir_name == "." or mod_dir_name == "..":
 			continue
 
-		if ml_options.disabled_mods.has(mod_dir_name):
+		if ModLoaderStore.ml_options.disabled_mods.has(mod_dir_name):
 			ModLoaderUtils.log_info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
 			continue
 
@@ -443,12 +371,7 @@ func _setup_mods() -> int:
 # Load mod config JSONs from res://configs
 func _load_mod_configs() -> void:
 	var found_configs_count := 0
-	var configs_path := ModLoaderUtils.get_local_folder_dir("configs")
-
-	# CLI override, set with `--configs-path="C://path/configs"`
-	# (similar to os_mods_path_override)
-	if not os_configs_path_override == "":
-		configs_path = os_configs_path_override
+	var configs_path := ModLoaderUtils.get_path_to_configs()
 
 	for dir_name in mod_data:
 		var json_path := configs_path.plus_file(dir_name + ".json")

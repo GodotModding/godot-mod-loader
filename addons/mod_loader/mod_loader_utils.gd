@@ -4,7 +4,7 @@ extends Node
 const LOG_NAME := "ModLoader:ModLoaderUtils"
 const MOD_LOG_PATH := "user://logs/modloader.log"
 
-enum verbosity_level {
+enum VERBOSITY_LEVEL {
 	ERROR,
 	WARNING,
 	INFO,
@@ -82,16 +82,16 @@ static func _loader_log(message: String, mod_name: String, log_type: String = "i
 			push_error(message)
 			_write_to_log_file(log_message)
 		"warning":
-			if _get_verbosity() >= verbosity_level.WARNING:
+			if _get_verbosity() >= VERBOSITY_LEVEL.WARNING:
 				print(prefix + message)
 				push_warning(message)
 				_write_to_log_file(log_message)
 		"info", "success":
-			if _get_verbosity() >= verbosity_level.INFO:
+			if _get_verbosity() >= VERBOSITY_LEVEL.INFO:
 				print(prefix + message)
 				_write_to_log_file(log_message)
 		"debug":
-			if _get_verbosity() >= verbosity_level.DEBUG:
+			if _get_verbosity() >= VERBOSITY_LEVEL.DEBUG:
 				print(prefix + message)
 				_write_to_log_file(log_message)
 
@@ -187,17 +187,7 @@ static func clear_old_log_backups() -> void:
 
 
 static func _get_verbosity() -> int:
-	if is_running_with_command_line_arg("-vvv") or is_running_with_command_line_arg("--log-debug"):
-		return verbosity_level.DEBUG
-	if is_running_with_command_line_arg("-vv") or is_running_with_command_line_arg("--log-info"):
-		return verbosity_level.INFO
-	if is_running_with_command_line_arg("-v") or is_running_with_command_line_arg("--log-warning"):
-		return verbosity_level.WARNING
-
-	if OS.has_feature("editor"):
-		return verbosity_level.DEBUG
-
-	return verbosity_level.ERROR
+	return ModLoaderStore.ml_options.log_level
 
 
 # Check if the provided command line argument was present when launching the game
@@ -532,3 +522,22 @@ static func save_string_to_file(save_string: String, filepath: String) -> bool:
 static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> bool:
 	var json_string = JSON.print(data, "\t")
 	return save_string_to_file(json_string, filepath)
+
+
+# Paths
+# =============================================================================
+
+# Get the path to the mods folder, with any applicable overrides applied
+static func get_path_to_mods() -> String:
+	var mods_folder_path := get_local_folder_dir("mods")
+	if ModLoaderStore.ml_options.override_path_to_mods:
+		mods_folder_path = ModLoaderStore.ml_options.override_path_to_mods
+	return mods_folder_path
+
+
+# Get the path to the configs folder, with any applicable overrides applied
+static func get_path_to_configs() -> String:
+	var configs_path := get_local_folder_dir("configs")
+	if ModLoaderStore.ml_options.override_path_to_configs:
+		configs_path = ModLoaderStore.ml_options.override_path_to_configs
+	return configs_path

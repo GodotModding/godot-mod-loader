@@ -15,7 +15,10 @@ const LOG_NAME := "ModLoader:ThirdParty:Steam"
 # Eg. Brotato:
 #   GAME     = Steam/steamapps/common/Brotato
 #   WORKSHOP = Steam/steamapps/workshop/content/1942280
-static func get_steam_workshop_dir() -> String:
+static func get_path_to_workshop() -> String:
+	if ModLoaderStore.ml_options.override_path_to_workshop:
+		return ModLoaderStore.ml_options.override_path_to_workshop
+
 	var game_install_directory := ModLoaderUtils.get_local_folder_dir()
 	var path := ""
 
