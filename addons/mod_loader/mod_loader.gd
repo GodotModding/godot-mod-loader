@@ -90,6 +90,9 @@ func _init() -> void:
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
 	ModLoaderUtils.rotate_log_file()
 
+	# Log the autoloads order. Helpful when providing support to players
+	ModLoaderUtils.log_debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
+
 	# Ensure ModLoaderStore and ModLoader are the 1st and 2nd autoloads
 	_check_autoload_positions()
 
@@ -164,22 +167,16 @@ func _init() -> void:
 # Check autoload positions:
 # Ensure 1st autoload is `ModLoaderStore`, and 2nd is `ModLoader`.
 func _check_autoload_positions() -> void:
-	# Log the autoloads order. Helpful when providing support to players
-	ModLoaderUtils.log_debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
-
-	var trigger_error := true
-	var override_cfg_path := ModLoaderUtils.get_override_path()
-	var is_override_cfg_setup :=  ModLoaderUtils.file_exists(override_cfg_path)
-
 	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
 	# In that case the ModLoader will be the last entry in the autoload array
+	var override_cfg_path := ModLoaderUtils.get_override_path()
+	var is_override_cfg_setup :=  ModLoaderUtils.file_exists(override_cfg_path)
 	if is_override_cfg_setup:
-		trigger_error = false
 		ModLoaderUtils.log_info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
 		return
 
-	var _pos_ml_store := ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, trigger_error)
-	var _pos_ml_core := ModLoaderGodot.check_autoload_position("ModLoader", 1, trigger_error)
+	var _pos_ml_store := ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
+	var _pos_ml_core := ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
 
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
