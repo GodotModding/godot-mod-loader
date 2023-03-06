@@ -240,12 +240,12 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		# "don't use ZIPs with unpacked mods!"
 		# https://github.com/godotengine/godot/issues/19815
 		# https://github.com/godotengine/godot/issues/16798
-		if OS.has_feature("editor") and not ModLoaderStore.ml_data.has_shown_editor_warning:
+		if OS.has_feature("editor") and not ModLoaderStore.ml_data.has_shown_editor_zips_warning:
 			ModLoaderUtils.log_warning(str(
 				"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
-			ModLoaderStore.ml_data.has_shown_editor_warning = true
+			ModLoaderStore.ml_data.has_shown_editor_zips_warning = true
 
 		ModLoaderUtils.log_debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
 
