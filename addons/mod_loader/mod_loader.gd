@@ -161,20 +161,6 @@ func _init() -> void:
 	is_initializing = false
 
 
-# Check the index position of the provided autoload (0 = 1st, 1 = 2nd, etc).
-# Returns a bool if the position does not match
-func _check_autoload_position(autoload_name: String, position_index: int, trigger_error: bool = false) -> bool:
-	var autoload_array = ModLoaderUtils.get_autoload_array()
-	var autoload_index = autoload_array.find(autoload_name) # mod_loader_index
-	var position_matches = autoload_index == position_index
-
-	if not position_matches and trigger_error:
-		var msg = "Expected %s to be the autoload in position %s, but this is currently %s" % [autoload_name, str(position_index), autoload_array[position_index]]
-		ModLoaderUtils.log_fatal(msg, LOG_NAME)
-
-	return position_matches
-
-
 # Check autoload positions:
 # Ensure 1st autoload is `ModLoaderStore`, and 2nd is `ModLoader`.
 func _check_autoload_positions() -> void:
