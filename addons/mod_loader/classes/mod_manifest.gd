@@ -23,6 +23,9 @@ var authors: PoolStringArray = []
 # only used for information
 var compatible_game_version: PoolStringArray = []
 # only used for information
+# Validated by [method _handle_compatible_mod_loader_version]
+var compatible_mod_loader_version: PoolStringArray = []
+# only used for information
 var incompatibilities: PoolStringArray = []
 var tags : PoolStringArray = []
 var config_defaults := {}
@@ -71,10 +74,11 @@ func _init(manifest: Dictionary) -> void:
 	website_url = manifest.website_url
 	dependencies = manifest.dependencies
 
-	var 	godot_details: Dictionary = manifest.extra.godot
+	var godot_details: Dictionary = manifest.extra.godot
 	authors = _get_array_from_dict(godot_details, "authors")
 	incompatibilities = _get_array_from_dict(godot_details, "incompatibilities")
 	compatible_game_version = _get_array_from_dict(godot_details, "compatible_game_version")
+	compatible_mod_loader_version = _handle_compatible_mod_loader_version(godot_details)
 	description_rich = _get_string_from_dict(godot_details, "description_rich")
 	tags = _get_array_from_dict(godot_details, "tags")
 	config_defaults = godot_details.config_defaults
@@ -107,12 +111,46 @@ func get_as_dict() -> Dictionary:
 		"dependencies": dependencies,
 		"authors": authors,
 		"compatible_game_version": compatible_game_version,
+		"compatible_mod_loader_version": compatible_mod_loader_version,
 		"incompatibilities": incompatibilities,
 		"tags": tags,
 		"config_defaults": config_defaults,
 		"description_rich": description_rich,
 		"image": image,
 	}
+
+
+# Handles deprecation of the single string value in the compatible_mod_loader_version.
+func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
+	var link_manifest_docs := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Files#manifestjson"
+	var array_value := _get_array_from_dict(godot_details, "compatible_mod_loader_version")
+
+	# If there are array values
+	if array_value.size() > 0:
+		# Check for valid versions
+		if not is_semver_version_array_valid(array_value):
+			return []
+
+		return array_value
+
+	# If the array is empty check if a string was passed
+	var string_value := _get_string_from_dict(godot_details, "compatible_mod_loader_version")
+	# If an empty string was passed
+	if string_value == "":
+		ModLoaderUtils.log_error(
+			"\"compatible_mod_loader_version\" is a required field." +
+			" For more details visit " + link_manifest_docs,
+			LOG_NAME
+		)
+		return []
+
+	# If a string was passed
+	ModLoaderDeprecated.deprecated_message(
+		"The single String value for \"compatible_mod_loader_version\" is deprecated." +
+		" Please provide an Array. For more details visit " + link_manifest_docs,
+		"6.0.0"
+	)
+	return [string_value]
 
 
 # A valid namespace may only use letters (any case), numbers and underscores
@@ -136,6 +174,16 @@ static func is_name_or_namespace_valid(check_name: String, is_silent := false) -
 	return true
 
 
+static func is_semver_version_array_valid(version_array: PoolStringArray, is_silent := false) -> bool:
+	var is_valid := true
+
+	for version in version_array:
+		if not is_semver_valid(version, is_silent):
+			is_valid = false
+
+	return is_valid
+
+
 # A valid semantic version should follow this format: {mayor}.{minor}.{patch}
 # reference https://semver.org/ for details
 # {0-9}.{0-9}.{0-9} (no leading 0, shorter than 16 characters total)
@@ -145,8 +193,13 @@ static func is_semver_valid(check_version_number: String, is_silent := false) ->
 
 	if re.search(check_version_number) == null:
 		if not is_silent:
-			ModLoaderUtils.log_fatal('Invalid semantic version: "%s". ' +
-				'You may only use numbers without leading zero and periods following this format {mayor}.{minor}.{patch}' % check_version_number,
+			# Using str() here because format strings cause an error
+			ModLoaderUtils.log_fatal(
+				str(
+					'Invalid semantic version: "%s".',
+					'You may only use numbers without leading zero and periods',
+					'following this format {mayor}.{minor}.{patch}'
+				)  % check_version_number,
 				LOG_NAME
 			)
 		return false
@@ -162,25 +215,40 @@ static func is_semver_valid(check_version_number: String, is_silent := false) ->
 
 
 static func validate_dependencies_and_incompatibilities(mod_id: String, dependencies: PoolStringArray, incompatibilities: PoolStringArray, is_silent := false) -> bool:
-	var valid_dep = true
-	var valid_inc = true
+	var valid_dependencies := validate_dependencies(mod_id, dependencies, is_silent)
+	var valid_incompatibilities := validate_incompatibilities(mod_id, incompatibilities, is_silent)
 
-	if dependencies.size() > 0:
-		for dep in dependencies:
-			if dep == mod_id:
-				ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as a dependency in its own manifest.json file" % mod_id, LOG_NAME)
-			valid_dep = is_mod_id_valid(mod_id, dep, "dependency", is_silent)
-
-	if incompatibilities.size() > 0:
-		for inc in incompatibilities:
-			if inc == mod_id:
-				ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as an incompatible mod in its own manifest.json file" % mod_id, LOG_NAME)
-			valid_inc = is_mod_id_valid(mod_id, inc, "incompatibility", is_silent)
-
-	if not valid_dep or not valid_inc:
+	if not valid_dependencies or not valid_incompatibilities:
 		return false
 
 	return true
+
+
+static func validate_dependencies(mod_id: String, dependencies: PoolStringArray, is_silent := false) -> bool:
+	return is_mod_id_array_valid(mod_id, dependencies, "dependency", is_silent)
+
+
+static func validate_incompatibilities(mod_id: String, incompatibilities: PoolStringArray, is_silent := false) -> bool:
+	return is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility", is_silent)
+
+
+static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
+	var is_valid := true
+
+	# If there are mod ids
+	if mod_id_array.size() > 0:
+		for mod_id in mod_id_array:
+			# Check if mod id is the same as the mods mod id.
+			if mod_id == own_mod_id:
+				is_valid = false
+				if not is_silent:
+					ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as \"%s\" in its own manifest.json file" % [mod_id, mod_id_array_description], LOG_NAME)
+
+			# Check if the mod id is a valid mod id.
+			if not is_mod_id_valid(own_mod_id, mod_id, mod_id_array_description, is_silent):
+				is_valid = false
+
+	return is_valid
 
 
 static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type := "", is_silent := false) -> bool:
@@ -189,7 +257,7 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 	# contains hyphen?
 	if not check_mod_id.count("-") == 1:
 		if not is_silent:
-			ModLoaderUtils.log_fatal(str(intro_text, 'Expected a single hypen in the mod ID, but the %s was: "%s"' % [type, check_mod_id]), LOG_NAME)
+			ModLoaderUtils.log_fatal(str(intro_text, 'Expected a single hyphen in the mod ID, but the %s was: "%s"' % [type, check_mod_id]), LOG_NAME)
 		return false
 
 	# at least 7 long (1 for hyphen, 3 each for namespace/name)
@@ -218,17 +286,25 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 	return true
 
 
-# Returns an empty String if the key does not exist
+# Returns an empty String if the key does not exist or is not type of String
 static func _get_string_from_dict(dict: Dictionary, key: String) -> String:
 	if not dict.has(key):
 		return ""
+
+	if not dict[key] is String:
+		return ""
+
 	return dict[key]
 
 
-# Returns an empty Array if the key does not exist
+# Returns an empty Array if the key does not exist or is not type of Array
 static func _get_array_from_dict(dict: Dictionary, key: String) -> Array:
 	if not dict.has(key):
 		return []
+
+	if not dict[key] is Array:
+		return []
+
 	return dict[key]
 
 
