@@ -276,11 +276,11 @@ static func validate_incompatibilities(mod_id: String, incompatibilities: PoolSt
 static func has_overlaps(dependencies: PoolStringArray, incompatibilities: PoolStringArray, is_silent := false) -> bool:
 	var overlaps: PoolStringArray = []
 	for incompatibility in incompatibilities:
-		if dependancies.has(incompatibility):
+		if dependencies.has(incompatibility):
 			overlaps.push_back(incompatibility)
 	if overlaps.size() > 0:
 		if not is_silent:
-			ModLoaderUtils.log_fatal("The mod(s) %s are listed as both, dependencies and incompatibilities" % overlap.join("\", \"") + "\"")
+			ModLoaderUtils.log_fatal("The mod(s) %s are listed as both, dependencies and incompatibilities" % overlaps)
 		return true
 	return false
 
