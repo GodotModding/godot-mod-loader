@@ -254,6 +254,9 @@ static func validate_dependencies_and_incompatibilities(mod_id: String, dependen
 
 	if not valid_dependencies or not valid_incompatibilities:
 		return false
+    
+    if has_overlaps(valid_dependencies, valid_incompatibilities):
+		return false
 
 	return true
 
@@ -268,6 +271,18 @@ static func validate_dependencies(mod_id: String, dependencies: PoolStringArray,
 
 static func validate_incompatibilities(mod_id: String, incompatibilities: PoolStringArray, is_silent := false) -> bool:
 	return is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility", is_silent)
+
+
+static func has_overlaps(dependencies: PoolStringArray, incompatibilities: PoolStringArray, is_silent := false) -> bool:
+	var overlaps: PoolStringArray = []
+	for incompatibility in incompatibilities:
+		if dependancies.has(incompatibility):
+			overlaps.push_back(incompatibility)
+	if overlaps.size() > 0:
+		if not is_silent:
+			ModLoaderUtils.log_fatal("The mod(s) %s are listed as both, dependencies and incompatibilities" % overlap.join("\", \"") + "\"")
+		return true
+	return false
 
 
 static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
