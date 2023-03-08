@@ -120,6 +120,30 @@ func get_as_dict() -> Dictionary:
 	}
 
 
+# Returns the Manifest values as JSON, in the manifest.json format
+func to_json() -> String:
+	return JSON.print({
+		"name": name,
+		"namespace": namespace,
+		"version_number": version_number,
+		"description": description,
+		"website_url": website_url,
+		"dependencies": dependencies,
+		"extra": {
+			"godot":{
+				"authors": authors,
+				"compatible_game_version": compatible_game_version,
+				"compatible_mod_loader_version": compatible_mod_loader_version,
+				"incompatibilities": incompatibilities,
+				"tags": tags,
+				"config_defaults": config_defaults,
+				"description_rich": description_rich,
+				"image": image,
+			}
+		}
+	})
+
+
 # Handles deprecation of the single string value in the compatible_mod_loader_version.
 func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
 	var link_manifest_docs := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Files#manifestjson"
