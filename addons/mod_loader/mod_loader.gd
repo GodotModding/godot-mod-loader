@@ -83,21 +83,21 @@ func _init() -> void:
 	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
 		return
 
-	if not ModLoaderStore.ml_options.enable_mods:
-		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
-		return
-
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
 	ModLoaderUtils.rotate_log_file()
-
-	# Log the autoloads order. Helpful when providing support to players
-	ModLoaderUtils.log_debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
 
 	# Ensure ModLoaderStore and ModLoader are the 1st and 2nd autoloads
 	_check_autoload_positions()
 
+	# Log the autoloads order. Helpful when providing support to players
+	ModLoaderUtils.log_debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
+
 	# Log game install dir
 	ModLoaderUtils.log_info("game_install_directory: %s" % ModLoaderUtils.get_local_folder_dir(), LOG_NAME)
+
+	if not ModLoaderStore.ml_options.enable_mods:
+		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
+		return
 
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
