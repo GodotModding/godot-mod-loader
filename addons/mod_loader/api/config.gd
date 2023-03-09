@@ -70,9 +70,9 @@ static func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dicti
 			# No user config file exists. Low importance as very likely to trigger
 			var full_msg = "Config JSON Notice: %s" % status_msg
 			# Only log this once, to avoid flooding the log
-			if not ModLoader.logged_messages.has(full_msg):
+			if not ModLoaderStore.logged_messages.has(full_msg):
 				ModLoaderUtils.log_debug(full_msg, mod_dir_name)
-				ModLoader.logged_messages.push_back(full_msg)
+				ModLoaderStore.logged_messages.push_back(full_msg)
 		else:
 			# Code error (eg. invalid mod ID)
 			ModLoaderUtils.log_fatal("Config JSON Error (%s): %s" % [status_code, status_msg], mod_dir_name)
@@ -119,11 +119,7 @@ static func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_
 		data_new = data_original.duplicate(true)
 		data_new.merge(data, true)
 
-	# Note: This bit of code is duped from `_load_mod_configs`
-	var configs_path := ModLoaderUtils.get_local_folder_dir("configs")
-	if not ModLoader.os_configs_path_override == "":
-		configs_path = ModLoader.os_configs_path_override
-
+	var configs_path := ModLoaderUtils.get_path_to_configs()
 	var json_path := configs_path.plus_file(mod_id + ".json")
 
 	return ModLoaderUtils.save_dictionary_to_json_file(data_new, json_path)

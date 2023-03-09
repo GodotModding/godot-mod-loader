@@ -51,6 +51,11 @@ const new_global_classes := [
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/deprecated.gd"
 	}, {
+		"base": "Object",
+		"class": "ModLoaderGodot",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/api/godot.gd"
+	}, {
 		"base": "Node",
 		"class": "ModLoaderSteam",
 		"language": "GDScript",
@@ -147,7 +152,10 @@ func reorder_autoloads() -> void:
 	for autoload in original_autoloads.keys():
 			ProjectSettings.set_setting(autoload, null)
 
-	# add ModLoader autoload (the * marks the path as autoload)
+	# Add ModLoaderStore autoload (the * marks the path as autoload)
+	ProjectSettings.set_setting("autoload/ModLoaderStore", "*" + "res://addons/mod_loader/mod_loader_store.gd")
+
+	# Add ModLoader autoload (the * marks the path as autoload)
 	ProjectSettings.set_setting("autoload/ModLoader", "*" + "res://addons/mod_loader/mod_loader.gd")
 
 	# add all previous autoloads back again
