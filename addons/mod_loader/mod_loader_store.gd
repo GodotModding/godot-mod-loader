@@ -14,18 +14,13 @@ const LOG_NAME = "ModLoader:Store"
 # Vars
 # =============================================================================
 
-# Store for any internal data. Storing it here allows it to be accessed and used
-# by any file.
-# Usage: `ModLoaderStore.ml_data.KEY`
-var ml_data := {
-	# True if ModLoader has displayed the warning about using zipped mods
-	has_shown_editor_warning = false,
+# True if ModLoader has displayed the warning about using zipped mods
+var has_shown_editor_zips_warning := false
 
-	# Keeps track of logged messages, to avoid flooding the log with duplicate notices
-	# Can also be used by mods, eg. to create an in-game developer console that
-	# shows messages
-	logged_messages = [],
-}
+# Keeps track of logged messages, to avoid flooding the log with duplicate notices
+# Can also be used by mods, eg. to create an in-game developer console that
+# shows messages
+var logged_messages := []
 
 # These variables handle various options, which can be changed either via
 # Godot's GUI (with the options.tres resource file), or via CLI args.
@@ -91,7 +86,7 @@ func _update_ml_options_from_cli_args() -> void:
 	# Set via: --mods-path
 	# Example: --mods-path="C://path/mods"
 	var cmd_line_mod_path := ModLoaderUtils.get_cmd_line_arg_value("--mods-path")
-	if not cmd_line_mod_path == "":
+	if cmd_line_mod_path:
 		ml_options.override_path_to_mods = cmd_line_mod_path
 		ModLoaderUtils.log_info("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
 
@@ -99,7 +94,7 @@ func _update_ml_options_from_cli_args() -> void:
 	# Set via: --configs-path
 	# Example: --configs-path="C://path/configs"
 	var cmd_line_configs_path := ModLoaderUtils.get_cmd_line_arg_value("--configs-path")
-	if not cmd_line_configs_path == "":
+	if cmd_line_configs_path:
 		ml_options.override_path_to_configs = cmd_line_configs_path
 		ModLoaderUtils.log_info("The path configs are loaded from has been changed via the CLI arg `--configs-path`, to: " + cmd_line_configs_path, LOG_NAME)
 
