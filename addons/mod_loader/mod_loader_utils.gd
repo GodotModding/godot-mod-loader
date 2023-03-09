@@ -187,7 +187,13 @@ static func clear_old_log_backups() -> void:
 
 
 static func _get_verbosity() -> int:
-	return ModLoaderStore.ml_options.log_level
+	if not ModLoaderStore:
+		# This lets us get a verbosity level even when ModLoaderStore is not in
+		# the correct autoload position (which they'll be notified about via
+		# `_check_autoload_positions`)
+		return VERBOSITY_LEVEL.DEBUG
+	else:
+		return ModLoaderStore.ml_options.log_level
 
 
 # Check if the provided command line argument was present when launching the game
