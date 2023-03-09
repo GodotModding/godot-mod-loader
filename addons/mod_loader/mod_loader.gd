@@ -657,7 +657,7 @@ func register_global_classes_from_array(new_global_classes: Array) -> void:
 
 
 # Add a translation file, eg "mytranslation.en.translation". The translation
-# file should have been created in Godot already: When you improt a CSV, such
+# file should have been created in Godot already: When you import a CSV, such
 # a file will be created for you.
 func add_translation_from_resource(resource_path: String) -> void:
 	if not File.new().file_exists(resource_path):
