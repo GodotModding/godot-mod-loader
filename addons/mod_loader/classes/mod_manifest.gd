@@ -141,7 +141,7 @@ func to_json() -> String:
 				"image": image,
 			}
 		}
-	})
+	}, "\t")
 
 
 # Handles deprecation of the single string value in the compatible_mod_loader_version.
