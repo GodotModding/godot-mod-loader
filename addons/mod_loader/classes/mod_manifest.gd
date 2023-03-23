@@ -57,9 +57,9 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 # Takes the manifest as [Dictionary] and validates everything.
 # Will return null if something is invalid.
 func _init(manifest: Dictionary) -> void:
-	if (not dict_has_fields(manifest, REQUIRED_MANIFEST_KEYS_ROOT) or
-		not dict_has_fields(manifest.extra, ["godot"]) or
-		not dict_has_fields(manifest.extra.godot, REQUIRED_MANIFEST_KEYS_EXTRA)):
+	if (not ModLoaderUtils.dict_has_fields(manifest, REQUIRED_MANIFEST_KEYS_ROOT) or
+		not ModLoaderUtils.dict_has_fields(manifest.extra, ["godot"]) or
+		not ModLoaderUtils.dict_has_fields(manifest.extra.godot, REQUIRED_MANIFEST_KEYS_EXTRA)):
 			return
 
 	name = manifest.name
@@ -75,12 +75,12 @@ func _init(manifest: Dictionary) -> void:
 	dependencies = manifest.dependencies
 
 	var godot_details: Dictionary = manifest.extra.godot
-	authors = _get_array_from_dict(godot_details, "authors")
-	incompatibilities = _get_array_from_dict(godot_details, "incompatibilities")
-	compatible_game_version = _get_array_from_dict(godot_details, "compatible_game_version")
+	authors = ModLoaderUtils.get_array_from_dict(godot_details, "authors")
+	incompatibilities = ModLoaderUtils.get_array_from_dict(godot_details, "incompatibilities")
+	compatible_game_version = ModLoaderUtils.get_array_from_dict(godot_details, "compatible_game_version")
 	compatible_mod_loader_version = _handle_compatible_mod_loader_version(godot_details)
-	description_rich = _get_string_from_dict(godot_details, "description_rich")
-	tags = _get_array_from_dict(godot_details, "tags")
+	description_rich = ModLoaderUtils.get_string_from_dict(godot_details, "description_rich")
+	tags = ModLoaderUtils.get_array_from_dict(godot_details, "tags")
 	config_defaults = godot_details.config_defaults
 
 	var mod_id = get_mod_id()
@@ -147,7 +147,7 @@ func to_json() -> String:
 # Handles deprecation of the single string value in the compatible_mod_loader_version.
 func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
 	var link_manifest_docs := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Files#manifestjson"
-	var array_value := _get_array_from_dict(godot_details, "compatible_mod_loader_version")
+	var array_value := ModLoaderUtils.get_array_from_dict(godot_details, "compatible_mod_loader_version")
 
 	# If there are array values
 	if array_value.size() > 0:
@@ -158,7 +158,7 @@ func _handle_compatible_mod_loader_version(godot_details: Dictionary) -> Array:
 		return array_value
 
 	# If the array is empty check if a string was passed
-	var string_value := _get_string_from_dict(godot_details, "compatible_mod_loader_version")
+	var string_value := ModLoaderUtils.get_string_from_dict(godot_details, "compatible_mod_loader_version")
 	# If an empty string was passed
 	if string_value == "":
 		ModLoaderUtils.log_error(
@@ -305,44 +305,6 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 	if re.search(check_name) == null:
 		if not is_silent:
 			ModLoaderUtils.log_fatal(str(intro_text, 'Mod ID has an invalid name for "%s". Name can only use letters, numbers and underscores, but was: "%s"' % [check_mod_id, check_name]), LOG_NAME)
-		return false
-
-	return true
-
-
-# Returns an empty String if the key does not exist or is not type of String
-static func _get_string_from_dict(dict: Dictionary, key: String) -> String:
-	if not dict.has(key):
-		return ""
-
-	if not dict[key] is String:
-		return ""
-
-	return dict[key]
-
-
-# Returns an empty Array if the key does not exist or is not type of Array
-static func _get_array_from_dict(dict: Dictionary, key: String) -> Array:
-	if not dict.has(key):
-		return []
-
-	if not dict[key] is Array:
-		return []
-
-	return dict[key]
-
-
-# Works like [method Dictionary.has_all],
-# but allows for more specific errors if a field is missing
-static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
-	var missing_fields := required_fields
-
-	for key in dict.keys():
-		if(required_fields.has(key)):
-			missing_fields.erase(key)
-
-	if missing_fields.size() > 0:
-		ModLoaderUtils.log_fatal("Mod manifest is missing required fields: %s" % missing_fields, LOG_NAME)
 		return false
 
 	return true
