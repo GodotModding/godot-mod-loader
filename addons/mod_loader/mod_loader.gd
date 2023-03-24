@@ -129,6 +129,17 @@ func _init() -> void:
 
 	ModLoaderUtils.log_success("DONE: Loaded all meta data", LOG_NAME)
 
+
+	# Check for mods with load_before. If a mod is listed in load_before,
+	# add the current mod to the dependencies of the the mod specified
+	# in load_before.
+	for dir_name in mod_data:
+		var mod: ModData = mod_data[dir_name]
+		if not mod.is_loadable:
+			continue
+		_check_load_before(mod)
+
+
 	# Run dependency checks after loading mod_manifest. If a mod depends on another
 	# mod that hasn't been loaded, that dependent mod won't be loaded.
 	for dir_name in mod_data:
@@ -472,6 +483,23 @@ func _handle_missing_dependency(mod_dir_name: String, dependency_id: String) -> 
 		mod_missing_dependencies[mod_dir_name] = []
 
 	mod_missing_dependencies[mod_dir_name].append(dependency_id)
+
+
+# Run load before check on a mod, checking any load_before entries it lists in its
+# mod_manifest (ie. its manifest.json file). Add the mod to the dependency of the
+# mods inside the load_before array.
+func _check_load_before(mod: ModData) -> void:
+	# Skip if no entries in load_before
+	if mod.manifest.load_before.size() == 0:
+		return
+
+	# Add the mod to the dependency arrays
+	for load_before_id in mod.manifest.load_before:
+		var load_before_mod_dependencies = mod_data[load_before_id].manifest.dependencies
+		load_before_mod_dependencies.append(mod.dir_name)
+		mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
+
+	ModLoaderUtils.log_debug("Load before detected -> Added %s as dependency for %s" % [mod.dir_name, mod.manifest.load_before], LOG_NAME)
 
 
 # Get the load order of mods, using a custom sorter
