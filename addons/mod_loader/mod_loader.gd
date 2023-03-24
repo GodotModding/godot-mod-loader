@@ -135,7 +135,9 @@ func _init() -> void:
 		var mod: ModData = mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
-		_check_dependencies(mod)
+		var is_circular := _check_dependencies(mod)
+		if is_circular:
+			return
 
 	# Sort mod_load_order by the importance score of the mod
 	mod_load_order = _get_load_order(mod_data.values())
@@ -421,14 +423,26 @@ func _init_mod_data(mod_folder_path: String) -> void:
 # Run dependency checks on a mod, checking any dependencies it lists in its
 # mod_manifest (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded.
-func _check_dependencies(mod: ModData) -> void:
+func _check_dependencies(mod: ModData, dependency_chain := []) -> bool:
 	ModLoaderUtils.log_debug("Checking dependencies - mod_id: %s dependencies: %s" % [mod.dir_name, mod.manifest.dependencies], LOG_NAME)
+
+	var is_circular := false
+	var mod_id := mod.dir_name
+
+	# Check for circular dependency
+	if mod_id in dependency_chain:
+		is_circular = true
+		ModLoaderUtils.log_debug("Dependency check - circular dependency detected.", LOG_NAME)
+		return is_circular
+
+	# Add mod_id to dependency_chain
+	dependency_chain.append(mod_id)
 
 	# loop through each dependency
 	for dependency_id in mod.manifest.dependencies:
 		# check if dependency is missing
 		if not mod_data.has(dependency_id):
-			_handle_missing_dependency(mod.dir_name, dependency_id)
+			_handle_missing_dependency(mod_id, dependency_id)
 			# Flag the mod so it's not loaded later
 			mod.is_loadable = false
 			continue
@@ -441,7 +455,12 @@ func _check_dependencies(mod: ModData) -> void:
 
 		# check if dependency has dependencies
 		if dependency.manifest.dependencies.size() > 0:
-			_check_dependencies(dependency)
+			is_circular = _check_dependencies(dependency, dependency_chain)
+
+			if is_circular:
+				return is_circular
+
+	return is_circular
 
 
 # Handle missing dependencies: Sets `is_loadable` to false and logs an error
