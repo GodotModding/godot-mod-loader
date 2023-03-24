@@ -376,6 +376,44 @@ static func dir_exists(path: String) -> bool:
 	return dir.dir_exists(path)
 
 
+# Returns an empty String if the key does not exist or is not type of String
+static func get_string_from_dict(dict: Dictionary, key: String) -> String:
+	if not dict.has(key):
+		return ""
+
+	if not dict[key] is String:
+		return ""
+
+	return dict[key]
+
+
+# Returns an empty Array if the key does not exist or is not type of Array
+static func get_array_from_dict(dict: Dictionary, key: String) -> Array:
+	if not dict.has(key):
+		return []
+
+	if not dict[key] is Array:
+		return []
+
+	return dict[key]
+
+
+# Works like [method Dictionary.has_all],
+# but allows for more specific errors if a field is missing
+static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
+	var missing_fields := required_fields
+
+	for key in dict.keys():
+		if(required_fields.has(key)):
+			missing_fields.erase(key)
+
+	if missing_fields.size() > 0:
+		log_fatal("Mod manifest is missing required fields: %s" % missing_fields, LOG_NAME)
+		return false
+
+	return true
+
+
 # Register an array of classes to the global scope, since Godot only does that in the editor.
 static func register_global_classes_from_array(new_global_classes: Array) -> void:
 	var registered_classes: Array = ProjectSettings.get_setting("_global_script_classes")
