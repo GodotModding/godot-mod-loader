@@ -430,7 +430,7 @@ func _check_dependencies(mod: ModData, dependency_chain := []) -> bool:
 	var mod_id := mod.dir_name
 
 	# Check for circular dependency
-	if dependency_chain.find(mod_id) != -1:
+	if mod_id in dependency_chain:
 		is_circular = true
 		ModLoaderUtils.log_debug("Dependency check - circular dependency detected.", LOG_NAME)
 		return is_circular
