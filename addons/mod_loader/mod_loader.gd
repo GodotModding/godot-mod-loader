@@ -135,9 +135,7 @@ func _init() -> void:
 		var mod: ModData = mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
-		var is_circular := _check_dependencies(mod)
-		if is_circular:
-			return
+		var _is_circular := _check_dependencies(mod)
 
 	# Sort mod_load_order by the importance score of the mod
 	mod_load_order = _get_load_order(mod_data.values())
