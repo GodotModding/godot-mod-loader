@@ -493,13 +493,24 @@ func _check_load_before(mod: ModData) -> void:
 	if mod.manifest.load_before.size() == 0:
 		return
 
-	# Add the mod to the dependency arrays
+	# For each mod id in load_before
 	for load_before_id in mod.manifest.load_before:
 		var load_before_mod_dependencies = mod_data[load_before_id].manifest.dependencies
+		# Check if it's already a dependency
+		if mod.dir_name in load_before_mod_dependencies:
+			ModLoaderUtils.log_debug(
+				"Load before detected -> Skipping %s because it's already a dependency for %s"
+				% [mod.dir_name, load_before_id], LOG_NAME
+			)
+			return
+		# Add the mod to the dependency array
 		load_before_mod_dependencies.append(mod.dir_name)
 		mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
 
-	ModLoaderUtils.log_debug("Load before detected -> Added %s as dependency for %s" % [mod.dir_name, mod.manifest.load_before], LOG_NAME)
+	ModLoaderUtils.log_debug(
+		"Load before detected -> Added %s as dependency for %s"
+		% [mod.dir_name, mod.manifest.load_before], LOG_NAME
+	)
 
 
 # Get the load order of mods, using a custom sorter
