@@ -146,9 +146,9 @@ func _init() -> void:
 		var mod: ModData = mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
-		var is_circular := _check_dependencies(mod)
-		if is_circular:
-			return
+			var is_circular := _check_dependencies(mod)
+			if is_circular:
+				return
 
 	# Sort mod_load_order by the importance score of the mod
 	mod_load_order = _get_load_order(mod_data.values())
@@ -493,24 +493,28 @@ func _check_load_before(mod: ModData) -> void:
 	if mod.manifest.load_before.size() == 0:
 		return
 
+	ModLoaderUtils.log_debug("Load before - In mod %s detected." % mod.dir_name, LOG_NAME)
+
 	# For each mod id in load_before
 	for load_before_id in mod.manifest.load_before:
-		var load_before_mod_dependencies = mod_data[load_before_id].manifest.dependencies
+
+		# Check if the load_before mod exists
+		if not mod_data.has(load_before_id):
+			ModLoaderUtils.log_debug("Load before - Skipping %s because it's missing" % load_before_id, LOG_NAME)
+			continue
+
+		var load_before_mod_dependencies := mod_data[load_before_id].manifest.dependencies as PoolStringArray
+
 		# Check if it's already a dependency
 		if mod.dir_name in load_before_mod_dependencies:
-			ModLoaderUtils.log_debug(
-				"Load before detected -> Skipping %s because it's already a dependency for %s"
-				% [mod.dir_name, load_before_id], LOG_NAME
-			)
-			return
+			ModLoaderUtils.log_debug("Load before - Skipping because it's already a dependency for %s" % load_before_id, LOG_NAME)
+			continue
+
 		# Add the mod to the dependency array
 		load_before_mod_dependencies.append(mod.dir_name)
 		mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
 
-	ModLoaderUtils.log_debug(
-		"Load before detected -> Added %s as dependency for %s"
-		% [mod.dir_name, mod.manifest.load_before], LOG_NAME
-	)
+		ModLoaderUtils.log_debug("Load before - Added %s as dependency for %s" % [mod.dir_name, load_before_id], LOG_NAME)
 
 
 # Get the load order of mods, using a custom sorter
