@@ -27,6 +27,7 @@ var compatible_game_version: PoolStringArray = []
 var compatible_mod_loader_version: PoolStringArray = []
 # only used for information
 var incompatibilities: PoolStringArray = []
+var load_before: PoolStringArray = []
 var tags : PoolStringArray = []
 var config_defaults := {}
 var description_rich := ""
@@ -77,6 +78,7 @@ func _init(manifest: Dictionary) -> void:
 	var godot_details: Dictionary = manifest.extra.godot
 	authors = ModLoaderUtils.get_array_from_dict(godot_details, "authors")
 	incompatibilities = ModLoaderUtils.get_array_from_dict(godot_details, "incompatibilities")
+	load_before = ModLoaderUtils.get_array_from_dict(godot_details, "load_before")
 	compatible_game_version = ModLoaderUtils.get_array_from_dict(godot_details, "compatible_game_version")
 	compatible_mod_loader_version = _handle_compatible_mod_loader_version(godot_details)
 	description_rich = ModLoaderUtils.get_string_from_dict(godot_details, "description_rich")
@@ -113,6 +115,7 @@ func get_as_dict() -> Dictionary:
 		"compatible_game_version": compatible_game_version,
 		"compatible_mod_loader_version": compatible_mod_loader_version,
 		"incompatibilities": incompatibilities,
+		"load_before": load_before,
 		"tags": tags,
 		"config_defaults": config_defaults,
 		"description_rich": description_rich,
@@ -135,6 +138,7 @@ func to_json() -> String:
 				"compatible_game_version": compatible_game_version,
 				"compatible_mod_loader_version": compatible_mod_loader_version,
 				"incompatibilities": incompatibilities,
+				"load_before": load_before,
 				"tags": tags,
 				"config_defaults": config_defaults,
 				"description_rich": description_rich,

@@ -129,6 +129,17 @@ func _init() -> void:
 
 	ModLoaderUtils.log_success("DONE: Loaded all meta data", LOG_NAME)
 
+
+	# Check for mods with load_before. If a mod is listed in load_before,
+	# add the current mod to the dependencies of the the mod specified
+	# in load_before.
+	for dir_name in mod_data:
+		var mod: ModData = mod_data[dir_name]
+		if not mod.is_loadable:
+			continue
+		_check_load_before(mod)
+
+
 	# Run dependency checks after loading mod_manifest. If a mod depends on another
 	# mod that hasn't been loaded, that dependent mod won't be loaded.
 	for dir_name in mod_data:
@@ -470,6 +481,38 @@ func _handle_missing_dependency(mod_dir_name: String, dependency_id: String) -> 
 		mod_missing_dependencies[mod_dir_name] = []
 
 	mod_missing_dependencies[mod_dir_name].append(dependency_id)
+
+
+# Run load before check on a mod, checking any load_before entries it lists in its
+# mod_manifest (ie. its manifest.json file). Add the mod to the dependency of the
+# mods inside the load_before array.
+func _check_load_before(mod: ModData) -> void:
+	# Skip if no entries in load_before
+	if mod.manifest.load_before.size() == 0:
+		return
+
+	ModLoaderUtils.log_debug("Load before - In mod %s detected." % mod.dir_name, LOG_NAME)
+
+	# For each mod id in load_before
+	for load_before_id in mod.manifest.load_before:
+
+		# Check if the load_before mod exists
+		if not mod_data.has(load_before_id):
+			ModLoaderUtils.log_debug("Load before - Skipping %s because it's missing" % load_before_id, LOG_NAME)
+			continue
+
+		var load_before_mod_dependencies := mod_data[load_before_id].manifest.dependencies as PoolStringArray
+
+		# Check if it's already a dependency
+		if mod.dir_name in load_before_mod_dependencies:
+			ModLoaderUtils.log_debug("Load before - Skipping because it's already a dependency for %s" % load_before_id, LOG_NAME)
+			continue
+
+		# Add the mod to the dependency array
+		load_before_mod_dependencies.append(mod.dir_name)
+		mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
+
+		ModLoaderUtils.log_debug("Load before - Added %s as dependency for %s" % [mod.dir_name, load_before_id], LOG_NAME)
 
 
 # Get the load order of mods, using a custom sorter
