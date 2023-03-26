@@ -18,6 +18,8 @@ var description := ""
 var website_url := ""
 # Used to determine mod load order
 var dependencies: PoolStringArray = []
+# Used to determine mod load order
+var optional_dependencies: PoolStringArray = []
 
 var authors: PoolStringArray = []
 # only used for information
@@ -77,6 +79,7 @@ func _init(manifest: Dictionary) -> void:
 
 	var godot_details: Dictionary = manifest.extra.godot
 	authors = ModLoaderUtils.get_array_from_dict(godot_details, "authors")
+	optional_dependencies = ModLoaderUtils.get_array_from_dict(godot_details, "optional_dependencies")
 	incompatibilities = ModLoaderUtils.get_array_from_dict(godot_details, "incompatibilities")
 	load_before = ModLoaderUtils.get_array_from_dict(godot_details, "load_before")
 	compatible_game_version = ModLoaderUtils.get_array_from_dict(godot_details, "compatible_game_version")
@@ -86,7 +89,8 @@ func _init(manifest: Dictionary) -> void:
 	config_defaults = godot_details.config_defaults
 
 	var mod_id = get_mod_id()
-	if not validate_dependencies_and_incompatibilities(mod_id, dependencies, incompatibilities):
+	if (not validate_dependencies_and_incompatibilities(mod_id, dependencies, incompatibilities) or
+		not validate_optional_dependencies(mod_id, optional_dependencies)):
 		return
 
 
@@ -111,6 +115,7 @@ func get_as_dict() -> Dictionary:
 		"description": description,
 		"website_url": website_url,
 		"dependencies": dependencies,
+		"optional_dependencies": optional_dependencies,
 		"authors": authors,
 		"compatible_game_version": compatible_game_version,
 		"compatible_mod_loader_version": compatible_mod_loader_version,
@@ -135,6 +140,7 @@ func to_json() -> String:
 		"extra": {
 			"godot":{
 				"authors": authors,
+				"optional_dependencies": optional_dependencies,
 				"compatible_game_version": compatible_game_version,
 				"compatible_mod_loader_version": compatible_mod_loader_version,
 				"incompatibilities": incompatibilities,
@@ -250,6 +256,10 @@ static func validate_dependencies_and_incompatibilities(mod_id: String, dependen
 		return false
 
 	return true
+
+
+static func validate_optional_dependencies(mod_id: String, optional_dependencies: PoolStringArray, is_silent := false) -> bool:
+	return is_mod_id_array_valid(mod_id, optional_dependencies, "optional_dependency", is_silent)
 
 
 static func validate_dependencies(mod_id: String, dependencies: PoolStringArray, is_silent := false) -> bool:
