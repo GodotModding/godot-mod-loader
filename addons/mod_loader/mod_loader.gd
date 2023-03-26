@@ -463,34 +463,34 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 
 	# Check for circular dependency
 	if mod_id in dependency_chain:
-			ModLoaderUtils.log_debug("%s dependency check - circular dependency detected for mod with ID %s." % [dependency_type.capitalize(), mod_id], LOG_NAME)
-			return true
+		ModLoaderUtils.log_debug("%s dependency check - circular dependency detected for mod with ID %s." % [dependency_type.capitalize(), mod_id], LOG_NAME)
+		return true
 
 	# Add mod_id to dependency_chain to avoid circular dependencies
 	dependency_chain.append(mod_id)
 
 	# Loop through each dependency listed in the mod's manifest
 	for dependency_id in dependencies:
-			# Check if dependency is missing
-			if not mod_data.has(dependency_id):
-					# Skip to the next dependency if it's optional
-					if not is_required:
-						ModLoaderUtils.log_info("Missing optional dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
-						continue
-					_handle_missing_dependency(mod_id, dependency_id)
-					# Flag the mod so it's not loaded later
-					mod.is_loadable = false
-			else:
-					var dependency: ModData = mod_data[dependency_id]
+		# Check if dependency is missing
+		if not mod_data.has(dependency_id):
+			# Skip to the next dependency if it's optional
+			if not is_required:
+				ModLoaderUtils.log_info("Missing optional dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
+				continue
+			_handle_missing_dependency(mod_id, dependency_id)
+			# Flag the mod so it's not loaded later
+			mod.is_loadable = false
+		else:
+			var dependency: ModData = mod_data[dependency_id]
 
-					# Increase the importance score of the dependency by 1
-					dependency.importance += 1
-					ModLoaderUtils.log_debug("%s dependency -> %s importance -> %s" % [dependency_type.capitalize(), dependency_id, dependency.importance], LOG_NAME)
+			# Increase the importance score of the dependency by 1
+			dependency.importance += 1
+			ModLoaderUtils.log_debug("%s dependency -> %s importance -> %s" % [dependency_type.capitalize(), dependency_id, dependency.importance], LOG_NAME)
 
-					# Check if the dependency has any dependencies of its own
-					if dependency.manifest.dependencies.size() > 0:
-							if _check_dependencies(dependency, is_required, dependency_chain):
-									return true
+			# Check if the dependency has any dependencies of its own
+			if dependency.manifest.dependencies.size() > 0:
+				if _check_dependencies(dependency, is_required, dependency_chain):
+					return true
 
 	# Return false if all dependencies have been resolved
 	return false
