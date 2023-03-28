@@ -286,10 +286,10 @@ static func validate_distinct_mod_ids_in_arrays(
 				),
 				LOG_NAME
 			)
-		return true
+		return false
 
 	# If no overlaps were found, return false.
-	return false
+	return true
 
 
 static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
