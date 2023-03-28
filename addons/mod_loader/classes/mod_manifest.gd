@@ -292,6 +292,9 @@ static func validate_distinct_mod_ids_in_arrays(
 		)
 		return false
 
+	# If silent just return false
+	return false
+
 
 static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
 	var is_valid := true
