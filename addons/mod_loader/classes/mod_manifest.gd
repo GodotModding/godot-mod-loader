@@ -89,8 +89,9 @@ func _init(manifest: Dictionary) -> void:
 	config_defaults = godot_details.config_defaults
 
 	var mod_id = get_mod_id()
-	if (not validate_dependencies_and_incompatibilities(mod_id, dependencies, incompatibilities) or
-		not validate_optional_dependencies(mod_id, optional_dependencies)):
+	if (not is_mod_id_array_valid(mod_id, dependencies, "dependency") or
+		not is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility") or
+		not is_mod_id_array_valid(mod_id, optional_dependencies, "optional_dependency")):
 		return
 
 
@@ -246,28 +247,6 @@ static func is_semver_valid(check_version_number: String, is_silent := false) ->
 		return false
 
 	return true
-
-
-static func validate_dependencies_and_incompatibilities(mod_id: String, dependencies: PoolStringArray, incompatibilities: PoolStringArray, is_silent := false) -> bool:
-	var valid_dependencies := validate_dependencies(mod_id, dependencies, is_silent)
-	var valid_incompatibilities := validate_incompatibilities(mod_id, incompatibilities, is_silent)
-
-	if not valid_dependencies or not valid_incompatibilities:
-		return false
-
-	return true
-
-
-static func validate_optional_dependencies(mod_id: String, optional_dependencies: PoolStringArray, is_silent := false) -> bool:
-	return is_mod_id_array_valid(mod_id, optional_dependencies, "optional_dependency", is_silent)
-
-
-static func validate_dependencies(mod_id: String, dependencies: PoolStringArray, is_silent := false) -> bool:
-	return is_mod_id_array_valid(mod_id, dependencies, "dependency", is_silent)
-
-
-static func validate_incompatibilities(mod_id: String, incompatibilities: PoolStringArray, is_silent := false) -> bool:
-	return is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility", is_silent)
 
 
 static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
