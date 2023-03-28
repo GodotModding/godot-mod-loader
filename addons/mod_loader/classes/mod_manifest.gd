@@ -249,6 +249,37 @@ static func is_semver_valid(check_version_number: String, is_silent := false) ->
 	return true
 
 
+# Validates a mod's dependencies and incompatibilities to ensure they don't conflict.
+static func validate_dependencies_and_incompatibilities_conflicts(
+	mod_id: String,
+	dependencies: PoolStringArray,
+	incompatibilities: PoolStringArray,
+	is_silent := false
+) -> bool:
+	# Initialize an empty array to hold any overlaps.
+	var overlaps: PoolStringArray = []
+
+	# Loop through each incompatibility and check if it is also listed as a dependency.
+	for incompatibility in incompatibilities:
+		if dependencies.has(incompatibility):
+			overlaps.push_back(incompatibility)
+
+	# If any overlaps were found, log a fatal error message and return true.
+	if overlaps.size() > 0:
+		if not is_silent:
+			ModLoaderUtils.log_fatal(
+				(
+					"The mod -> %s lists the same mod(s) -> %s - in incompatibilities and dependencies"
+					% [mod_id, overlaps]
+				),
+				LOG_NAME
+			)
+		return true
+
+	# If no overlaps were found, return false.
+	return false
+
+
 static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
 	var is_valid := true
 
