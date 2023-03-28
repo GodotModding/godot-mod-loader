@@ -90,6 +90,7 @@ func _init(manifest: Dictionary) -> void:
 
 	var mod_id = get_mod_id()
 	if (not validate_dependencies_and_incompatibilities(mod_id, dependencies, incompatibilities) or
+		not validate_dependencies_and_incompatibilities_conflicts(mod_id, dependencies, incompatibilities) or
 		not validate_optional_dependencies(mod_id, optional_dependencies)):
 		return
 
@@ -268,6 +269,37 @@ static func validate_dependencies(mod_id: String, dependencies: PoolStringArray,
 
 static func validate_incompatibilities(mod_id: String, incompatibilities: PoolStringArray, is_silent := false) -> bool:
 	return is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility", is_silent)
+
+
+# Validates a mod's dependencies and incompatibilities to ensure they don't conflict.
+static func validate_dependencies_and_incompatibilities_conflicts(
+	mod_id: String,
+	dependencies: PoolStringArray,
+	incompatibilities: PoolStringArray,
+	is_silent := false
+) -> bool:
+	# Initialize an empty array to hold any overlaps.
+	var overlaps: PoolStringArray = []
+
+	# Loop through each incompatibility and check if it is also listed as a dependency.
+	for incompatibility in incompatibilities:
+		if dependencies.has(incompatibility):
+			overlaps.push_back(incompatibility)
+
+	# If any overlaps were found, log a fatal error message and return true.
+	if overlaps.size() > 0:
+		if not is_silent:
+			ModLoaderUtils.log_fatal(
+				(
+					"The mod -> %s lists the same mod(s) -> %s - in incompatibilities and dependencies"
+					% [mod_id, overlaps]
+				),
+				LOG_NAME
+			)
+		return true
+
+	# If no overlaps were found, return false.
+	return false
 
 
 static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
