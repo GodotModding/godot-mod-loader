@@ -277,20 +277,20 @@ static func validate_distinct_mod_ids_in_arrays(
 		if array_two.has(mod_id):
 			overlaps.push_back(mod_id)
 
-	# If any overlaps were found, log a fatal error message and return true.
-	if overlaps.size() > 0:
-		if not is_silent:
-			ModLoaderUtils.log_fatal(
-				(
-					"The mod -> %s lists the same mod(s) -> %s - in \"%s\" and \"%s\". %s"
-					% [mod_id, overlaps, array_description[0], array_description[1], additional_info]
-				),
-				LOG_NAME
-			)
-		return false
+	# If no overlaps were found
+	if overlaps.size() == 0:
+		return true
 
-	# If no overlaps were found, return false.
-	return true
+	# If any overlaps were found
+	if not is_silent:
+		ModLoaderUtils.log_fatal(
+			(
+				"The mod -> %s lists the same mod(s) -> %s - in \"%s\" and \"%s\". %s"
+				% [mod_id, overlaps, array_description[0], array_description[1], additional_info]
+			),
+			LOG_NAME
+		)
+		return false
 
 
 static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
