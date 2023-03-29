@@ -693,6 +693,10 @@ func _apply_extension(extension_path)->Script:
 		return null
 
 	var child_script:Script = ResourceLoader.load(extension_path)
+	# Adding metadata that contains the extension script path
+	# We cannot get that path in any other way
+	# Passing the child_script as is would return the base script path
+	# Passing the .duplicate() would return a '' path
 	child_script.set_meta("extension_script_path", extension_path)
 
 	# Force Godot to compile the script now.
@@ -721,6 +725,7 @@ func _apply_extension(extension_path)->Script:
 	return child_script
 
 
+# Used to remove a specific extension
 func _remove_extension(extension_path: String):
 	# Check path to file exists
 	if not File.new().file_exists(extension_path):
@@ -745,6 +750,7 @@ func _remove_extension(extension_path: String):
 	var parent_script_extensions = _saved_scripts[parent_script_path].duplicate()
 	parent_script_extensions.remove(0)
 
+	# Searching for the extension that we want to remove
 	var found_script_extension = null
 	for script_extension in parent_script_extensions:
 		if script_extension.get_meta("extension_script_path") == extension_path:
@@ -757,8 +763,10 @@ func _remove_extension(extension_path: String):
 		return
 	parent_script_extensions.erase(found_script_extension)
 
+	# Preparing the script to have all other extensions reapllied
 	_reset_extension(parent_script_path)
 
+	# Reapplying all the extensions without the removed one
 	for script_extension in parent_script_extensions:
 		_apply_extension(script_extension.get_meta("extension_script_path"))
 
