@@ -60,18 +60,25 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 # Takes the manifest as [Dictionary] and validates everything.
 # Will return null if something is invalid.
 func _init(manifest: Dictionary) -> void:
-	if (not ModLoaderUtils.dict_has_fields(manifest, REQUIRED_MANIFEST_KEYS_ROOT) or
+	if (
+		not ModLoaderUtils.dict_has_fields(manifest, REQUIRED_MANIFEST_KEYS_ROOT) or
 		not ModLoaderUtils.dict_has_fields(manifest.extra, ["godot"]) or
-		not ModLoaderUtils.dict_has_fields(manifest.extra.godot, REQUIRED_MANIFEST_KEYS_EXTRA)):
-			return
+		not ModLoaderUtils.dict_has_fields(manifest.extra.godot, REQUIRED_MANIFEST_KEYS_EXTRA)
+	):
+		return
 
 	name = manifest.name
 	namespace = manifest.namespace
 	version_number = manifest.version_number
-	if (not is_name_or_namespace_valid(name) or
-		not is_name_or_namespace_valid(namespace) or
-		not is_semver_valid(version_number)):
-			return
+
+	if (
+		not is_name_or_namespace_valid(name) or
+		not is_name_or_namespace_valid(namespace)
+	):
+		return
+
+	if is_semver_valid(version_number):
+		return
 
 	description = manifest.description
 	website_url = manifest.website_url
@@ -89,9 +96,40 @@ func _init(manifest: Dictionary) -> void:
 	config_defaults = godot_details.config_defaults
 
 	var mod_id = get_mod_id()
-	if (not is_mod_id_array_valid(mod_id, dependencies, "dependency") or
+	if (
+		not is_mod_id_array_valid(mod_id, dependencies, "dependency") or
 		not is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility") or
-		not is_mod_id_array_valid(mod_id, optional_dependencies, "optional_dependency")):
+		not is_mod_id_array_valid(mod_id, optional_dependencies, "optional_dependency")
+	):
+		return
+
+	if (
+		not validate_distinct_mod_ids_in_arrays(
+			mod_id,
+			dependencies,
+			incompatibilities,
+			["dependencies", "incompatibilities"]
+		) or
+		not validate_distinct_mod_ids_in_arrays(
+			mod_id,
+			optional_dependencies,
+			incompatibilities,
+			["optional_dependencies", "incompatibilities"]
+		) or
+		not validate_distinct_mod_ids_in_arrays(
+			mod_id,
+			load_before,
+			dependencies,
+			["load_before", "dependencies"],
+			"\"load_before\" should be handled as optional dependency adding it to \"dependencies\" will cancel out the desired effect."
+		) or
+		not validate_distinct_mod_ids_in_arrays(
+			mod_id,
+			load_before,
+			optional_dependencies,
+			["load_before", "optional_dependencies"],
+			"\"load_before\" can be viewed as optional dependency, please remove the duplicate mod-id.")
+	):
 		return
 
 
