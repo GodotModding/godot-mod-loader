@@ -74,6 +74,8 @@ var loaded_vanilla_parents_cache := {}
 # Helps to decide whether a script extension should go through the _handle_script_extensions process
 var is_initializing := true
 
+# Stores all the taken over scripts for restoration
+var _saved_scripts := {}
 
 # Main
 # =============================================================================
@@ -703,10 +705,42 @@ func _apply_extension(extension_path)->Script:
 
 	var parent_script:Script = child_script.get_base_script()
 	var parent_script_path:String = parent_script.resource_path
+
+	# We want to save scripts for resetting later
+	# All the scripts are saved in order already
+	if not _saved_scripts.has(parent_script_path):
+		_saved_scripts[parent_script_path] = []
+		# The first entry in the script path array will be the copy of the base script
+		_saved_scripts[parent_script_path].append(parent_script.duplicate())
+	_saved_scripts[parent_script_path].append(child_script)
+	ModLoaderUtils.log_error("base script: %s" % str(_saved_scripts[parent_script_path]), LOG_NAME)
+
 	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
 
 	return child_script
+
+
+func _reset_extension(parent_script_path)->Script:
+	# Check path to file exists
+	if not File.new().file_exists(parent_script_path):
+		ModLoaderUtils.log_error("The parent script path '%s' does not exist" % [parent_script_path], LOG_NAME)
+		return null
+
+	# Check if the script to reset has been extended
+	if not _saved_scripts.has(parent_script_path):
+		ModLoaderUtils.log_error("The parent script path '%s' has not been extended" % [parent_script_path], LOG_NAME)
+		return null
+
+	# Check if the script to reset has been extended
+	if not _saved_scripts[parent_script_path].size() > 0:
+		ModLoaderUtils.log_error("The parent script path '%s' does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
+		return null
+
+	var parent_script = _saved_scripts[parent_script_path][0]
+	parent_script.take_over_path(parent_script_path)
+
+	return parent_script
 
 
 # Helpers
