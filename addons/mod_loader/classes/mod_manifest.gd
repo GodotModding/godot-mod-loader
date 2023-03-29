@@ -287,34 +287,38 @@ static func is_semver_valid(check_version_number: String, is_silent := false) ->
 	return true
 
 
-# Validates a mod's dependencies and incompatibilities to ensure they don't conflict.
-static func validate_dependencies_and_incompatibilities_conflicts(
+static func validate_distinct_mod_ids_in_arrays(
 	mod_id: String,
-	dependencies: PoolStringArray,
-	incompatibilities: PoolStringArray,
+	array_one: PoolStringArray,
+	array_two: PoolStringArray,
+	array_description: PoolStringArray,
+	additional_info := "",
 	is_silent := false
 ) -> bool:
 	# Initialize an empty array to hold any overlaps.
 	var overlaps: PoolStringArray = []
 
 	# Loop through each incompatibility and check if it is also listed as a dependency.
-	for incompatibility in incompatibilities:
-		if dependencies.has(incompatibility):
-			overlaps.push_back(incompatibility)
+	for mod_id in array_one:
+		if array_two.has(mod_id):
+			overlaps.push_back(mod_id)
 
-	# If any overlaps were found, log a fatal error message and return true.
-	if overlaps.size() > 0:
-		if not is_silent:
-			ModLoaderUtils.log_fatal(
-				(
-					"The mod -> %s lists the same mod(s) -> %s - in incompatibilities and dependencies"
-					% [mod_id, overlaps]
-				),
-				LOG_NAME
-			)
+	# If no overlaps were found
+	if overlaps.size() == 0:
 		return true
 
-	# If no overlaps were found, return false.
+	# If any overlaps were found
+	if not is_silent:
+		ModLoaderUtils.log_fatal(
+			(
+				"The mod -> %s lists the same mod(s) -> %s - in \"%s\" and \"%s\". %s"
+				% [mod_id, overlaps, array_description[0], array_description[1], additional_info]
+			),
+			LOG_NAME
+		)
+		return false
+
+	# If silent just return false
 	return false
 
 
