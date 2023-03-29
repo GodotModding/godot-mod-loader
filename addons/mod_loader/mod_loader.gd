@@ -693,6 +693,7 @@ func _apply_extension(extension_path)->Script:
 		return null
 
 	var child_script:Script = ResourceLoader.load(extension_path)
+	child_script.set_meta("extension_script_path", extension_path)
 
 	# Force Godot to compile the script now.
 	# We need to do this here to ensure that the inheritance chain is
@@ -721,31 +722,71 @@ func _apply_extension(extension_path)->Script:
 	return child_script
 
 
+func _remove_extension(extension_path: String):
+	# Check path to file exists
+	if not File.new().file_exists(extension_path):
+		ModLoaderUtils.log_error("The extension script path '%s' does not exist" % [extension_path], LOG_NAME)
+		return null
+
+	var extension_script: Script = ResourceLoader.load(extension_path)
+	var parent_script: Script = extension_script.get_base_script()
+	var parent_script_path: String = parent_script.resource_path
+
+	# Check if the script to reset has been extended
+	if not _saved_scripts.has(parent_script_path):
+		ModLoaderUtils.log_error("The extension parent script path '%s' has not been extended" % [parent_script_path], LOG_NAME)
+		return
+
+	# Check if the script to reset has anything actually saved
+	# If we ever encounter this it means something went very wrong in extending
+	if not _saved_scripts[parent_script_path].size() > 0:
+		ModLoaderUtils.log_error("The extension script path '%s' does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
+		return
+
+	var parent_script_extensions = _saved_scripts[parent_script_path].duplicate()
+	parent_script_extensions.remove(0)
+
+	var found_script_extension = null
+	for script_extension in parent_script_extensions:
+		if script_extension.get_meta("extension_script_path") == extension_path:
+			ModLoaderUtils.log_debug("Extension Check %s Extension Passed %s" %[script_extension.get_meta("extension_script_path"), extension_path], LOG_NAME)
+			found_script_extension = script_extension
+			break
+
+	if found_script_extension == null:
+		ModLoaderUtils.log_error("The extension script path '%s' has not been found in the saved extension of the base script" % [parent_script_path], LOG_NAME)
+		return
+	parent_script_extensions.erase(found_script_extension)
+
+	_reset_extension(parent_script_path)
+
+	for script_extension in parent_script_extensions:
+		_apply_extension(script_extension.get_meta("extension_script_path"))
+
+
 # Used to fully reset the provided script to a state prior of any extension
-func _reset_extension(parent_script_path: String)->Script:
+func _reset_extension(parent_script_path: String):
 	# Check path to file exists
 	if not File.new().file_exists(parent_script_path):
 		ModLoaderUtils.log_error("The parent script path '%s' does not exist" % [parent_script_path], LOG_NAME)
-		return null
+		return
 
 	# Check if the script to reset has been extended
 	if not _saved_scripts.has(parent_script_path):
 		ModLoaderUtils.log_error("The parent script path '%s' has not been extended" % [parent_script_path], LOG_NAME)
-		return null
+		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
 	if not _saved_scripts[parent_script_path].size() > 0:
 		ModLoaderUtils.log_error("The parent script path '%s' does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
-		return null
+		return
 
 	var parent_script = _saved_scripts[parent_script_path][0]
 	parent_script.take_over_path(parent_script_path)
 
 	# Remove the script after it has been reset so we do not do it again
 	_saved_scripts.erase(parent_script_path)
-
-	return parent_script
 
 
 # Helpers
@@ -769,6 +810,11 @@ func install_script_extension(child_script_path:String):
 	# If not, apply the extension directly
 	else:
 		_apply_extension(child_script_path)
+
+
+func uninstall_script_extension(extension_script_path: String):
+
+	pass
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
