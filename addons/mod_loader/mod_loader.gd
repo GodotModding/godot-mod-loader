@@ -714,7 +714,6 @@ func _apply_extension(extension_path)->Script:
 		# The first entry in the script path array will be the copy of the base script
 		_saved_scripts[parent_script_path].append(parent_script.duplicate())
 	_saved_scripts[parent_script_path].append(child_script)
-	ModLoaderUtils.log_error("base script: %s" % str(_saved_scripts[parent_script_path]), LOG_NAME)
 
 	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
