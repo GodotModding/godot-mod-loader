@@ -821,7 +821,9 @@ func install_script_extension(child_script_path:String):
 
 func uninstall_script_extension(extension_script_path: String):
 
-	pass
+	# Currently this is the only thing we do, but it is better to expose
+	# this function like this for further changes
+	_remove_extension(extension_script_path)
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
