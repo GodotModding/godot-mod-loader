@@ -99,7 +99,8 @@ func _init(manifest: Dictionary) -> void:
 	if (
 		not is_mod_id_array_valid(mod_id, dependencies, "dependency") or
 		not is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility") or
-		not is_mod_id_array_valid(mod_id, optional_dependencies, "optional_dependency")
+		not is_mod_id_array_valid(mod_id, optional_dependencies, "optional_dependency") or
+		not is_mod_id_array_valid(mod_id, load_before, "load_before")
 	):
 		return
 
