@@ -721,7 +721,8 @@ func _apply_extension(extension_path)->Script:
 	return child_script
 
 
-func _reset_extension(parent_script_path)->Script:
+# Used to fully reset the provided script to a state prior of any extension
+func _reset_extension(parent_script_path: String)->Script:
 	# Check path to file exists
 	if not File.new().file_exists(parent_script_path):
 		ModLoaderUtils.log_error("The parent script path '%s' does not exist" % [parent_script_path], LOG_NAME)
@@ -732,13 +733,17 @@ func _reset_extension(parent_script_path)->Script:
 		ModLoaderUtils.log_error("The parent script path '%s' has not been extended" % [parent_script_path], LOG_NAME)
 		return null
 
-	# Check if the script to reset has been extended
+	# Check if the script to reset has anything actually saved
+	# If we ever encounter this it means something went very wrong in extending
 	if not _saved_scripts[parent_script_path].size() > 0:
 		ModLoaderUtils.log_error("The parent script path '%s' does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return null
 
 	var parent_script = _saved_scripts[parent_script_path][0]
 	parent_script.take_over_path(parent_script_path)
+
+	# Remove the script after it has been reset so we do not do it again
+	_saved_scripts.erase(parent_script_path)
 
 	return parent_script
 
