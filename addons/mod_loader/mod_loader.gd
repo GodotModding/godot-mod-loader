@@ -727,9 +727,9 @@ func _apply_extension(extension_path)->Script:
 
 
 # Used to remove a specific extension
-func _remove_extension(extension_path: String):
+func _remove_extension(extension_path: String) -> void:
 	# Check path to file exists
-	if not File.new().file_exists(extension_path):
+	if not ModLoaderUtils.file_exists(extension_path):
 		ModLoaderUtils.log_error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
 		return null
 
@@ -772,7 +772,7 @@ func _remove_extension(extension_path: String):
 
 
 # Used to fully reset the provided script to a state prior of any extension
-func _reset_extension(parent_script_path: String):
+func _reset_extension(parent_script_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(parent_script_path):
 		ModLoaderUtils.log_error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
@@ -819,7 +819,7 @@ func install_script_extension(child_script_path:String):
 		_apply_extension(child_script_path)
 
 
-func uninstall_script_extension(extension_script_path: String):
+func uninstall_script_extension(extension_script_path: String) -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
