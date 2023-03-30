@@ -715,7 +715,8 @@ func _apply_extension(extension_path)->Script:
 	# All the scripts are saved in order already
 	if not _saved_scripts.has(parent_script_path):
 		_saved_scripts[parent_script_path] = []
-		# The first entry in the script path array will be the copy of the base script
+		# The first entry in the saved script array that has the path
+		# used as a key will be the duplicate of the not modified script
 		_saved_scripts[parent_script_path].append(parent_script.duplicate())
 	_saved_scripts[parent_script_path].append(child_script)
 
@@ -729,7 +730,7 @@ func _apply_extension(extension_path)->Script:
 func _remove_extension(extension_path: String):
 	# Check path to file exists
 	if not File.new().file_exists(extension_path):
-		ModLoaderUtils.log_error("The extension script path '%s' does not exist" % [extension_path], LOG_NAME)
+		ModLoaderUtils.log_error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
 		return null
 
 	var extension_script: Script = ResourceLoader.load(extension_path)
@@ -738,28 +739,27 @@ func _remove_extension(extension_path: String):
 
 	# Check if the script to reset has been extended
 	if not _saved_scripts.has(parent_script_path):
-		ModLoaderUtils.log_error("The extension parent script path '%s' has not been extended" % [parent_script_path], LOG_NAME)
+		ModLoaderUtils.log_error("The extension parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
 	if not _saved_scripts[parent_script_path].size() > 0:
-		ModLoaderUtils.log_error("The extension script path '%s' does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
+		ModLoaderUtils.log_error("The extension script path \"%s\" does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
-	var parent_script_extensions = _saved_scripts[parent_script_path].duplicate()
+	var parent_script_extensions: Array = _saved_scripts[parent_script_path].duplicate()
 	parent_script_extensions.remove(0)
 
 	# Searching for the extension that we want to remove
-	var found_script_extension = null
+	var found_script_extension: Script = null
 	for script_extension in parent_script_extensions:
 		if script_extension.get_meta("extension_script_path") == extension_path:
-			ModLoaderUtils.log_debug("Extension Check %s Extension Passed %s" %[script_extension.get_meta("extension_script_path"), extension_path], LOG_NAME)
 			found_script_extension = script_extension
 			break
 
 	if found_script_extension == null:
-		ModLoaderUtils.log_error("The extension script path '%s' has not been found in the saved extension of the base script" % [parent_script_path], LOG_NAME)
+		ModLoaderUtils.log_error("The extension script path \"%s\" has not been found in the saved extension of the base script" % [parent_script_path], LOG_NAME)
 		return
 	parent_script_extensions.erase(found_script_extension)
 
@@ -774,22 +774,22 @@ func _remove_extension(extension_path: String):
 # Used to fully reset the provided script to a state prior of any extension
 func _reset_extension(parent_script_path: String):
 	# Check path to file exists
-	if not File.new().file_exists(parent_script_path):
-		ModLoaderUtils.log_error("The parent script path '%s' does not exist" % [parent_script_path], LOG_NAME)
+	if not ModLoaderUtils.file_exists(parent_script_path):
+		ModLoaderUtils.log_error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has been extended
 	if not _saved_scripts.has(parent_script_path):
-		ModLoaderUtils.log_error("The parent script path '%s' has not been extended" % [parent_script_path], LOG_NAME)
+		ModLoaderUtils.log_error("The parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
 	if not _saved_scripts[parent_script_path].size() > 0:
-		ModLoaderUtils.log_error("The parent script path '%s' does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
+		ModLoaderUtils.log_error("The parent script path \"%s\" does not have the base script saved, \nthis should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
-	var parent_script = _saved_scripts[parent_script_path][0]
+	var parent_script: Script = _saved_scripts[parent_script_path][0]
 	parent_script.take_over_path(parent_script_path)
 
 	# Remove the script after it has been reset so we do not do it again
