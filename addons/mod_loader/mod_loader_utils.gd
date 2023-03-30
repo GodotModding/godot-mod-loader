@@ -190,13 +190,22 @@ static func clear_old_log_backups() -> void:
 
 
 static func _get_verbosity() -> int:
-	if not ModLoaderStore:
+	var modloader_store := get_modloader_store()
+	if not modloader_store:
 		# This lets us get a verbosity level even when ModLoaderStore is not in
 		# the correct autoload position (which they'll be notified about via
 		# `_check_autoload_positions`)
 		return VERBOSITY_LEVEL.DEBUG
 	else:
-		return ModLoaderStore.ml_options.log_level
+		return modloader_store.ml_options.log_level
+
+
+# Returns a reference to the ModLoaderStore autoload if it exists, or null otherwise.
+# This function can be used to get a reference to the ModLoaderStore autoload in functions
+# that may be called before the autoload is initialized.
+# If the ModLoaderStore autoload does not exist in the global scope, this function returns null.
+static func get_modloader_store() -> Object:
+	return Engine.get_singleton("ModLoaderStore") if Engine.has_singleton("ModLoaderStore") else null
 
 
 # Check if the provided command line argument was present when launching the game
@@ -576,15 +585,19 @@ static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> 
 
 # Get the path to the mods folder, with any applicable overrides applied
 static func get_path_to_mods() -> String:
+	var modloader_store := get_modloader_store()
 	var mods_folder_path := get_local_folder_dir("mods")
-	if ModLoaderStore.ml_options.override_path_to_mods:
-		mods_folder_path = ModLoaderStore.ml_options.override_path_to_mods
+	if modloader_store:
+		if modloader_store.ml_options.override_path_to_mods:
+			mods_folder_path = modloader_store.ml_options.override_path_to_mods
 	return mods_folder_path
 
 
 # Get the path to the configs folder, with any applicable overrides applied
 static func get_path_to_configs() -> String:
+	var modloader_store := get_modloader_store()
 	var configs_path := MOD_CONFIG_DIR_PATH
-	if ModLoaderStore.ml_options.override_path_to_configs:
-		configs_path = ModLoaderStore.ml_options.override_path_to_configs
+	if modloader_store:
+		if modloader_store.ml_options.override_path_to_configs:
+			configs_path = modloader_store.ml_options.override_path_to_configs
 	return configs_path
