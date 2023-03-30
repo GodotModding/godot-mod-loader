@@ -370,7 +370,7 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 	var check_namespace = split[0]
 	var check_name = split[1]
 	var re := RegEx.new()
-	re.compile("^[a-zA-Z0-9_]*$") # alphanumeric and _
+	re.compile("^[a-zA-Z0-9_]{3,}$") # alphanumeric and _ and at least 3 characters
 
 	if re.search(check_namespace) == null:
 		if not is_silent:
