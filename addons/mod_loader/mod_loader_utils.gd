@@ -1,8 +1,10 @@
 class_name ModLoaderUtils
 extends Node
 
+
 const LOG_NAME := "ModLoader:ModLoaderUtils"
 const MOD_LOG_PATH := "user://logs/modloader.log"
+const MOD_CONFIG_DIR_PATH := "user://configs"
 
 enum VERBOSITY_LEVEL {
 	ERROR,
@@ -10,6 +12,7 @@ enum VERBOSITY_LEVEL {
 	INFO,
 	DEBUG,
 }
+
 
 # Logs the error in red and a stack trace. Prefixed FATAL-ERROR
 # Stops the execution in editor
@@ -581,7 +584,7 @@ static func get_path_to_mods() -> String:
 
 # Get the path to the configs folder, with any applicable overrides applied
 static func get_path_to_configs() -> String:
-	var configs_path := get_local_folder_dir("configs")
+	var configs_path := MOD_CONFIG_DIR_PATH
 	if ModLoaderStore.ml_options.override_path_to_configs:
 		configs_path = ModLoaderStore.ml_options.override_path_to_configs
 	return configs_path
