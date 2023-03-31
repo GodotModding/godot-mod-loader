@@ -819,7 +819,6 @@ func _clear_extensions() -> void:
 	var _to_remove_scripts = _saved_scripts.duplicate()
 	for script in _to_remove_scripts:
 		_remove_all_extensions(script)
-	print(_saved_scripts)
 
 
 # Helpers
