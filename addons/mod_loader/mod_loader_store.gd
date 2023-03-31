@@ -20,7 +20,7 @@ var has_shown_editor_zips_warning := false
 # Keeps track of logged messages, to avoid flooding the log with duplicate notices
 # Can also be used by mods, eg. to create an in-game developer console that
 # shows messages
-var logged_messages := []
+var log_manager := LogManager.new()
 
 # These variables handle various options, which can be changed either via
 # Godot's GUI (with the options.tres resource file), or via CLI args.
@@ -29,7 +29,7 @@ var logged_messages := []
 # See: res://addons/mod_loader/classes/options_profile.gd
 var ml_options := {
 	enable_mods = true,
-	log_level = ModLoaderUtils.VERBOSITY_LEVEL.DEBUG,
+	log_level = LogManager.VERBOSITY_LEVEL.DEBUG,
 
 	# Array of disabled mods (contains mod IDs as strings)
 	disabled_mods = [],

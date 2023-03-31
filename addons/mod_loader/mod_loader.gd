@@ -86,7 +86,7 @@ func _init() -> void:
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
-	ModLoaderUtils.rotate_log_file()
+	ModLoaderStore.log_manager.rotate_log_file()
 
 	# Ensure ModLoaderStore and ModLoader are the 1st and 2nd autoloads
 	_check_autoload_positions()
