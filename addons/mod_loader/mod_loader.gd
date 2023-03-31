@@ -727,11 +727,11 @@ func _apply_extension(extension_path)->Script:
 
 
 # Used to remove a specific extension
-func _remove_extension(extension_path: String) -> void:
+func _remove_specific_extension(extension_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(extension_path):
 		ModLoaderUtils.log_error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
-		return null
+		return
 
 	var extension_script: Script = ResourceLoader.load(extension_path)
 	var parent_script: Script = extension_script.get_base_script()
@@ -764,7 +764,7 @@ func _remove_extension(extension_path: String) -> void:
 	parent_script_extensions.erase(found_script_extension)
 
 	# Preparing the script to have all other extensions reapllied
-	_reset_extension(parent_script_path)
+	_remove_all_extensions(parent_script_path)
 
 	# Reapplying all the extensions without the removed one
 	for script_extension in parent_script_extensions:
@@ -772,7 +772,7 @@ func _remove_extension(extension_path: String) -> void:
 
 
 # Used to fully reset the provided script to a state prior of any extension
-func _reset_extension(parent_script_path: String) -> void:
+func _remove_all_extensions(parent_script_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(parent_script_path):
 		ModLoaderUtils.log_error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
@@ -823,7 +823,7 @@ func uninstall_script_extension(extension_script_path: String) -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
-	_remove_extension(extension_script_path)
+	_remove_specific_extension(extension_script_path)
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
