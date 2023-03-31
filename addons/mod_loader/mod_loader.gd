@@ -101,6 +101,12 @@ func _init() -> void:
 		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
 		return
 
+	_load_mods()
+
+	is_initializing = false
+
+
+func _load_mods() -> void:
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	var unzipped_mods := _load_mod_zips()
@@ -183,8 +189,6 @@ func _init() -> void:
 	_handle_script_extensions()
 
 	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
-
-	is_initializing = false
 
 
 # Check autoload positions:
