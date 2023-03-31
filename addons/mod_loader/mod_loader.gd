@@ -191,6 +191,21 @@ func _load_mods() -> void:
 	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
 
 
+# Internal call to reload mods
+func _reload_mods() -> void:
+	_reset_mods()
+	_load_mods()
+
+
+# Internal call that handles the resetting of all mod related data
+func _reset_mods() -> void:
+	mod_data.clear()
+	mod_load_order.clear()
+	mod_missing_dependencies.clear()
+	script_extensions.clear()
+	_clear_extensions()
+
+
 # Check autoload positions:
 # Ensure 1st autoload is `ModLoaderStore`, and 2nd is `ModLoader`.
 func _check_autoload_positions() -> void:
@@ -830,11 +845,25 @@ func install_script_extension(child_script_path:String):
 		_apply_extension(child_script_path)
 
 
+# Remove a specific script from the vanilla extension chain
+# This will remove only the specifically provided extension
+# and keep all other extensions of that vanilla script running
 func uninstall_script_extension(extension_script_path: String) -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
 	_remove_specific_extension(extension_script_path)
+
+
+# This function should be called only when actually necessary
+# as it can break the game and require a restart for mods
+# that do not fully use the mod loader systems
+# Used to reload already present mods and load new ones
+func reload_mods() -> void:
+
+	# Currently this is the only thing we do, but it is better to expose
+	# this function like this for further changes
+	_reload_mods()
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
