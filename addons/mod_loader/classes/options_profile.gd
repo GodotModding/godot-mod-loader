@@ -12,3 +12,4 @@ export (bool) var steam_workshop_enabled = false
 export (String, DIR) var override_path_to_mods = ""
 export (String, DIR) var override_path_to_configs = ""
 export (String, DIR) var override_path_to_workshop = ""
+export (bool) var ignore_deprecated_errors = false
