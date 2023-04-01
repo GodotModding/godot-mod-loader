@@ -816,7 +816,7 @@ func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 
 
 func _remove_all_extensions_from_all_scripts() -> void:
-	var _to_remove_scripts = _saved_scripts.duplicate()
+	var _to_remove_scripts: Dictionary = _saved_scripts.duplicate()
 	for script in _to_remove_scripts:
 		_remove_all_extensions_from_script(script)
 
