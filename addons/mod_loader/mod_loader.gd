@@ -203,7 +203,7 @@ func _reset_mods() -> void:
 	mod_load_order.clear()
 	mod_missing_dependencies.clear()
 	script_extensions.clear()
-	_clear_extensions()
+	_remove_all_extensions_from_all_scripts()
 
 
 # Check autoload positions:
@@ -746,7 +746,7 @@ func _apply_extension(extension_path)->Script:
 
 
 # Used to remove a specific extension
-func _remove_specific_extension(extension_path: String) -> void:
+func _remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(extension_path):
 		ModLoaderUtils.log_error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
@@ -783,7 +783,7 @@ func _remove_specific_extension(extension_path: String) -> void:
 	parent_script_extensions.erase(found_script_extension)
 
 	# Preparing the script to have all other extensions reapllied
-	_remove_all_extensions(parent_script_path)
+	_remove_all_extensions_from_script(parent_script_path)
 
 	# Reapplying all the extensions without the removed one
 	for script_extension in parent_script_extensions:
@@ -791,7 +791,7 @@ func _remove_specific_extension(extension_path: String) -> void:
 
 
 # Used to fully reset the provided script to a state prior of any extension
-func _remove_all_extensions(parent_script_path: String) -> void:
+func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(parent_script_path):
 		ModLoaderUtils.log_error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
@@ -815,10 +815,10 @@ func _remove_all_extensions(parent_script_path: String) -> void:
 	_saved_scripts.erase(parent_script_path)
 
 
-func _clear_extensions() -> void:
+func _remove_all_extensions_from_all_scripts() -> void:
 	var _to_remove_scripts = _saved_scripts.duplicate()
 	for script in _to_remove_scripts:
-		_remove_all_extensions(script)
+		_remove_all_extensions_from_script(script)
 
 
 # Helpers
@@ -851,12 +851,16 @@ func uninstall_script_extension(extension_script_path: String) -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
-	_remove_specific_extension(extension_script_path)
+	_remove_specific_extension_from_script(extension_script_path)
 
 
 # This function should be called only when actually necessary
 # as it can break the game and require a restart for mods
-# that do not fully use the mod loader systems
+# that do not fully use the systems put in place by the mod loader,
+# so anything that just uses add_node, move_node ecc...
+# To not have your mod break on reload please use provided functions
+# like ModLoader::save_scene, ModLoader::append_node_in_scene and
+# all the functions that will be added in the next versions
 # Used to reload already present mods and load new ones
 func reload_mods() -> void:
 
