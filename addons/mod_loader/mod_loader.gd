@@ -101,6 +101,12 @@ func _init() -> void:
 		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
 		return
 
+	_load_mods()
+
+	is_initializing = false
+
+
+func _load_mods() -> void:
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	var unzipped_mods := _load_mod_zips()
@@ -184,7 +190,20 @@ func _init() -> void:
 
 	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
 
-	is_initializing = false
+
+# Internal call to reload mods
+func _reload_mods() -> void:
+	_reset_mods()
+	_load_mods()
+
+
+# Internal call that handles the resetting of all mod related data
+func _reset_mods() -> void:
+	mod_data.clear()
+	mod_load_order.clear()
+	mod_missing_dependencies.clear()
+	script_extensions.clear()
+	_remove_all_extensions_from_all_scripts()
 
 
 # Check autoload positions:
@@ -727,11 +746,11 @@ func _apply_extension(extension_path)->Script:
 
 
 # Used to remove a specific extension
-func _remove_extension(extension_path: String) -> void:
+func _remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(extension_path):
 		ModLoaderUtils.log_error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
-		return null
+		return
 
 	var extension_script: Script = ResourceLoader.load(extension_path)
 	var parent_script: Script = extension_script.get_base_script()
@@ -764,7 +783,7 @@ func _remove_extension(extension_path: String) -> void:
 	parent_script_extensions.erase(found_script_extension)
 
 	# Preparing the script to have all other extensions reapllied
-	_reset_extension(parent_script_path)
+	_remove_all_extensions_from_script(parent_script_path)
 
 	# Reapplying all the extensions without the removed one
 	for script_extension in parent_script_extensions:
@@ -772,7 +791,7 @@ func _remove_extension(extension_path: String) -> void:
 
 
 # Used to fully reset the provided script to a state prior of any extension
-func _reset_extension(parent_script_path: String) -> void:
+func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(parent_script_path):
 		ModLoaderUtils.log_error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
@@ -794,6 +813,12 @@ func _reset_extension(parent_script_path: String) -> void:
 
 	# Remove the script after it has been reset so we do not do it again
 	_saved_scripts.erase(parent_script_path)
+
+
+func _remove_all_extensions_from_all_scripts() -> void:
+	var _to_remove_scripts: Dictionary = _saved_scripts.duplicate()
+	for script in _to_remove_scripts:
+		_remove_all_extensions_from_script(script)
 
 
 # Helpers
@@ -819,11 +844,29 @@ func install_script_extension(child_script_path:String):
 		_apply_extension(child_script_path)
 
 
+# Remove a specific script from the vanilla extension chain
+# This will remove only the specifically provided extension
+# and keep all other extensions of that vanilla script running
 func uninstall_script_extension(extension_script_path: String) -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
-	_remove_extension(extension_script_path)
+	_remove_specific_extension_from_script(extension_script_path)
+
+
+# This function should be called only when actually necessary
+# as it can break the game and require a restart for mods
+# that do not fully use the systems put in place by the mod loader,
+# so anything that just uses add_node, move_node ecc...
+# To not have your mod break on reload please use provided functions
+# like ModLoader::save_scene, ModLoader::append_node_in_scene and
+# all the functions that will be added in the next versions
+# Used to reload already present mods and load new ones
+func reload_mods() -> void:
+
+	# Currently this is the only thing we do, but it is better to expose
+	# this function like this for further changes
+	_reload_mods()
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
