@@ -47,6 +47,11 @@ var ml_options := {
 
 	# Can be used in the editor to load mods from your Steam workshop directory
 	override_path_to_workshop = "",
+
+	# If true, using deprecated funcs will trigger a warning, instead of a fatal
+	# error. This can be helpful when developing mods that depend on a mod that
+	# hasn't been updated to fix the deprecated issues yet
+	ignore_deprecated_errors = false,
 }
 
 

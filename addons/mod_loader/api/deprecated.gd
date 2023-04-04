@@ -7,28 +7,37 @@ const LOG_NAME := "ModLoader:Deprecated"
 
 
 # A method has changed its name/class
-static func deprecated_changed(old_method: String, new_method: String, since_version: String, show_removal_note: bool = true):
-	ModLoaderUtils.log_fatal(str(
+static func deprecated_changed(old_method: String, new_method: String, since_version: String, show_removal_note: bool = true) -> void:
+	_deprecated_log(str(
 		"DEPRECATED: ",
 		"The method \"%s\" has been deprecated since version %s. " % [old_method, since_version],
 		"Please use \"%s\" instead. " % new_method,
 		"The old method will be removed with the next major update, and will break your code if not changed. " if show_removal_note else ""
-	), LOG_NAME)
+	))
 
 
 # A method has been entirely removed, with no replacement
 # (should never be needed but good to have just in case)
-static func deprecated_removed(old_method: String, since_version: String, show_removal_note: bool = true):
-	ModLoaderUtils.log_fatal(str(
+static func deprecated_removed(old_method: String, since_version: String, show_removal_note: bool = true) -> void:
+	_deprecated_log(str(
 		"DEPRECATED: ",
 		"The method \"%s\" has been deprecated since version %s, and is no longer available. " % [old_method, since_version],
 		"There is currently no replacement method. ",
 		"The method will be removed with the next major update, and will break your code if not changed. " if show_removal_note else ""
-	), LOG_NAME)
+	))
 
 
 # Freeform deprecation message.
 # Allows you to add a deprecation comment without specifying the old/new method
-static func deprecated_message(msg: String, since_version: String = ""):
+static func deprecated_message(msg: String, since_version: String = "") -> void:
 	var since_text := " (since version %s)" % since_version if since_version else ""
-	ModLoaderUtils.log_fatal(str("DEPRECATED: ", msg, since_text), LOG_NAME)
+	_deprecated_log(str("DEPRECATED: ", msg, since_text))
+
+
+# Internal func for logging with support to trigger warnings instead of fatal
+# errors
+static func _deprecated_log(msg: String) -> void:
+	if ModLoaderStore.ml_options.ignore_deprecated_errors:
+		ModLoaderUtils.log_warning(msg, LOG_NAME)
+	else:
+		ModLoaderUtils.log_fatal(msg, LOG_NAME)
