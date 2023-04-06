@@ -33,10 +33,6 @@ const MODLOADER_VERSION = "5.0.1"
 # be useful for debugging
 const DEBUG_ENABLE_STORING_FILEPATHS := false
 
-# Path to the mod log file
-# Find this log here: %appdata%/GAMENAME/mods.log
-const MOD_LOG_PATH := "user://mods.log"
-
 # This is where mod ZIPs are unpacked to
 const UNPACKED_DIR := "res://mods-unpacked/"
 

@@ -1,4 +1,4 @@
-class_name LogEntry
+class_name ModLoaderLogEntry
 extends Resource
 
 var mod_name: String

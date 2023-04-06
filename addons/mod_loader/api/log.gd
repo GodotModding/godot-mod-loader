@@ -1,6 +1,8 @@
 class_name ModLoaderLog
-extends Node
+extends Object
 
+
+const MOD_LOG_PATH := "user://logs/modloader.log"
 
 enum VERBOSITY_LEVEL {
 	ERROR,
@@ -64,7 +66,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info") -
 		return
 
 	var time := "%s   " % _get_time_string()
-	var log_entry := LogEntry.new(mod_name, message, log_type, time)
+	var log_entry := ModLoaderLogEntry.new(mod_name, message, log_type, time)
 	_store_log(log_entry)
 
 	_code_note(str(
@@ -101,7 +103,11 @@ static func _log(message: String, mod_name: String, log_type: String = "info") -
 
 
 static func _is_mod_name_ignored(mod_name: String) -> bool:
-	var ignored_mod_names := ModLoaderStore.ml_options.ignored_mod_names_in_log as Array
+	var mod_loader_store := _get_modloader_store()
+	if not mod_loader_store:
+		return false
+
+	var ignored_mod_names := mod_loader_store.ml_options.ignored_mod_names_in_log as Array
 
 	if not ignored_mod_names.size() == 0:
 		if mod_name in ignored_mod_names:
@@ -111,7 +117,7 @@ static func _is_mod_name_ignored(mod_name: String) -> bool:
 
 static func _get_verbosity() -> int:
 	# This doesn't use the ModLoaderUtils get_modloader_store() method, to prevent a cyclic dependency.
-	var modloader_store := Engine.get_singleton("ModLoaderStore") if Engine.has_singleton("ModLoaderStore") else null
+	var modloader_store := _get_modloader_store()
 	if not modloader_store:
 		# This lets us get a verbosity level even when ModLoaderStore is not in
 		# the correct autoload position (which they'll be notified about via
@@ -121,19 +127,24 @@ static func _get_verbosity() -> int:
 		return modloader_store.ml_options.log_level
 
 
-static func _store_log(log_entry: LogEntry) -> void:
+static func _store_log(log_entry: ModLoaderLogEntry) -> void:
+	var mod_loader_store := _get_modloader_store()
+
+	if not mod_loader_store:
+		return
+
 	# Store in all
-	ModLoaderStore.logged_messages.all[log_entry.get_md5()] = log_entry
+	mod_loader_store.logged_messages.all[log_entry.get_md5()] = log_entry
 
 	# Store in by_mod
 	# If the mod is not yet in "by_mod" init the entry
-	if not ModLoaderStore.logged_messages.by_mod.has(log_entry.mod_name):
-		ModLoaderStore.logged_messages.by_mod[log_entry.mod_name] = {}
+	if not mod_loader_store.logged_messages.by_mod.has(log_entry.mod_name):
+		mod_loader_store.logged_messages.by_mod[log_entry.mod_name] = {}
 
-	ModLoaderStore.logged_messages.by_mod[log_entry.mod_name][log_entry.get_md5()] = log_entry
+	mod_loader_store.logged_messages.by_mod[log_entry.mod_name][log_entry.get_md5()] = log_entry
 
 	# Store in by_type
-	ModLoaderStore.logged_messages.by_type[log_entry.type.to_lower()][log_entry.get_md5()] = log_entry
+	mod_loader_store.logged_messages.by_type[log_entry.type.to_lower()][log_entry.get_md5()] = log_entry
 
 
 # Internal Date Time
@@ -163,10 +174,10 @@ static func _get_date_time_string() -> String:
 static func _write_to_log_file(string_to_write: String) -> void:
 	var log_file := File.new()
 
-	if not log_file.file_exists(ModLoaderStore.MOD_LOG_PATH):
+	if not log_file.file_exists(MOD_LOG_PATH):
 		_rotate_log_file()
 
-	var error := log_file.open(ModLoaderStore.MOD_LOG_PATH, File.READ_WRITE)
+	var error := log_file.open(MOD_LOG_PATH, File.READ_WRITE)
 	if not error == OK:
 		assert(false, "Could not open log file, error code: %s" % error)
 		return
@@ -182,20 +193,20 @@ static func _rotate_log_file() -> void:
 	var MAX_LOGS := int(ProjectSettings.get_setting("logging/file_logging/max_log_files"))
 	var log_file := File.new()
 
-	if log_file.file_exists(ModLoaderStore.MOD_LOG_PATH):
+	if log_file.file_exists(MOD_LOG_PATH):
 		if MAX_LOGS > 1:
 			var datetime := _get_date_time_string().replace(":", ".")
-			var backup_name: String = ModLoaderStore.MOD_LOG_PATH.get_basename() + "_" + datetime
-			if ModLoaderStore.MOD_LOG_PATH.get_extension().length() > 0:
-				backup_name += "." + ModLoaderStore.MOD_LOG_PATH.get_extension()
+			var backup_name: String = MOD_LOG_PATH.get_basename() + "_" + datetime
+			if MOD_LOG_PATH.get_extension().length() > 0:
+				backup_name += "." + MOD_LOG_PATH.get_extension()
 
 			var dir := Directory.new()
-			if dir.dir_exists(ModLoaderStore.MOD_LOG_PATH.get_base_dir()):
-				dir.copy(ModLoaderStore.MOD_LOG_PATH, backup_name)
+			if dir.dir_exists(MOD_LOG_PATH.get_base_dir()):
+				dir.copy(MOD_LOG_PATH, backup_name)
 			_clear_old_log_backups()
 
 	# only File.WRITE creates a new file, File.READ_WRITE throws an error
-	var error := log_file.open(ModLoaderStore.MOD_LOG_PATH, File.WRITE)
+	var error := log_file.open(MOD_LOG_PATH, File.WRITE)
 	if not error == OK:
 		assert(false, "Could not open log file, error code: %s" % error)
 	log_file.store_string('%s Created log' % _get_date_string())
@@ -205,13 +216,13 @@ static func _rotate_log_file() -> void:
 static func _clear_old_log_backups() -> void:
 	var MAX_LOGS := int(ProjectSettings.get_setting("logging/file_logging/max_log_files"))
 	var MAX_BACKUPS := MAX_LOGS - 1 # -1 for the current new log (not a backup)
-	var basename := ModLoaderStore.MOD_LOG_PATH.get_file().get_basename() as String
-	var extension := ModLoaderStore.MOD_LOG_PATH.get_extension() as String
+	var basename := MOD_LOG_PATH.get_file().get_basename() as String
+	var extension := MOD_LOG_PATH.get_extension() as String
 
 	var dir := Directory.new()
-	if not dir.dir_exists(ModLoaderStore.MOD_LOG_PATH.get_base_dir()):
+	if not dir.dir_exists(MOD_LOG_PATH.get_base_dir()):
 		return
-	if not dir.open(ModLoaderStore.MOD_LOG_PATH.get_base_dir()) == OK:
+	if not dir.open(MOD_LOG_PATH.get_base_dir()) == OK:
 		return
 
 	dir.list_dir_begin()
@@ -221,7 +232,7 @@ static func _clear_old_log_backups() -> void:
 		if (not dir.current_is_dir() and
 				file.begins_with(basename) and
 				file.get_extension() == extension and
-				not file == ModLoaderStore.MOD_LOG_PATH.get_file()):
+				not file == MOD_LOG_PATH.get_file()):
 			backups.append(file)
 		file = dir.get_next()
 	dir.list_dir_end()
@@ -233,13 +244,22 @@ static func _clear_old_log_backups() -> void:
 			dir.remove(file_to_delete)
 
 
-# Internal dummy func
+# Internal util funcs
 # =============================================================================
+# This are duplicates of the functions in mod_loader_utils.gd to prevent
+# a cyclic reference error between ModLoaderLog and ModLoaderUtils.
+
 
 # This is a dummy func. It is exclusively used to show notes in the code that
 # stay visible after decompiling a PCK, as is primarily intended to assist new
 # modders in understanding and troubleshooting issues.
-# This is a duplicate of the function in mod_loader_utils.gd to prevent
-# a cyclic reference error between ModLoaderLog and ModLoaderUtils.
 static func _code_note(_msg:String):
 	pass
+
+
+# Returns a reference to the ModLoaderStore autoload if it exists, or null otherwise.
+# This function can be used to get a reference to the ModLoaderStore autoload in functions
+# that may be called before the autoload is initialized.
+# If the ModLoaderStore autoload does not exist in the global scope, this function returns null.
+static func _get_modloader_store() -> Object:
+	return Engine.get_singleton("ModLoaderStore") if Engine.has_singleton("ModLoaderStore") else null
