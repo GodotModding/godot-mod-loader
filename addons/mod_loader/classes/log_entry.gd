@@ -1,5 +1,5 @@
 class_name LogEntry
-
+extends Resource
 
 var mod_name: String
 var message: String

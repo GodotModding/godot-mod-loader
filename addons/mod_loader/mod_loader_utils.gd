@@ -10,44 +10,50 @@ const MOD_CONFIG_DIR_PATH := "user://configs"
 # Stops the execution in editor
 # Always logged
 static func log_fatal(message: String, mod_name: String) -> void:
-	ModLoaderStore.log_manager.log(message, mod_name, "fatal-error")
+	ModLoaderDeprecated.deprecated_changed("ModLoader.fatal", "ModLoaderLog.fatal", "6.0.0")
+	ModLoaderLog.fatal(message, mod_name)
 
 
 # Logs the message and pushed an error. Prefixed ERROR
 # Always logged
 static func log_error(message: String, mod_name: String) -> void:
-	ModLoaderStore.log_manager.log(message, mod_name, "error")
+	ModLoaderDeprecated.deprecated_changed("ModLoader.error", "ModLoaderLog.error", "6.0.0")
+	ModLoaderLog.error(message, mod_name)
 
 
 # Logs the message and pushes a warning. Prefixed WARNING
 # Logged with verbosity level at or above warning (-v)
 static func log_warning(message: String, mod_name: String) -> void:
-	ModLoaderStore.log_manager.log(message, mod_name, "warning")
+	ModLoaderDeprecated.deprecated_changed("ModLoader.warning", "ModLoaderLog.warning", "6.0.0")
+	ModLoaderLog.warning(message, mod_name)
 
 
 # Logs the message. Prefixed INFO
 # Logged with verbosity level at or above info (-vv)
 static func log_info(message: String, mod_name: String) -> void:
-	ModLoaderStore.log_manager.log(message, mod_name, "info")
+	ModLoaderDeprecated.deprecated_changed("ModLoader.info", "ModLoaderLog.info", "6.0.0")
+	ModLoaderLog.info(message, mod_name)
 
 
 # Logs the message. Prefixed SUCCESS
 # Logged with verbosity level at or above info (-vv)
 static func log_success(message: String, mod_name: String) -> void:
-	ModLoaderStore.log_manager.log(message, mod_name, "success")
+	ModLoaderDeprecated.deprecated_changed("ModLoader.success", "ModLoaderLog.success", "6.0.0")
+	ModLoaderLog.success(message, mod_name)
 
 
 # Logs the message. Prefixed DEBUG
 # Logged with verbosity level at or above debug (-vvv)
 static func log_debug(message: String, mod_name: String) -> void:
-	ModLoaderStore.log_manager.log(message, mod_name, "debug")
+	ModLoaderDeprecated.deprecated_changed("ModLoader.debug", "ModLoaderLog.debug", "6.0.0")
+	ModLoaderLog.debug(message, mod_name)
 
 
 # Logs the message formatted with [method JSON.print]. Prefixed DEBUG
 # Logged with verbosity level at or above debug (-vvv)
-static func log_debug_json_print(message: String, json_printable, mod_name: String) -> void:
-	message = "%s\n%s" % [message, JSON.print(json_printable, "  ")]
-	ModLoaderStore.log_manager.log(message, mod_name, "debug")
+static func debug_json_print(message: String, json_printable, mod_name: String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.debug_json_print", "ModLoaderLog.debug_json_print", "6.0.0")
+	ModLoaderLog.debug_json_print(message, json_printable, mod_name)
 
 
 # This is a dummy func. It is exclusively used to show notes in the code that
@@ -197,7 +203,7 @@ static func get_json_as_dict(path: String) -> Dictionary:
 
 	var error = file.open(path, File.READ)
 	if not error == OK:
-		log_error("Error opening file. Code: %s" % error, LOG_NAME)
+		ModLoaderLog.error("Error opening file. Code: %s" % error, LOG_NAME)
 
 	var content := file.get_as_text()
 	return get_json_string_as_dict(content)
@@ -210,10 +216,10 @@ static func get_json_string_as_dict(string: String) -> Dictionary:
 		return {}
 	var parsed := JSON.parse(string)
 	if parsed.error:
-		log_error("Error parsing JSON", LOG_NAME)
+		ModLoaderLog.error("Error parsing JSON", LOG_NAME)
 		return {}
 	if not parsed.result is Dictionary:
-		log_error("JSON is not a dictionary", LOG_NAME)
+		ModLoaderLog.error("JSON is not a dictionary", LOG_NAME)
 		return {}
 	return parsed.result
 
@@ -260,7 +266,7 @@ static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
 			missing_fields.erase(key)
 
 	if missing_fields.size() > 0:
-		log_fatal("Mod manifest is missing required fields: %s" % missing_fields, LOG_NAME)
+		ModLoaderLog.fatal("Mod manifest is missing required fields: %s" % missing_fields, LOG_NAME)
 		return false
 
 	return true
@@ -277,9 +283,9 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 		for old_class in registered_classes:
 			if old_class.class == new_class.class:
 				if OS.has_feature("editor"):
-					log_info('Class "%s" to be registered as global was already registered by the editor. Skipping.' % new_class.class, LOG_NAME)
+					ModLoaderLog.info('Class "%s" to be registered as global was already registered by the editor. Skipping.' % new_class.class, LOG_NAME)
 				else:
-					log_info('Class "%s" to be registered as global already exists. Skipping.' % new_class.class, LOG_NAME)
+					ModLoaderLog.info('Class "%s" to be registered as global already exists. Skipping.' % new_class.class, LOG_NAME)
 				continue
 
 		registered_classes.append(new_class)
@@ -294,12 +300,12 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 static func is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 	var required_fields := ["base", "class", "language", "path"]
 	if not global_class_dict.has_all(required_fields):
-		log_fatal("Global class to be registered is missing one of %s" % required_fields, LOG_NAME)
+		ModLoaderLog.fatal("Global class to be registered is missing one of %s" % required_fields, LOG_NAME)
 		return false
 
 	var file = File.new()
 	if not file.file_exists(global_class_dict.path):
-		log_fatal('Class "%s" to be registered as global could not be found at given path "%s"' %
+		ModLoaderLog.fatal('Class "%s" to be registered as global could not be found at given path "%s"' %
 		[global_class_dict.class, global_class_dict.path], LOG_NAME)
 		return false
 
@@ -396,7 +402,7 @@ static func save_string_to_file(save_string: String, filepath: String) -> bool:
 	if not dir.dir_exists(file_directory):
 		var makedir_error = dir.make_dir_recursive(file_directory)
 		if not makedir_error == OK:
-			log_fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
+			ModLoaderLog.fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
 			return false
 
 	var file = File.new()
@@ -405,7 +411,7 @@ static func save_string_to_file(save_string: String, filepath: String) -> bool:
 	var fileopen_error = file.open(filepath, File.WRITE)
 
 	if not fileopen_error == OK:
-		log_fatal("Encountered an error (%s) when attempting to write to a file, with the path: %s" % [fileopen_error, filepath], LOG_NAME)
+		ModLoaderLog.fatal("Encountered an error (%s) when attempting to write to a file, with the path: %s" % [fileopen_error, filepath], LOG_NAME)
 		return false
 
 	file.store_string(save_string)

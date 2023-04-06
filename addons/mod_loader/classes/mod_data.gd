@@ -51,16 +51,16 @@ func load_manifest() -> void:
 	if not has_required_files():
 		return
 
-	ModLoaderUtils.log_info("Loading mod_manifest (manifest.json) for -> %s" % dir_name, LOG_NAME)
+	ModLoaderLog.info("Loading mod_manifest (manifest.json) for -> %s" % dir_name, LOG_NAME)
 
 	# Load meta data file
 	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
 	var manifest_dict := ModLoaderUtils.get_json_as_dict(manifest_path)
 
 	if USE_EXTENDED_DEBUGLOG:
-		ModLoaderUtils.log_debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
+		ModLoaderLog.debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
 	else:
-		ModLoaderUtils.log_debug(str("%s loaded manifest data -> " % dir_name, manifest_dict), LOG_NAME)
+		ModLoaderLog.debug(str("%s loaded manifest data -> " % dir_name, manifest_dict), LOG_NAME)
 
 	var mod_manifest := ModManifest.new(manifest_dict)
 
@@ -75,7 +75,7 @@ func load_manifest() -> void:
 func is_mod_dir_name_same_as_id(mod_manifest: ModManifest) -> bool:
 	var manifest_id := mod_manifest.get_mod_id()
 	if not dir_name == manifest_id:
-		ModLoaderUtils.log_fatal('Mod directory name "%s" does not match the data in manifest.json. Expected "%s" (Format: {namespace}-{name})' % [ dir_name, manifest_id ], LOG_NAME)
+		ModLoaderLog.fatal('Mod directory name "%s" does not match the data in manifest.json. Expected "%s" (Format: {namespace}-{name})' % [ dir_name, manifest_id ], LOG_NAME)
 		return false
 	return true
 
@@ -88,7 +88,7 @@ func has_required_files() -> bool:
 		var file_path := get_required_mod_file_path(required_mod_files[required_file])
 
 		if !file_check.file_exists(file_path):
-			ModLoaderUtils.log_fatal("ERROR - %s is missing a required file: %s" % [dir_name, file_path], LOG_NAME)
+			ModLoaderLog.fatal("ERROR - %s is missing a required file: %s" % [dir_name, file_path], LOG_NAME)
 			is_loadable = false
 	return is_loadable
 
@@ -96,7 +96,7 @@ func has_required_files() -> bool:
 # Validates if manifest is set
 func has_manifest(mod_manifest: ModManifest) -> bool:
 	if mod_manifest == null:
-		ModLoaderUtils.log_fatal("Mod manifest could not be created correctly due to errors.", LOG_NAME)
+		ModLoaderLog.fatal("Mod manifest could not be created correctly due to errors.", LOG_NAME)
 		return false
 	return true
 
