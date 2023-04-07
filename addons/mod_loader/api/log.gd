@@ -2,8 +2,6 @@ class_name ModLoaderLog
 extends Node
 
 
-signal logged(entry)
-
 const MOD_LOG_PATH := "user://logs/modloader.log"
 
 enum VERBOSITY_LEVEL {
@@ -102,7 +100,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info") -
 
 	# Check if the scene_tree is available
 	if Engine.get_main_loop():
-		ModLoader._emit_signal("logged", log_entry)
+		ModLoader.emit_signal("logged", log_entry)
 
 	_code_note(str(
 		"If you are seeing this after trying to run the game, there is an error in your mod somewhere.",

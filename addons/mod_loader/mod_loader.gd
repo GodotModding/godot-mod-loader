@@ -819,10 +819,6 @@ func _remove_all_extensions_from_all_scripts() -> void:
 		_remove_all_extensions_from_script(script)
 
 
-func _emit_signal(signal_name: String, data) -> void:
-	emit_signal(signal_name, data)
-
-
 # Helpers
 # =============================================================================
 
