@@ -42,6 +42,13 @@ class ModLoaderLogEntry:
 		return str(get_prefix(), message).md5_text()
 
 
+	func get_all_entries() -> Array:
+		var entries := [self]
+		entries.append_array(stack)
+
+		return entries
+
+
 # API log functions
 # =============================================================================
 
