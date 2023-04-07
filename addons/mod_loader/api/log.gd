@@ -153,8 +153,9 @@ static func _store_log(log_entry: ModLoaderLogEntry) -> void:
 	if not ModLoaderStore.logged_messages.all.has(log_entry.get_md5()):
 		ModLoaderStore.logged_messages.all[log_entry.get_md5()] = log_entry
 	else:
-		ModLoaderStore.logged_messages.all[log_entry.get_md5()].time = log_entry.time
-		ModLoaderStore.logged_messages.all[log_entry.get_md5()].time_stamps.push_back(log_entry.time)
+		var existing_entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[log_entry.get_md5()]
+		existing_entry.time = log_entry.time
+		existing_entry.time_stamps.push_back(log_entry.time)
 
 	# Store in by_mod
 	# If the mod is not yet in "by_mod" init the entry
