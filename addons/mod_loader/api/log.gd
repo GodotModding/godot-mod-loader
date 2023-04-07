@@ -18,7 +18,8 @@ class ModLoaderLogEntry:
 	var message: String
 	var type: String
 	var time: String
-	var time_stamps := []
+	var time_stamp: int
+	var stack := []
 
 
 	func _init(_mod_name: String, _message: String, _type: String, _time: String) -> void:
@@ -26,6 +27,7 @@ class ModLoaderLogEntry:
 		message = _message
 		type = _type
 		time = _time
+		time_stamp = Time.get_ticks_msec()
 
 
 	func get_entry() -> String:
@@ -150,12 +152,14 @@ static func _get_verbosity() -> int:
 
 static func _store_log(log_entry: ModLoaderLogEntry) -> void:
 	# Store in all
+	# If it's a new entry
 	if not ModLoaderStore.logged_messages.all.has(log_entry.get_md5()):
 		ModLoaderStore.logged_messages.all[log_entry.get_md5()] = log_entry
+	# If it's a existing entry
 	else:
 		var existing_entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[log_entry.get_md5()]
 		existing_entry.time = log_entry.time
-		existing_entry.time_stamps.push_back(log_entry.time)
+		existing_entry.stack.push_back(log_entry)
 
 	# Store in by_mod
 	# If the mod is not yet in "by_mod" init the entry
@@ -166,6 +170,15 @@ static func _store_log(log_entry: ModLoaderLogEntry) -> void:
 
 	# Store in by_type
 	ModLoaderStore.logged_messages.by_type[log_entry.type.to_lower()][log_entry.get_md5()] = log_entry
+
+
+class ModLoaderLogCompare:
+	# Custom sorter that orders logs by time
+	static func time(a: ModLoaderLogEntry, b: ModLoaderLogEntry) -> bool:
+		if a.time_stamp > b.time_stamp:
+			return true # a -> b
+		else:
+			return false # b -> a
 
 
 # Internal Date Time
