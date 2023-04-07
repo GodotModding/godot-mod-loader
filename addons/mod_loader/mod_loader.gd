@@ -20,6 +20,8 @@
 extends Node
 
 
+signal logged(entry)
+
 # Config
 # =============================================================================
 
@@ -815,6 +817,10 @@ func _remove_all_extensions_from_all_scripts() -> void:
 	var _to_remove_scripts: Dictionary = _saved_scripts.duplicate()
 	for script in _to_remove_scripts:
 		_remove_all_extensions_from_script(script)
+
+
+func _emit_signal(signal_name: String, data) -> void:
+	emit_signal(signal_name, data)
 
 
 # Helpers

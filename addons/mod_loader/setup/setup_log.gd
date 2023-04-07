@@ -1,8 +1,7 @@
-class_name ModLoaderLog
-extends Node
+class_name ModLoaderSetupLog
 
 
-signal logged(entry)
+# Slimed down version of ModLoaderLog for the ModLoader Self Setup
 
 const MOD_LOG_PATH := "user://logs/modloader.log"
 
@@ -12,6 +11,7 @@ enum VERBOSITY_LEVEL {
 	INFO,
 	DEBUG,
 }
+
 
 class ModLoaderLogEntry:
 	extends Resource
@@ -93,24 +93,8 @@ static func debug_json_print(message: String, json_printable, mod_name: String) 
 # =============================================================================
 
 static func _log(message: String, mod_name: String, log_type: String = "info") -> void:
-	if _is_mod_name_ignored(mod_name):
-		return
-
 	var time := "%s   " % _get_time_string()
 	var log_entry := ModLoaderLogEntry.new(mod_name, message, log_type, time)
-	_store_log(log_entry)
-
-	# Check if the scene_tree is available
-	if Engine.get_main_loop():
-		ModLoader._emit_signal("logged", log_entry)
-
-	_code_note(str(
-		"If you are seeing this after trying to run the game, there is an error in your mod somewhere.",
-		"Check the Debugger tab (below) to see the error.",
-		"Click through the files listed in Stack Frames to trace where the error originated.",
-		"View Godot's documentation for more info:",
-		"https://docs.godotengine.org/en/stable/tutorials/scripting/debug/debugger_panel.html#doc-debugger-panel"
-	))
 
 	match log_type.to_lower():
 		"fatal-error":
@@ -123,50 +107,15 @@ static func _log(message: String, mod_name: String, log_type: String = "info") -
 			push_error(message)
 			_write_to_log_file(log_entry.get_entry())
 		"warning":
-			if _get_verbosity() >= VERBOSITY_LEVEL.WARNING:
 				print(log_entry.get_prefix() + message)
 				push_warning(message)
 				_write_to_log_file(log_entry.get_entry())
 		"info", "success":
-			if _get_verbosity() >= VERBOSITY_LEVEL.INFO:
 				print(log_entry.get_prefix() + message)
 				_write_to_log_file(log_entry.get_entry())
 		"debug":
-			if _get_verbosity() >= VERBOSITY_LEVEL.DEBUG:
 				print(log_entry.get_prefix() + message)
 				_write_to_log_file(log_entry.get_entry())
-
-
-static func _is_mod_name_ignored(mod_name: String) -> bool:
-	var ignored_mod_names := ModLoaderStore.ml_options.ignored_mod_names_in_log as Array
-
-	if not ignored_mod_names.size() == 0:
-		if mod_name in ignored_mod_names:
-			return true
-	return false
-
-
-static func _get_verbosity() -> int:
-		return ModLoaderStore.ml_options.log_level
-
-
-static func _store_log(log_entry: ModLoaderLogEntry) -> void:
-	# Store in all
-	if not ModLoaderStore.logged_messages.all.has(log_entry.get_md5()):
-		ModLoaderStore.logged_messages.all[log_entry.get_md5()] = log_entry
-	else:
-		ModLoaderStore.logged_messages.all[log_entry.get_md5()].time = log_entry.time
-		ModLoaderStore.logged_messages.all[log_entry.get_md5()].time_stamps.push_back(log_entry.time)
-
-	# Store in by_mod
-	# If the mod is not yet in "by_mod" init the entry
-	if not ModLoaderStore.logged_messages.by_mod.has(log_entry.mod_name):
-		ModLoaderStore.logged_messages.by_mod[log_entry.mod_name] = {}
-
-	ModLoaderStore.logged_messages.by_mod[log_entry.mod_name][log_entry.get_md5()] = log_entry
-
-	# Store in by_type
-	ModLoaderStore.logged_messages.by_type[log_entry.type.to_lower()][log_entry.get_md5()] = log_entry
 
 
 # Internal Date Time
@@ -187,7 +136,6 @@ static func _get_date_string() -> String:
 # Returns the current date and time as a string in the format yyyy-mm-dd_hh:mm:ss
 static func _get_date_time_string() -> String:
 	return "%s_%s" % [ _get_date_string(), _get_time_string() ]
-
 
 
 # Internal File
@@ -264,16 +212,3 @@ static func _clear_old_log_backups() -> void:
 		backups.resize(backups.size() - MAX_BACKUPS)
 		for file_to_delete in backups:
 			dir.remove(file_to_delete)
-
-
-# Internal util funcs
-# =============================================================================
-# This are duplicates of the functions in mod_loader_utils.gd to prevent
-# a cyclic reference error between ModLoaderLog and ModLoaderUtils.
-
-
-# This is a dummy func. It is exclusively used to show notes in the code that
-# stay visible after decompiling a PCK, as is primarily intended to assist new
-# modders in understanding and troubleshooting issues.
-static func _code_note(_msg:String):
-	pass
