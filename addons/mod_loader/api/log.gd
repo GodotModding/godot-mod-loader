@@ -96,6 +96,21 @@ static func debug_json_print(message: String, json_printable, mod_name: String) 
 	_log(message, mod_name, "debug")
 
 
+static func get_all_as_resource_array() -> Array:
+	var log_entries := []
+
+	# Get all log entries
+	for entry_key in ModLoaderStore.logged_messages.all.keys():
+		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[entry_key]
+
+		log_entries.append_array(entry.get_all_entries())
+
+	# Sort them by time
+	log_entries.sort_custom(ModLoaderLogCompare, "time")
+
+	return log_entries
+
+
 # Internal log functions
 # =============================================================================
 
