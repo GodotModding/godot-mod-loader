@@ -20,7 +20,6 @@ class ModLoaderLogEntry:
 	var message: String
 	var type: String
 	var time: String
-	var time_stamps := []
 
 
 	func _init(_mod_name: String, _message: String, _type: String, _time: String) -> void:
