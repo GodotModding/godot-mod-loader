@@ -99,7 +99,7 @@ static func debug_json_print(message: String, json_printable, mod_name: String) 
 # API log functions - stored logs
 # =============================================================================
 
-static func get_all_as_resource_array() -> Array:
+static func get_all_as_resource() -> Array:
 	var log_entries := []
 
 	# Get all log entries
@@ -114,7 +114,7 @@ static func get_all_as_resource_array() -> Array:
 	return log_entries
 
 
-static func get_all_as_string_array() -> Array:
+static func get_all_as_string() -> Array:
 	var log_entries := []
 	var log_entry_strings := []
 
@@ -135,7 +135,7 @@ static func get_all_as_string_array() -> Array:
 
 
 # Returns an array of log entries as resource for a specific mod_name
-static func get_by_mod_as_resource_array(mod_name: String) -> Array:
+static func get_by_mod_as_resource(mod_name: String) -> Array:
 	var log_entries := []
 
 	for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
@@ -147,7 +147,7 @@ static func get_by_mod_as_resource_array(mod_name: String) -> Array:
 
 
 # Returns an array of log entries as string for a specific mod_name
-static func get_by_mod_as_string_array(mod_name: String) -> Array:
+static func get_by_mod_as_string(mod_name: String) -> Array:
 	var log_entries := []
 	var log_entry_strings := []
 
@@ -164,7 +164,7 @@ static func get_by_mod_as_string_array(mod_name: String) -> Array:
 
 
 # Returns an array of log entries as resource for a specific mod_name
-static func get_by_type_as_resource_array(type: String) -> Array:
+static func get_by_type_as_resource(type: String) -> Array:
 	var log_entries := []
 
 	for entry_key in ModLoaderStore.logged_messages.by_type[type].keys():
@@ -176,7 +176,7 @@ static func get_by_type_as_resource_array(type: String) -> Array:
 
 
 # Returns an array of log entries as string for a specific mod_name
-static func get_by_type_as_string_array(type: String) -> Array:
+static func get_by_type_as_string(type: String) -> Array:
 	var log_entries := []
 	var log_entry_strings := []
 
