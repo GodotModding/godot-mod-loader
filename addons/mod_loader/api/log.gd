@@ -124,8 +124,8 @@ static func get_all_as_string() -> Array:
 
 	# Sort them by time
 	log_entries.sort_custom(ModLoaderLogCompare, "time")
-	log_entry_strings = ModLoaderLogStoreUtils.get_all_entries_as_string(log_entries)
-	return log_entry_strings
+
+	return ModLoaderLogStoreUtils.get_all_entries_as_string(log_entries)
 
 
 # Returns an array of log entries as resource for a specific mod_name
@@ -174,6 +174,8 @@ static func get_by_type_as_string(type: String) -> Array:
 
 
 class ModLoaderLogStoreUtils:
+	static func
+
 	static func get_all_entries_as_string(log_entries: Array) -> Array:
 		var log_entry_strings := []
 
