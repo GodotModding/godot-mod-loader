@@ -131,6 +131,18 @@ static func get_all_as_string_array() -> Array:
 	return log_entry_strings
 
 
+# Returns an array of log entries as resource for a specific mod_name
+static func get_by_mod_as_resource_array(mod_name: String) -> Array:
+	var log_entries := []
+
+	for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
+		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_mod[mod_name][entry_key]
+
+		log_entries.append_array(entry.get_all_entries())
+
+	return log_entries
+
+
 # Internal log functions
 # =============================================================================
 
