@@ -105,7 +105,6 @@ static func get_all_as_resource() -> Array:
 	# Get all log entries
 	for entry_key in ModLoaderStore.logged_messages.all.keys():
 		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[entry_key]
-
 		log_entries.append_array(entry.get_all_entries())
 
 	# Sort them by time
@@ -121,16 +120,11 @@ static func get_all_as_string() -> Array:
 	# Get all log entries
 	for entry_key in ModLoaderStore.logged_messages.all.keys():
 		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[entry_key]
-
 		log_entries.append_array(entry.get_all_entries())
 
 	# Sort them by time
 	log_entries.sort_custom(ModLoaderLogCompare, "time")
-
-	# Get all the strings
-	for entry in log_entries:
-		log_entry_strings.push_back(entry.get_entry())
-
+	log_entry_strings = ModLoaderLogStoreUtils.get_all_entries_as_string(log_entries)
 	return log_entry_strings
 
 
@@ -140,7 +134,6 @@ static func get_by_mod_as_resource(mod_name: String) -> Array:
 
 	for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
 		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_mod[mod_name][entry_key]
-
 		log_entries.append_array(entry.get_all_entries())
 
 	return log_entries
@@ -149,18 +142,12 @@ static func get_by_mod_as_resource(mod_name: String) -> Array:
 # Returns an array of log entries as string for a specific mod_name
 static func get_by_mod_as_string(mod_name: String) -> Array:
 	var log_entries := []
-	var log_entry_strings := []
 
 	for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
 		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_mod[mod_name][entry_key]
-
 		log_entries.append_array(entry.get_all_entries())
 
-	# Get all the strings
-	for entry in log_entries:
-		log_entry_strings.push_back(entry.get_entry())
-
-	return log_entry_strings
+	return ModLoaderLogStoreUtils.get_all_entries_as_string(log_entries)
 
 
 # Returns an array of log entries as resource for a specific mod_name
@@ -169,7 +156,6 @@ static func get_by_type_as_resource(type: String) -> Array:
 
 	for entry_key in ModLoaderStore.logged_messages.by_type[type].keys():
 		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_type[type][entry_key]
-
 		log_entries.append_array(entry.get_all_entries())
 
 	return log_entries
@@ -178,18 +164,24 @@ static func get_by_type_as_resource(type: String) -> Array:
 # Returns an array of log entries as string for a specific mod_name
 static func get_by_type_as_string(type: String) -> Array:
 	var log_entries := []
-	var log_entry_strings := []
 
 	for entry_key in ModLoaderStore.logged_messages.by_type[type].keys():
 		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_type[type][entry_key]
 
 		log_entries.append_array(entry.get_all_entries())
 
-	# Get all the strings
-	for entry in log_entries:
-		log_entry_strings.push_back(entry.get_entry())
+	return ModLoaderLogStoreUtils.get_all_entries_as_string(log_entries)
 
-	return log_entry_strings
+
+class ModLoaderLogStoreUtils:
+	static func get_all_entries_as_string(log_entries: Array) -> Array:
+		var log_entry_strings := []
+
+		# Get all the strings
+		for entry in log_entries:
+			log_entry_strings.push_back(entry.get_entry())
+
+		return log_entry_strings
 
 
 # Internal log functions
