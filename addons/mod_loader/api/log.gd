@@ -111,6 +111,24 @@ static func get_all_as_resource_array() -> Array:
 	return log_entries
 
 
+static func get_all_as_string_array() -> Array:
+	var log_entries := []
+	var log_entry_strings := []
+
+	# Get all log entries
+	for entry in ModLoaderStore.logged_messages.all:
+		log_entries.append_array(entry.get_all_entries())
+
+	# Sort them by time
+	log_entries.sort_custom(ModLoaderLogCompare, "time")
+
+	# Get all the strings
+	for entry in log_entries:
+		log_entry_strings.push_back(entry.get_entry())
+
+	return log_entry_strings
+
+
 # Internal log functions
 # =============================================================================
 
