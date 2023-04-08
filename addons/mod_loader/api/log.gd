@@ -49,7 +49,7 @@ class ModLoaderLogEntry:
 		return entries
 
 
-# API log functions
+# API log functions - logging
 # =============================================================================
 
 # Logs the error in red and a stack trace. Prefixed FATAL-ERROR
@@ -96,6 +96,9 @@ static func debug_json_print(message: String, json_printable, mod_name: String) 
 	_log(message, mod_name, "debug")
 
 
+# API log functions - stored logs
+# =============================================================================
+
 static func get_all_as_resource_array() -> Array:
 	var log_entries := []
 
@@ -141,6 +144,23 @@ static func get_by_mod_as_resource_array(mod_name: String) -> Array:
 		log_entries.append_array(entry.get_all_entries())
 
 	return log_entries
+
+
+# Returns an array of log entries as string for a specific mod_name
+static func get_by_mod_as_string_array(mod_name: String) -> Array:
+	var log_entries := []
+	var log_entry_strings := []
+
+	for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
+		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_mod[mod_name][entry_key]
+
+		log_entries.append_array(entry.get_all_entries())
+
+	# Get all the strings
+	for entry in log_entries:
+		log_entry_strings.push_back(entry.get_entry())
+
+	return log_entry_strings
 
 
 # Internal log functions
