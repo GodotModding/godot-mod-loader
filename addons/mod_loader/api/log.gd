@@ -116,7 +116,9 @@ static func get_all_as_string_array() -> Array:
 	var log_entry_strings := []
 
 	# Get all log entries
-	for entry in ModLoaderStore.logged_messages.all:
+	for entry_key in ModLoaderStore.logged_messages.all.keys():
+		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[entry_key]
+
 		log_entries.append_array(entry.get_all_entries())
 
 	# Sort them by time
