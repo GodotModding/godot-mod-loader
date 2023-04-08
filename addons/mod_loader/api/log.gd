@@ -99,82 +99,73 @@ static func debug_json_print(message: String, json_printable, mod_name: String) 
 # API log functions - stored logs
 # =============================================================================
 
+# Returns an array of log entries as resource
 static func get_all_as_resource() -> Array:
-	var log_entries := []
-
-	# Get all log entries
-	for entry_key in ModLoaderStore.logged_messages.all.keys():
-		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[entry_key]
-		log_entries.append_array(entry.get_all_entries())
-
-	# Sort them by time
-	log_entries.sort_custom(ModLoaderLogCompare, "time")
-
-	return log_entries
+	return ModLoaderLogStoreUtils.get_all()
 
 
+# Returns an array of log entries as string
 static func get_all_as_string() -> Array:
-	var log_entries := []
-	var log_entry_strings := []
-
-	# Get all log entries
-	for entry_key in ModLoaderStore.logged_messages.all.keys():
-		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[entry_key]
-		log_entries.append_array(entry.get_all_entries())
-
-	# Sort them by time
-	log_entries.sort_custom(ModLoaderLogCompare, "time")
-
+	var log_entries := ModLoaderLogStoreUtils.get_all()
 	return ModLoaderLogStoreUtils.get_all_entries_as_string(log_entries)
 
 
 # Returns an array of log entries as resource for a specific mod_name
 static func get_by_mod_as_resource(mod_name: String) -> Array:
-	var log_entries := []
-
-	for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
-		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_mod[mod_name][entry_key]
-		log_entries.append_array(entry.get_all_entries())
-
-	return log_entries
+	return ModLoaderLogStoreUtils.get_by_mod(mod_name)
 
 
 # Returns an array of log entries as string for a specific mod_name
 static func get_by_mod_as_string(mod_name: String) -> Array:
-	var log_entries := []
-
-	for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
-		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_mod[mod_name][entry_key]
-		log_entries.append_array(entry.get_all_entries())
-
+	var log_entries := ModLoaderLogStoreUtils.get_by_mod(mod_name)
 	return ModLoaderLogStoreUtils.get_all_entries_as_string(log_entries)
 
 
 # Returns an array of log entries as resource for a specific mod_name
 static func get_by_type_as_resource(type: String) -> Array:
-	var log_entries := []
-
-	for entry_key in ModLoaderStore.logged_messages.by_type[type].keys():
-		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_type[type][entry_key]
-		log_entries.append_array(entry.get_all_entries())
-
-	return log_entries
+	return ModLoaderLogStoreUtils.get_by_type(type)
 
 
 # Returns an array of log entries as string for a specific mod_name
 static func get_by_type_as_string(type: String) -> Array:
-	var log_entries := []
-
-	for entry_key in ModLoaderStore.logged_messages.by_type[type].keys():
-		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_type[type][entry_key]
-
-		log_entries.append_array(entry.get_all_entries())
-
+	var log_entries := ModLoaderLogStoreUtils.get_by_type(type)
 	return ModLoaderLogStoreUtils.get_all_entries_as_string(log_entries)
 
 
 class ModLoaderLogStoreUtils:
-	static func
+	static func get_all() -> Array:
+		var log_entries := []
+
+		# Get all log entries
+		for entry_key in ModLoaderStore.logged_messages.all.keys():
+			var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[entry_key]
+			log_entries.append_array(entry.get_all_entries())
+
+		# Sort them by time
+		log_entries.sort_custom(ModLoaderLogCompare, "time")
+
+		return log_entries
+
+
+	static func get_by_mod(mod_name: String) -> Array:
+		var log_entries := []
+
+		for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
+			var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_mod[mod_name][entry_key]
+			log_entries.append_array(entry.get_all_entries())
+
+		return log_entries
+
+
+	static func get_by_type(type: String) -> Array:
+		var log_entries := []
+
+		for entry_key in ModLoaderStore.logged_messages.by_type[type].keys():
+			var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_type[type][entry_key]
+			log_entries.append_array(entry.get_all_entries())
+
+		return log_entries
+
 
 	static func get_all_entries_as_string(log_entries: Array) -> Array:
 		var log_entry_strings := []
