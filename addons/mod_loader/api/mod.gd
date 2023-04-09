@@ -12,7 +12,7 @@ const LOG_NAME := "ModLoader:Mod"
 # {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 # Note that your extender script doesn't have to follow the same directory path
 # as the vanilla file, but it's good practice to do so.
-static func install_script_extension(child_script_path:String):
+static func install_script_extension(child_script_path:String) -> void:
 
 	# If this is called during initialization, add it with the other
 	# extensions to be installed taking inheritance chain into account

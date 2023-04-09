@@ -820,7 +820,7 @@ func _remove_all_extensions_from_all_scripts() -> void:
 # Deprecated
 # =============================================================================
 
-func install_script_extension(child_script_path:String):
+func install_script_extension(child_script_path:String) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.install_script_extension", "ModLoaderMod.install_script_extension", "6.0.0")
 	ModLoaderMod.install_script_extension(child_script_path)
 
