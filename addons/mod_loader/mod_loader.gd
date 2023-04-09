@@ -97,7 +97,7 @@ func _init() -> void:
 
 	_load_mods()
 
-	is_initializing = false
+	ModLoaderStore.is_initializing = false
 
 
 func _load_mods() -> void:
@@ -198,7 +198,7 @@ func _reset_mods() -> void:
 	mod_data.clear()
 	mod_load_order.clear()
 	mod_missing_dependencies.clear()
-	script_extensions.clear()
+	ModLoaderStore.script_extensions.clear()
 	_remove_all_extensions_from_all_scripts()
 
 
