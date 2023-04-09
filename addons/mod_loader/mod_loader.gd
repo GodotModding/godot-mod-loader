@@ -817,24 +817,6 @@ func _remove_all_extensions_from_all_scripts() -> void:
 		_remove_all_extensions_from_script(script)
 
 
-# Helpers
-# =============================================================================
-
-# This function should be called only when actually necessary
-# as it can break the game and require a restart for mods
-# that do not fully use the systems put in place by the mod loader,
-# so anything that just uses add_node, move_node ecc...
-# To not have your mod break on reload please use provided functions
-# like ModLoader::save_scene, ModLoader::append_node_in_scene and
-# all the functions that will be added in the next versions
-# Used to reload already present mods and load new ones
-func reload_mods() -> void:
-
-	# Currently this is the only thing we do, but it is better to expose
-	# this function like this for further changes
-	_reload_mods()
-
-
 # Deprecated
 # =============================================================================
 
@@ -846,7 +828,7 @@ func install_script_extension(child_script_path:String):
 func uninstall_script_extension(extension_script_path: String) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.uninstall_script_extension", "ModLoaderMod.uninstall_script_extension", "6.0.0")
 	ModLoaderMod.uninstall_script_extension(extension_script_path)
-  
+
 
 func register_global_classes_from_array(new_global_classes: Array) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.register_global_classes_from_array", "ModLoaderMod.register_global_classes_from_array", "6.0.0")

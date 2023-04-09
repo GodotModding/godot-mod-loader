@@ -31,6 +31,21 @@ static func uninstall_script_extension(extension_script_path: String) -> void:
 	ModLoader._remove_extension(extension_script_path)
 
 
+# This function should be called only when actually necessary
+# as it can break the game and require a restart for mods
+# that do not fully use the systems put in place by the mod loader,
+# so anything that just uses add_node, move_node ecc...
+# To not have your mod break on reload please use provided functions
+# like ModLoader::save_scene, ModLoader::append_node_in_scene and
+# all the functions that will be added in the next versions
+# Used to reload already present mods and load new ones
+func reload_mods() -> void:
+
+	# Currently this is the only thing we do, but it is better to expose
+	# this function like this for further changes
+	ModLoader._reload_mods()
+
+
 # Register an array of classes to the global scope, since Godot only does that in the editor.
 # Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
 # You can find these easily in the project.godot file under "_global_script_classes"
