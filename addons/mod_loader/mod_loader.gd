@@ -828,6 +828,7 @@ func register_global_classes_from_array(new_global_classes: Array) -> void:
 	ModLoaderMod.register_global_classes_from_array(new_global_classes)
 
 
+func add_translation_from_resource(resource_path: String) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.add_translation_from_resource", "ModLoaderMod.add_translation_from_resource", "6.0.0")
 	ModLoaderMod.add_translation_from_resource(resource_path)
 
