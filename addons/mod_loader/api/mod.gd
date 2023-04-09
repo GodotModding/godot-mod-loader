@@ -60,12 +60,12 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 # a file will be created for you.
 static func add_translation_from_resource(resource_path: String) -> void:
 	if not File.new().file_exists(resource_path):
-		ModLoaderUtils.log_fatal("Tried to load a translation resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
+		ModLoaderLog.fatal("Tried to load a translation resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
 		return
 
 	var translation_object: Translation = load(resource_path)
 	TranslationServer.add_translation(translation_object)
-	ModLoaderUtils.log_info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
+	ModLoaderLog.info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
 
 
 static func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
@@ -90,7 +90,7 @@ static func append_node_in_scene(modified_scene: Node, node_name: String = "", n
 static func save_scene(modified_scene: Node, scene_path: String) -> void:
 	var packed_scene := PackedScene.new()
 	var _pack_error := packed_scene.pack(modified_scene)
-	ModLoaderUtils.log_debug("packing scene -> %s" % packed_scene, LOG_NAME)
+	ModLoaderLog.debug("packing scene -> %s" % packed_scene, LOG_NAME)
 	packed_scene.take_over_path(scene_path)
-	ModLoaderUtils.log_debug("save_scene - taking over path - new path -> %s" % packed_scene.resource_path, LOG_NAME)
+	ModLoaderLog.debug("save_scene - taking over path - new path -> %s" % packed_scene.resource_path, LOG_NAME)
 	ModLoader._saved_objects.append(packed_scene)
