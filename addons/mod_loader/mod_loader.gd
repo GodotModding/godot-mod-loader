@@ -825,11 +825,6 @@ func install_script_extension(child_script_path:String):
 	ModLoaderMod.install_script_extension(child_script_path)
 
 
-func uninstall_script_extension(extension_script_path: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.uninstall_script_extension", "ModLoaderMod.uninstall_script_extension", "6.0.0")
-	ModLoaderMod.uninstall_script_extension(extension_script_path)
-
-
 func register_global_classes_from_array(new_global_classes: Array) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.register_global_classes_from_array", "ModLoaderMod.register_global_classes_from_array", "6.0.0")
 	ModLoaderMod.register_global_classes_from_array(new_global_classes)
