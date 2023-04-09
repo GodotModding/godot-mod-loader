@@ -52,6 +52,11 @@ const new_global_classes := [
 		"path": "res://addons/mod_loader/api/deprecated.gd"
 	}, {
 		"base": "Object",
+		"class": "ModLoaderMod",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/api/mod.gd"
+	}, {
+		"base": "Object",
 		"class": "ModLoaderGodot",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/godot.gd"
