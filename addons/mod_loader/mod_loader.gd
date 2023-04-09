@@ -95,6 +95,12 @@ func _init() -> void:
 		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
 		return
 
+	_load_mods()
+
+	is_initializing = false
+
+
+func _load_mods() -> void:
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	var unzipped_mods := _load_mod_zips()
@@ -179,6 +185,21 @@ func _init() -> void:
 	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
 
 	ModLoaderStore.is_initializing = false
+
+
+# Internal call to reload mods
+func _reload_mods() -> void:
+	_reset_mods()
+	_load_mods()
+
+
+# Internal call that handles the resetting of all mod related data
+func _reset_mods() -> void:
+	mod_data.clear()
+	mod_load_order.clear()
+	mod_missing_dependencies.clear()
+	script_extensions.clear()
+	_remove_all_extensions_from_all_scripts()
 
 
 # Check autoload positions:
@@ -721,7 +742,7 @@ func _apply_extension(extension_path)->Script:
 
 
 # Used to remove a specific extension
-func _remove_extension(extension_path: String) -> void:
+func _remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(extension_path):
 		ModLoaderUtils.log_error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
@@ -758,7 +779,7 @@ func _remove_extension(extension_path: String) -> void:
 	parent_script_extensions.erase(found_script_extension)
 
 	# Preparing the script to have all other extensions reapllied
-	_reset_extension(parent_script_path)
+	_remove_all_extensions_from_script(parent_script_path)
 
 	# Reapplying all the extensions without the removed one
 	for script_extension in parent_script_extensions:
@@ -766,7 +787,7 @@ func _remove_extension(extension_path: String) -> void:
 
 
 # Used to fully reset the provided script to a state prior of any extension
-func _reset_extension(parent_script_path: String) -> void:
+func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(parent_script_path):
 		ModLoaderUtils.log_error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
@@ -790,6 +811,29 @@ func _reset_extension(parent_script_path: String) -> void:
 	_saved_scripts.erase(parent_script_path)
 
 
+func _remove_all_extensions_from_all_scripts() -> void:
+	var _to_remove_scripts: Dictionary = _saved_scripts.duplicate()
+	for script in _to_remove_scripts:
+		_remove_all_extensions_from_script(script)
+
+
+# Helpers
+# =============================================================================
+
+# This function should be called only when actually necessary
+# as it can break the game and require a restart for mods
+# that do not fully use the systems put in place by the mod loader,
+# so anything that just uses add_node, move_node ecc...
+# To not have your mod break on reload please use provided functions
+# like ModLoader::save_scene, ModLoader::append_node_in_scene and
+# all the functions that will be added in the next versions
+# Used to reload already present mods and load new ones
+func reload_mods() -> void:
+
+	# Currently this is the only thing we do, but it is better to expose
+	# this function like this for further changes
+	_reload_mods()
+
 
 # Deprecated
 # =============================================================================
@@ -798,25 +842,31 @@ func install_script_extension(child_script_path:String):
 	ModLoaderDeprecated.deprecated_changed("ModLoader.install_script_extension", "ModLoaderMod.install_script_extension", "6.0.0")
 	ModLoaderMod.install_script_extension(child_script_path)
 
+
 func uninstall_script_extension(extension_script_path: String) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.uninstall_script_extension", "ModLoaderMod.uninstall_script_extension", "6.0.0")
 	ModLoaderMod.uninstall_script_extension(extension_script_path)
+  
 
 func register_global_classes_from_array(new_global_classes: Array) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.register_global_classes_from_array", "ModLoaderMod.register_global_classes_from_array", "6.0.0")
 	ModLoaderMod.register_global_classes_from_array(new_global_classes)
 
+
 func add_translation_from_resource(resource_path: String) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.add_translation_from_resource", "ModLoaderMod.add_translation_from_resource", "6.0.0")
 	ModLoaderMod.add_translation_from_resource(resource_path)
+
 
 func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.append_node_in_scene", "ModLoaderMod.append_node_in_scene", "6.0.0")
 	ModLoaderMod.append_node_in_scene(modified_scene, node_name, node_parent, instance_path, is_visible)
 
+
 func save_scene(modified_scene: Node, scene_path: String) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.save_scene", "ModLoaderMod.save_scene", "6.0.0")
 	ModLoaderMod.save_scene(modified_scene, scene_path)
+
 
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
