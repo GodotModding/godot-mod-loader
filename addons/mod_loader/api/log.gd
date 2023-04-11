@@ -2,7 +2,10 @@ class_name ModLoaderLog
 extends Node
 
 
+# This Class provides methods for logging, retrieving logged data, and internal methods for working with log files.
+
 const MOD_LOG_PATH := "user://logs/modloader.log"
+const LOG_NAME := "ModLoader:Log"
 
 enum VERBOSITY_LEVEL {
 	ERROR,
@@ -148,6 +151,10 @@ static func get_all() -> Array:
 
 static func get_by_mod(mod_name: String) -> Array:
 	var log_entries := []
+
+	if not ModLoaderStore.logged_messages.by_mod.has(mod_name):
+		error("\"%s\" not found in logged messages." % mod_name, LOG_NAME)
+		return []
 
 	for entry_key in ModLoaderStore.logged_messages.by_mod[mod_name].keys():
 		var entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.by_mod[mod_name][entry_key]
