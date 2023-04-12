@@ -17,12 +17,14 @@ class Profile:
 # API profile functions
 # =============================================================================
 
-static func enable_mod(mod_id: String, profile: String = "Default") -> void:
-	pass
+# Enables a mod - it will be loaded on the next game start
+static func enable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> void:
+	_handle_mod_state(mod_id, profile_name, true)
 
 
-static func disable_mod(mod_id: String, profile: String = "Default") -> void:
-	pass
+# Disables a mod - it will not be loaded on the next game start
+static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> void:
+	_handle_mod_state(mod_id, profile_name, false)
 
 
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
@@ -61,6 +63,20 @@ static func delete(profile: String) -> void:
 
 # Internal profile functions
 # =============================================================================
+
+# Handles the activation or deactivation of a mod in a user profile.
+static func _handle_mod_state(mod_id: String, profile_name: String, activate: bool) -> void:
+	# Verify whether the mod_id is present in the profile's mod_list.
+	if not ModLoaderStore.user_profiles[profile_name].mod_list.has(mod_id):
+		ModLoaderUtils.log_error("Mod id \"%s\" not found in the \"mod_list\" of user profile \"%s\"." % [mod_id, profile_name], LOG_NAME)
+		return
+
+	# Handle mod state
+	ModLoaderStore.user_profiles[profile_name].mod_list[mod_id] = activate
+
+	# Save profiles to the user profiles JSON file
+	_save()
+
 
 # Creates a new Profile with the given name and mod list.
 # Returns the newly created Profile object.
