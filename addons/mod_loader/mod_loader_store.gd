@@ -29,6 +29,9 @@ var has_shown_editor_zips_warning := false
 # shows messages
 var logged_messages := []
 
+# List of user profiles loaded from user://mods.json
+var user_profiles := []
+
 # These variables handle various options, which can be changed either via
 # Godot's GUI (with the options.tres resource file), or via CLI args.
 # Usage: `ModLoaderStore.ml_options.KEY`
