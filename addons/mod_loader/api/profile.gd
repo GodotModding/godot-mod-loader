@@ -28,7 +28,6 @@ static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_u
 
 
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
-# The new profile is added to the ModLoaderStore and saved to the user profiles JSON file.
 static func create(name: String) -> void:
 	# Verify that the profile name is not already in use
 	if ModLoaderStore.user_profiles.has(name):
@@ -57,8 +56,29 @@ static func update(profile: String) -> void:
 	pass
 
 
-static func delete(profile: String) -> void:
-	pass
+# Deletes a user profile with the given profile_name.
+static func delete(profile_name: String) -> void:
+	# If the current_profile is about to get deleted change it to default
+	if ModLoaderStore.current_user_profile == profile_name:
+		ModLoaderUtils.log_error(str(
+			"You cannot delete the currently selected user profile \"%s\" " +
+			"because it is currently in use. Please switch to a different profile before deleting this one.") % profile_name,
+		LOG_NAME)
+		return
+
+	# Deleting the default profile is not allowed
+	if profile_name == "default":
+		ModLoaderUtils.log_error("You can't delete the default profile", LOG_NAME)
+		return
+
+	# Delete the user profile
+	if not ModLoaderStore.user_profiles.erase(profile_name):
+		# Erase returns false if the the key is not present in user_profiles
+		ModLoaderUtils.log_error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
+		return
+
+	# Save profiles to the user profiles JSON file
+	_save()
 
 
 # Internal profile functions
