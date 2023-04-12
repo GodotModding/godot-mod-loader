@@ -40,7 +40,7 @@ static func create(name: String) -> void:
 	ModLoaderStore.current_user_profile = name
 
 	# Store the new profile in the ModLoaderStore
-	ModLoaderStore.user_profiles.push_back(new_profile)
+	ModLoaderStore.user_profiles[name] = new_profile
 
 	# Store the new profile in the json file
 	_save()
@@ -101,7 +101,7 @@ static func _load() -> void:
 
 		# Create a new profile object and add it to ModLoaderStore.user_profiles
 		var new_profile := _create_new_profile(profile_name, profile_data.mod_list)
-		ModLoaderStore.user_profiles.push_back(new_profile)
+		ModLoaderStore.user_profiles[profile_name] = new_profile
 
 
 # Saves the user profiles in the ModLoaderStore to the user profiles JSON file.
@@ -116,7 +116,9 @@ static func _save() -> void:
 	save_dict.current_profile = ModLoaderStore.current_user_profile
 
 	# Serialize the mod_list data for each user profile and add it to the save_dict
-	for profile in ModLoaderStore.user_profiles:
+	for profile_name in ModLoaderStore.user_profiles.keys():
+		var profile: Profile = ModLoaderStore.user_profiles[profile_name]
+
 		save_dict.profiles[profile.name] = {}
 		save_dict.profiles[profile.name].mod_list = {}
 
@@ -126,5 +128,5 @@ static func _save() -> void:
 			save_dict.profiles[profile.name].mod_list[mod_id] = is_activated
 
 	# Save the serialized user profiles data to the user profiles JSON file
-	var _success = ModLoaderUtils.save_dictionary_to_json_file(save_dict, FILE_PATH_USER_PROFILES)
+	var _success := ModLoaderUtils.save_dictionary_to_json_file(save_dict, FILE_PATH_USER_PROFILES)
 

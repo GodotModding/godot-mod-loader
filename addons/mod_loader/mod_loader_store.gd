@@ -32,7 +32,7 @@ var logged_messages := []
 # Active user profile
 var current_user_profile := "default"
 # List of user profiles loaded from user://mods.json
-var user_profiles := []
+var user_profiles :=  {}
 
 # These variables handle various options, which can be changed either via
 # Godot's GUI (with the options.tres resource file), or via CLI args.
