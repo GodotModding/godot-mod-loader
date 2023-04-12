@@ -4,13 +4,13 @@ extends Object
 
 # This Class provides methods for working with user profiles.
 
+class Profile:
+	var name := ""
+	var mod_list := {}
+
 
 # API profile functions
 # =============================================================================
-
-static func save_mod_options() -> void:
-	pass
-
 
 static func enable_mod(mod_id: String, profile: String = "Default") -> void:
 	pass
@@ -20,20 +20,35 @@ static func disable_mod(mod_id: String, profile: String = "Default") -> void:
 	pass
 
 
-static func create(profile: String) -> void:
+static func create(name: String) -> void:
+	var new_profile = Profile.new()
+	new_profile.name = name
+
+	# Add all currently loaded mods to the mod_list
+	for mod_id in ModLoader.mod_data.keys():
+		new_profile.mod_list[mod_id] = true
+
+	# Store the new profile in the ModLoaderStore
+	ModLoaderStore.user_profiles.push_back(new_profile)
+
+	# Store the new profile in the json file
+	_save()
+
+
+static func update(profile: String) -> void:
 	pass
 
 
-func update(profile: String) -> void:
-	pass
-
-
-func delete(profile: String) -> void:
+static func delete(profile: String) -> void:
 	pass
 
 
 # Internal profile functions
 # =============================================================================
 
-static func _load_mod_options() -> void:
+static func _load() -> void:
+	pass
+
+
+static func _save() -> void:
 	pass
