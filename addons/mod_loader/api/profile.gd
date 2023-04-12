@@ -28,6 +28,11 @@ static func disable_mod(mod_id: String, profile: String = "Default") -> void:
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
 # The new profile is added to the ModLoaderStore and saved to the user profiles JSON file.
 static func create(name: String) -> void:
+	# Verify that the profile name is not already in use
+	if ModLoaderStore.user_profiles.has(name):
+		ModLoaderUtils.log_error("User profile with the name of \"%s\" already exists." % name, LOG_NAME)
+		return
+
 	var mod_list := {}
 
 	# Add all currently loaded mods to the mod_list as active
