@@ -65,6 +65,17 @@ static func create(name: String) -> void:
 	_save()
 
 
+# Sets the current user profile to the specified profile_name.
+static func set_profile(profile_name: String) -> void:
+	# Check if there is a user profile with the specified name
+	if not ModLoaderStore.user_profiles.has(profile_name):
+		ModLoaderUtils.log_error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
+		return
+
+	# Update the current_user_profile in the ModLoaderStore
+	ModLoaderStore.current_user_profile = profile_name
+
+
 # Deletes a user profile with the given profile_name.
 static func delete(profile_name: String) -> void:
 	# If the current_profile is about to get deleted change it to default
