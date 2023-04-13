@@ -106,6 +106,20 @@ static func delete(profile_name: String) -> bool:
 # Internal profile functions
 # =============================================================================
 
+# Update the global list of disabled mods based on the current user profile
+static func _update_disabled_mods() -> void:
+	var user_profile_disabled_mods := []
+	var current_user_profile : Profile = ModLoaderStore.user_profiles[ModLoaderStore.current_user_profile]
+
+	# Iterate through the mod list in the current user profile to find disabled mods
+	for mod_id in current_user_profile.mod_list:
+		if not current_user_profile.mod_list[mod_id]:
+			user_profile_disabled_mods.push_back(mod_id)
+
+	# Append the disabled mods to the global list of disabled mods
+	ModLoaderStore.ml_options.disabled_mods.append_array(user_profile_disabled_mods)
+
+
 # This function updates the mod lists of all user profiles with newly loaded mods that are not already present.
 # It does so by comparing the current set of loaded mods with the mod list of each user profile, and adding any missing mods.
 static func _update_mod_lists() -> bool:
@@ -173,7 +187,7 @@ static func _create_new_profile(name: String, mod_list: Dictionary) -> Profile:
 	return new_profile
 
 
-# Loads user profiles from a JSON file and adds them to ModLoaderStore.
+# Loads user profiles from the JSON file and adds them to ModLoaderStore.
 static func _load() -> bool:
 	# Load JSON data from the user profiles file
 	var data := ModLoaderUtils.get_json_as_dict(FILE_PATH_USER_PROFILES)
@@ -223,4 +237,3 @@ static func _save() -> bool:
 
 	# Save the serialized user profiles data to the user profiles JSON file
 	return ModLoaderUtils.save_dictionary_to_json_file(save_dict, FILE_PATH_USER_PROFILES)
-
