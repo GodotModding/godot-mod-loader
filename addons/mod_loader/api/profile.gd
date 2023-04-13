@@ -52,10 +52,6 @@ static func create(name: String) -> void:
 	_save()
 
 
-static func update(profile: String) -> void:
-	pass
-
-
 # Deletes a user profile with the given profile_name.
 static func delete(profile_name: String) -> void:
 	# If the current_profile is about to get deleted change it to default
@@ -83,6 +79,24 @@ static func delete(profile_name: String) -> void:
 
 # Internal profile functions
 # =============================================================================
+
+# This function updates the mod lists of all user profiles with newly loaded mods that are not already present.
+# It does so by comparing the current set of loaded mods with the mod list of each user profile, and adding any missing mods.
+static func _update_mod_lists() -> void:
+	var current_mod_list := {}
+
+	# Create a mod_list with the currently loaded mods
+	for mod_id in ModLoader.mod_data.keys():
+		current_mod_list[mod_id] = true
+
+	# Iterate over all user profiles and merge the current mod list with each profile's mod list
+	for profile_name in ModLoaderStore.user_profiles.keys():
+		var profile: Profile = ModLoaderStore.user_profiles[profile_name]
+		profile.mod_list.merge(current_mod_list)
+
+	# Save the updated user profiles to the JSON file
+	_save()
+
 
 # Handles the activation or deactivation of a mod in a user profile.
 static func _handle_mod_state(mod_id: String, profile_name: String, activate: bool) -> void:
