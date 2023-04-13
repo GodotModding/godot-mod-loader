@@ -30,7 +30,7 @@ static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_u
 # Delete a mod from a user profiles mod_list
 static func delete_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> void:
 	# Verify whether the mod_id is present in the profile's mod_list.
-	if not _is_mod_id_in_mod_list(mod_id, profile_name)
+	if not _is_mod_id_in_mod_list(mod_id, profile_name):
 		return
 
 	# Erase the mod from the mod_list
@@ -114,7 +114,7 @@ static func _update_mod_lists() -> void:
 # Handles the activation or deactivation of a mod in a user profile.
 static func _handle_mod_state(mod_id: String, profile_name: String, activate: bool) -> void:
 	# Verify whether the mod_id is present in the profile's mod_list.
-	if not _is_mod_id_in_mod_list(mod_id, profile_name)
+	if not _is_mod_id_in_mod_list(mod_id, profile_name):
 		return
 
 	# Handle mod state
