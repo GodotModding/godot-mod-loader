@@ -27,6 +27,19 @@ static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_u
 	_handle_mod_state(mod_id, profile_name, false)
 
 
+# Delete a mod from a user profiles mod_list
+static func delete_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> void:
+	# Verify whether the mod_id is present in the profile's mod_list.
+	if not _is_mod_id_in_mod_list(mod_id, profile_name)
+		return
+
+	# Erase the mod from the mod_list
+	ModLoaderStore.user_profiles[profile_name].mod_list.erase(mod_id)
+
+	# Save profiles to the user profiles JSON file
+	_save()
+
+
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
 static func create(name: String) -> void:
 	# Verify that the profile name is not already in use
@@ -101,8 +114,7 @@ static func _update_mod_lists() -> void:
 # Handles the activation or deactivation of a mod in a user profile.
 static func _handle_mod_state(mod_id: String, profile_name: String, activate: bool) -> void:
 	# Verify whether the mod_id is present in the profile's mod_list.
-	if not ModLoaderStore.user_profiles[profile_name].mod_list.has(mod_id):
-		ModLoaderUtils.log_error("Mod id \"%s\" not found in the \"mod_list\" of user profile \"%s\"." % [mod_id, profile_name], LOG_NAME)
+	if not _is_mod_id_in_mod_list(mod_id, profile_name)
 		return
 
 	# Handle mod state
@@ -110,6 +122,18 @@ static func _handle_mod_state(mod_id: String, profile_name: String, activate: bo
 
 	# Save profiles to the user profiles JSON file
 	_save()
+
+
+# Checks whether a given mod_id is present in the mod_list of the specified user profile.
+# Returns True if the mod_id is present, False otherwise.
+static func _is_mod_id_in_mod_list(mod_id: String, profile_name: String) -> bool:
+	# Return false if the mod_id is not in the profile's mod_list
+	if not ModLoaderStore.user_profiles[profile_name].mod_list.has(mod_id):
+		ModLoaderUtils.log_error("Mod id \"%s\" not found in the \"mod_list\" of user profile \"%s\"." % [mod_id, profile_name], LOG_NAME)
+		return false
+
+	# Return true if the mod_id is in the profile's mod_list
+	return true
 
 
 # Creates a new Profile with the given name and mod list.
