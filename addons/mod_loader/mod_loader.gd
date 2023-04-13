@@ -95,9 +95,24 @@ func _init() -> void:
 		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
 		return
 
+	# Load user profiles into ModLoaderStore
+	var _success_user_profile_load := ModLoaderUserProfile._load()
+	# Update the list of disabled mods in ModLoaderStore based on the current user profile
+	ModLoaderUserProfile._update_disabled_mods()
+
 	_load_mods()
 
 	ModLoaderStore.is_initializing = false
+
+
+func _ready():
+	# Create the default user profile if it doesn't exist already
+	# This should always be present unless the JSON file was manually edited
+	if not ModLoaderStore.user_profiles.has("default"):
+		var _success_user_profile_create := ModLoaderUserProfile.create("default")
+
+	# Update the mod_list for each user profile
+	var _success_update_mod_lists := ModLoaderUserProfile._update_mod_lists()
 
 
 func _load_mods() -> void:
