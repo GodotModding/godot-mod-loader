@@ -25,7 +25,7 @@ static func enable_mod(mod_id: String, profile_name := ModLoaderStore.current_us
 # Disables a mod - it will not be loaded on the next game start
 static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
 	# Check if it is a mandatory mod
-	if ModLoader.mod_data[mod_id].is_mandatory:
+	if ModLoader.mod_data.has(mod_id) and ModLoader.mod_data[mod_id].is_mandatory:
 		ModLoaderUtils.log_error(
 			"Unable to disable mod \"%s\" as it is marked as mandatory \"%s\" and cannot be deactivated."
 			% [mod_id, ModLoaderStore.ml_options.mandatory_mods],
