@@ -119,6 +119,15 @@ static func delete(profile_name: String) -> bool:
 	return _save()
 
 
+# Return the user profile with the given name
+static func get_profile(profile_name: String) -> Profile:
+	if ModLoaderStore.user_profiles.has(profile_name):
+		ModLoaderUtils.log_error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
+		return null
+
+	return ModLoaderStore.user_profiles[profile_name]
+
+
 # Returns an array containing all user profiles stored in ModLoaderStore
 static func get_all_as_array() -> Array:
 	var user_profiles := []
