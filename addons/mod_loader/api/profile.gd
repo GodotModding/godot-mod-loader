@@ -162,6 +162,10 @@ static func _update_mod_lists() -> bool:
 	for mod_id in ModLoader.mod_data.keys():
 		current_mod_list[mod_id] = true
 
+	# Add the deactivated mods to the list
+	for mod_id in ModLoaderStore.ml_options.disabled_mods:
+		current_mod_list[mod_id] = false
+
 	# Iterate over all user profiles and merge the current mod list with each profile's mod list
 	for profile_name in ModLoaderStore.user_profiles.keys():
 		var profile: Profile = ModLoaderStore.user_profiles[profile_name]
