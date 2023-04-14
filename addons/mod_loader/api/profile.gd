@@ -190,20 +190,20 @@ static func _is_mod_id_in_mod_list(mod_id: String, profile_name: String) -> bool
 
 # Creates a new Profile with the given name and mod list.
 # Returns the newly created Profile object.
-static func _create_new_profile(name: String, mod_list: Dictionary) -> Profile:
+static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> Profile:
 	var new_profile := Profile.new()
 
 	# If no name is provided, log an error and return null
-	if name == "":
+	if profile_name == "":
 		ModLoaderUtils.log_error("Please provide a name for the new profile", LOG_NAME)
 		return null
 
 	# Set the profile name
-	new_profile.name = name
+	new_profile.name = profile_name
 
 	# If no mods are specified in the mod_list, log a warning and return the new profile
 	if mod_list.keys().size() == 0:
-		ModLoaderUtils.log_warning("No mod_ids inside \"mod_list\" for user profile \"%s\" " % name, LOG_NAME)
+		ModLoaderUtils.log_warning("No mod_ids inside \"mod_list\" for user profile \"%s\" " % profile_name, LOG_NAME)
 		return new_profile
 
 	# Set the mod_list
