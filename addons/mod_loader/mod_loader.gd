@@ -460,6 +460,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	mod.dir_name = dir_name
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = ModLoaderUtils.file_exists(mod_overwrites_path)
+	mod.is_mandatory = true if dir_name in ModLoaderStore.ml_options.mandatory_mods else false
 	mod_data[dir_name] = mod
 
 	# Get the mod file paths

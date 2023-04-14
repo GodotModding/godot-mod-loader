@@ -7,6 +7,7 @@ extends Resource
 
 export (bool) var enable_mods = true
 export (ModLoaderUtils.VERBOSITY_LEVEL) var log_level: = ModLoaderUtils.VERBOSITY_LEVEL.DEBUG
+export (Array, String) var mandatory_mods = []
 export (Array, String) var disabled_mods = []
 export (bool) var steam_workshop_enabled = false
 export (String, DIR) var override_path_to_mods = ""

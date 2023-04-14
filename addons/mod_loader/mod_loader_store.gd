@@ -43,6 +43,9 @@ var ml_options := {
 	enable_mods = true,
 	log_level = ModLoaderUtils.VERBOSITY_LEVEL.DEBUG,
 
+	# Mods that can't be disabled (contains mod IDs as strings)
+	mandatory_mods = [],
+
 	# Array of disabled mods (contains mod IDs as strings)
 	disabled_mods = [],
 
