@@ -119,7 +119,14 @@ static func get_all_as_array() -> Array:
 # Update the global list of disabled mods based on the current user profile
 static func _update_disabled_mods() -> void:
 	var user_profile_disabled_mods := []
-	var current_user_profile : Profile = ModLoaderStore.user_profiles[ModLoaderStore.current_user_profile]
+	var current_user_profile : Profile
+
+	# Check if a current user profile is set
+	if ModLoaderStore.current_user_profile == "":
+		ModLoaderUtils.log_info("There is no current user profile. The \"default\" profile will be created.", LOG_NAME)
+		return
+
+	current_user_profile = ModLoaderStore.user_profiles[ModLoaderStore.current_user_profile]
 
 	# Iterate through the mod list in the current user profile to find disabled mods
 	for mod_id in current_user_profile.mod_list:

@@ -30,7 +30,7 @@ var has_shown_editor_zips_warning := false
 var logged_messages := []
 
 # Active user profile
-var current_user_profile := "default"
+var current_user_profile := ""
 # List of user profiles loaded from user://mods.json
 var user_profiles :=  {}
 
