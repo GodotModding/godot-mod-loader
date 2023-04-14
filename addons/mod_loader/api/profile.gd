@@ -50,10 +50,10 @@ static func delete_mod(mod_id: String, profile_name := ModLoaderStore.current_us
 
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
 static func create(profile_name: String) -> bool:
-	# Verify that the profile name is not already in use
+		# Verify that the profile name is not already in use
 		if ModLoaderStore.user_profiles.has(profile_name):
 			ModLoaderUtils.log_error("User profile with the name of \"%s\" already exists." % profile_name, LOG_NAME)
-		return false
+			return false
 
 	var mod_list := {}
 
@@ -117,6 +117,11 @@ static func delete(profile_name: String) -> bool:
 
 	# Save profiles to the user profiles JSON file
 	return _save()
+
+
+# Returns the current user profile
+static func get_current() -> Profile:
+	return ModLoaderStore.user_profiles[ModLoaderStore.current_user_profile]
 
 
 # Return the user profile with the given name
