@@ -489,7 +489,7 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 	# Loop through each dependency listed in the mod's manifest
 	for dependency_id in dependencies:
 		# Check if dependency is missing
-		if not mod_data.has(dependency_id):
+		if not mod_data.has(dependency_id) or not mod_data[dependency_id].is_loadable:
 			# Skip to the next dependency if it's optional
 			if not is_required:
 				ModLoaderUtils.log_info("Missing optional dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
