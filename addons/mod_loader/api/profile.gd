@@ -126,7 +126,7 @@ static func get_current() -> Profile:
 
 # Return the user profile with the given name
 static func get_profile(profile_name: String) -> Profile:
-	if ModLoaderStore.user_profiles.has(profile_name):
+	if not ModLoaderStore.user_profiles.has(profile_name):
 		ModLoaderUtils.log_error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
 		return null
 
