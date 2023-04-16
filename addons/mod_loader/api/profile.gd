@@ -205,8 +205,14 @@ static func _handle_mod_state(mod_id: String, profile_name: String, activate: bo
 # Checks whether a given mod_id is present in the mod_list of the specified user profile.
 # Returns True if the mod_id is present, False otherwise.
 static func _is_mod_id_in_mod_list(mod_id: String, profile_name: String) -> bool:
+	# Get the user profile
+	var user_profile := get_profile(profile_name)
+	if not user_profile:
+		# Return false if there is an error getting the user profile
+		return false
+
 	# Return false if the mod_id is not in the profile's mod_list
-	if not ModLoaderStore.user_profiles[profile_name].mod_list.has(mod_id):
+	if not user_profile.mod_list.has(mod_id):
 		ModLoaderUtils.log_error("Mod id \"%s\" not found in the \"mod_list\" of user profile \"%s\"." % [mod_id, profile_name], LOG_NAME)
 		return false
 
