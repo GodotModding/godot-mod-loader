@@ -49,11 +49,11 @@ static func get_steam_app_id() -> String:
 		file.close()
 
 		if not file_content.has("app_id"):
-			ModLoaderUtils.log_error("The steam_data file does not contain an app ID. Mod uploading will not work.", LOG_NAME)
+			ModLoaderLog.error("The steam_data file does not contain an app ID. Mod uploading will not work.", LOG_NAME)
 			return ""
 
 		steam_app_id = file_content.app_id
 	else :
-		ModLoaderUtils.log_error("Can't open steam_data file, \"%s\". Please make sure the file exists and is valid." % game_install_directory.plus_file("steam_data.json"), LOG_NAME)
+		ModLoaderLog.error("Can't open steam_data file, \"%s\". Please make sure the file exists and is valid." % game_install_directory.plus_file("steam_data.json"), LOG_NAME)
 
 	return steam_app_id

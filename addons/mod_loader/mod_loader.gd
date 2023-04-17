@@ -20,6 +20,8 @@
 extends Node
 
 
+signal logged(entry)
+
 # Config
 # =============================================================================
 
@@ -32,10 +34,6 @@ const MODLOADER_VERSION = "5.0.1"
 # disabled by default because the operation can be very expensive, but may
 # be useful for debugging
 const DEBUG_ENABLE_STORING_FILEPATHS := false
-
-# Path to the mod log file
-# Find this log here: %appdata%/GAMENAME/mods.log
-const MOD_LOG_PATH := "user://mods.log"
 
 # This is where mod ZIPs are unpacked to
 const UNPACKED_DIR := "res://mods-unpacked/"
@@ -64,18 +62,12 @@ var mod_missing_dependencies := {}
 # Things to keep to ensure they are not garbage collected (used by `save_scene`)
 var _saved_objects := []
 
-# Store all extenders paths
-var script_extensions := []
-
 # Store vanilla classes for script extension sorting
 var loaded_vanilla_parents_cache := {}
 
-# Set to false after _init()
-# Helps to decide whether a script extension should go through the _handle_script_extensions process
-var is_initializing := true
-
 # Stores all the taken over scripts for restoration
 var _saved_scripts := {}
+
 
 # Main
 # =============================================================================
@@ -86,24 +78,24 @@ func _init() -> void:
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
-	ModLoaderUtils.rotate_log_file()
+	ModLoaderLog._rotate_log_file()
 
 	# Ensure ModLoaderStore and ModLoader are the 1st and 2nd autoloads
 	_check_autoload_positions()
 
 	# Log the autoloads order. Helpful when providing support to players
-	ModLoaderUtils.log_debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
+	ModLoaderLog.debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
 
 	# Log game install dir
-	ModLoaderUtils.log_info("game_install_directory: %s" % ModLoaderUtils.get_local_folder_dir(), LOG_NAME)
+	ModLoaderLog.info("game_install_directory: %s" % ModLoaderUtils.get_local_folder_dir(), LOG_NAME)
 
 	if not ModLoaderStore.ml_options.enable_mods:
-		ModLoaderUtils.log_info("Mods are currently disabled", LOG_NAME)
+		ModLoaderLog.info("Mods are currently disabled", LOG_NAME)
 		return
 
 	_load_mods()
 
-	is_initializing = false
+	ModLoaderStore.is_initializing = false
 
 
 func _load_mods() -> void:
@@ -111,17 +103,17 @@ func _load_mods() -> void:
 	# directory (UNPACKED_DIR)
 	var unzipped_mods := _load_mod_zips()
 	if unzipped_mods > 0:
-		ModLoaderUtils.log_success("DONE: Loaded %s mod files into the virtual filesystem" % unzipped_mods, LOG_NAME)
+		ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % unzipped_mods, LOG_NAME)
 	else:
-		ModLoaderUtils.log_info("No zipped mods found", LOG_NAME)
+		ModLoaderLog.info("No zipped mods found", LOG_NAME)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
 	var setup_mods := _setup_mods()
 	if setup_mods > 0:
-		ModLoaderUtils.log_success("DONE: Setup %s mods" % setup_mods, LOG_NAME)
+		ModLoaderLog.success("DONE: Setup %s mods" % setup_mods, LOG_NAME)
 	else:
-		ModLoaderUtils.log_info("No mods were setup", LOG_NAME)
+		ModLoaderLog.info("No mods were setup", LOG_NAME)
 
 	# Set up mod configs. If a mod's JSON file is found, its data gets added
 	# to mod_data.{dir_name}.config
@@ -135,7 +127,7 @@ func _load_mods() -> void:
 		var mod: ModData = mod_data[dir_name]
 		mod.load_manifest()
 
-	ModLoaderUtils.log_success("DONE: Loaded all meta data", LOG_NAME)
+	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
 
 
 	# Check for mods with load_before. If a mod is listed in load_before,
@@ -173,22 +165,24 @@ func _load_mods() -> void:
 	var mod_i := 1
 	for mod in mod_load_order: # mod === mod_data
 		mod = mod as ModData
-		ModLoaderUtils.log_info("mod_load_order -> %s) %s" % [mod_i, mod.dir_name], LOG_NAME)
+		ModLoaderLog.info("mod_load_order -> %s) %s" % [mod_i, mod.dir_name], LOG_NAME)
 		mod_i += 1
 
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in mod_load_order:
 		mod = mod as ModData
-		ModLoaderUtils.log_info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
+		ModLoaderLog.info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
 
-	ModLoaderUtils.log_debug_json_print("mod data", mod_data, LOG_NAME)
+	ModLoaderLog.debug_json_print("mod data", mod_data, LOG_NAME)
 
-	ModLoaderUtils.log_success("DONE: Completely finished loading mods", LOG_NAME)
+	ModLoaderLog.success("DONE: Completely finished loading mods", LOG_NAME)
 
 	_handle_script_extensions()
 
-	ModLoaderUtils.log_success("DONE: Installed all script extensions", LOG_NAME)
+	ModLoaderLog.success("DONE: Installed all script extensions", LOG_NAME)
+
+	ModLoaderStore.is_initializing = false
 
 
 # Internal call to reload mods
@@ -202,7 +196,7 @@ func _reset_mods() -> void:
 	mod_data.clear()
 	mod_load_order.clear()
 	mod_missing_dependencies.clear()
-	script_extensions.clear()
+	ModLoaderStore.script_extensions.clear()
 	_remove_all_extensions_from_all_scripts()
 
 
@@ -214,7 +208,7 @@ func _check_autoload_positions() -> void:
 	var override_cfg_path := ModLoaderUtils.get_override_path()
 	var is_override_cfg_setup :=  ModLoaderUtils.file_exists(override_cfg_path)
 	if is_override_cfg_setup:
-		ModLoaderUtils.log_info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
+		ModLoaderLog.info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
 		return
 
 	var _pos_ml_store := ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
@@ -245,11 +239,11 @@ func _load_zips_in_folder(folder_path: String) -> int:
 	var mod_dir := Directory.new()
 	var mod_dir_open_error := mod_dir.open(folder_path)
 	if not mod_dir_open_error == OK:
-		ModLoaderUtils.log_error("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
+		ModLoaderLog.error("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
 		return -1
 	var mod_dir_listdir_error := mod_dir.list_dir_begin()
 	if not mod_dir_listdir_error == OK:
-		ModLoaderUtils.log_error("Can't read mod folder %s (Error: %s)" % [folder_path, mod_dir_listdir_error], LOG_NAME)
+		ModLoaderLog.error("Can't read mod folder %s (Error: %s)" % [folder_path, mod_dir_listdir_error], LOG_NAME)
 		return -1
 
 	# Get all zip folders inside the game mod folder
@@ -283,22 +277,22 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		# https://github.com/godotengine/godot/issues/19815
 		# https://github.com/godotengine/godot/issues/16798
 		if OS.has_feature("editor") and not ModLoaderStore.has_shown_editor_zips_warning:
-			ModLoaderUtils.log_warning(str(
+			ModLoaderLog.warning(str(
 				"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
 				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
 				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
 			ModLoaderStore.has_shown_editor_zips_warning = true
 
-		ModLoaderUtils.log_debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
+		ModLoaderLog.debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
 
 		# If there was an error loading the mod zip file
 		if not is_mod_loaded_successfully:
 			# Log the error and continue with the next file
-			ModLoaderUtils.log_error("%s failed to load." % mod_zip_file_name, LOG_NAME)
+			ModLoaderLog.error("%s failed to load." % mod_zip_file_name, LOG_NAME)
 			continue
 
 		# Mod successfully loaded!
-		ModLoaderUtils.log_success("%s loaded." % mod_zip_file_name, LOG_NAME)
+		ModLoaderLog.success("%s loaded." % mod_zip_file_name, LOG_NAME)
 		temp_zipped_mods_count += 1
 
 	mod_dir.list_dir_end()
@@ -313,16 +307,16 @@ func _load_steam_workshop_zips() -> int:
 	var temp_zipped_mods_count := 0
 	var workshop_folder_path := ModLoaderSteam.get_path_to_workshop()
 
-	ModLoaderUtils.log_info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
+	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 
 	var workshop_dir := Directory.new()
 	var workshop_dir_open_error := workshop_dir.open(workshop_folder_path)
 	if not workshop_dir_open_error == OK:
-		ModLoaderUtils.log_error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_open_error], LOG_NAME)
+		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_open_error], LOG_NAME)
 		return -1
 	var workshop_dir_listdir_error := workshop_dir.list_dir_begin()
 	if not workshop_dir_listdir_error == OK:
-		ModLoaderUtils.log_error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
+		ModLoaderLog.error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
 		return -1
 
 	# Loop 1: Workshop folders
@@ -331,7 +325,7 @@ func _load_steam_workshop_zips() -> int:
 		var item_dir := workshop_dir.get_next()
 		var item_path := workshop_dir.get_current_dir() + "/" + item_dir
 
-		ModLoaderUtils.log_info("Checking workshop item path: \"%s\"" % item_path, LOG_NAME)
+		ModLoaderLog.info("Checking workshop item path: \"%s\"" % item_path, LOG_NAME)
 
 		# Stop loading mods when there's no more folders
 		if item_dir == '':
@@ -357,10 +351,10 @@ func _setup_mods() -> int:
 
 	var dir := Directory.new()
 	if not dir.open(unpacked_mods_path) == OK:
-		ModLoaderUtils.log_error("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
+		ModLoaderLog.error("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return -1
 	if not dir.list_dir_begin() == OK:
-		ModLoaderUtils.log_error("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
+		ModLoaderLog.error("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return -1
 
 	var unpacked_mods_count := 0
@@ -382,7 +376,7 @@ func _setup_mods() -> int:
 			continue
 
 		if ModLoaderStore.ml_options.disabled_mods.has(mod_dir_name):
-			ModLoaderUtils.log_info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
+			ModLoaderLog.info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
 			continue
 
 		# Init the mod data
@@ -402,13 +396,13 @@ func _load_mod_configs() -> void:
 		var json_path := configs_path.plus_file(dir_name + ".json")
 		var mod_config := ModLoaderUtils.get_json_as_dict(json_path)
 
-		ModLoaderUtils.log_debug("Config JSON: Looking for config at path: %s" % json_path, LOG_NAME)
+		ModLoaderLog.debug("Config JSON: Looking for config at path: %s" % json_path, LOG_NAME)
 
 		if mod_config.size() > 0:
 			found_configs_count += 1
 
-			ModLoaderUtils.log_info("Config JSON: Found a config file: '%s'" % json_path, LOG_NAME)
-			ModLoaderUtils.log_debug_json_print("Config JSON: File data: ", mod_config, LOG_NAME)
+			ModLoaderLog.info("Config JSON: Found a config file: '%s'" % json_path, LOG_NAME)
+			ModLoaderLog.debug_json_print("Config JSON: File data: ", mod_config, LOG_NAME)
 
 			# Check `load_from` option. This lets you specify the name of a
 			# different JSON file to load your config from. Must be in the same
@@ -418,21 +412,21 @@ func _load_mod_configs() -> void:
 			if mod_config.has("load_from"):
 				var new_path: String = mod_config.load_from
 				if not new_path == "" and not new_path == str(dir_name, ".json"):
-					ModLoaderUtils.log_info("Config JSON: Following load_from path: %s" % new_path, LOG_NAME)
+					ModLoaderLog.info("Config JSON: Following load_from path: %s" % new_path, LOG_NAME)
 					var new_config := ModLoaderUtils.get_json_as_dict(configs_path + new_path)
 					if new_config.size() > 0:
 						mod_config = new_config
-						ModLoaderUtils.log_info("Config JSON: Loaded from custom json: %s" % new_path, LOG_NAME)
-						ModLoaderUtils.log_debug_json_print("Config JSON: File data:", mod_config, LOG_NAME)
+						ModLoaderLog.info("Config JSON: Loaded from custom json: %s" % new_path, LOG_NAME)
+						ModLoaderLog.debug_json_print("Config JSON: File data:", mod_config, LOG_NAME)
 					else:
-						ModLoaderUtils.log_error("Config JSON: ERROR - Could not load data via `load_from` for %s, at path: %s" % [dir_name, new_path], LOG_NAME)
+						ModLoaderLog.error("Config JSON: ERROR - Could not load data via `load_from` for %s, at path: %s" % [dir_name, new_path], LOG_NAME)
 
 			mod_data[dir_name].config = mod_config
 
 	if found_configs_count > 0:
-		ModLoaderUtils.log_success("Config JSON: Loaded %s config(s)" % found_configs_count, LOG_NAME)
+		ModLoaderLog.success("Config JSON: Loaded %s config(s)" % found_configs_count, LOG_NAME)
 	else:
-		ModLoaderUtils.log_info("Config JSON: No mod configs were found", LOG_NAME)
+		ModLoaderLog.info("Config JSON: No mod configs were found", LOG_NAME)
 
 
 # Add a mod's data to mod_data.
@@ -480,11 +474,11 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 	# Get the ID of the mod being checked
 	var mod_id := mod.dir_name
 
-	ModLoaderUtils.log_debug("Checking dependencies - mod_id: %s %s dependencies: %s" % [mod_id, dependency_type, dependencies], LOG_NAME)
+	ModLoaderLog.debug("Checking dependencies - mod_id: %s %s dependencies: %s" % [mod_id, dependency_type, dependencies], LOG_NAME)
 
 	# Check for circular dependency
 	if mod_id in dependency_chain:
-		ModLoaderUtils.log_debug("%s dependency check - circular dependency detected for mod with ID %s." % [dependency_type.capitalize(), mod_id], LOG_NAME)
+		ModLoaderLog.debug("%s dependency check - circular dependency detected for mod with ID %s." % [dependency_type.capitalize(), mod_id], LOG_NAME)
 		return true
 
 	# Add mod_id to dependency_chain to avoid circular dependencies
@@ -493,10 +487,10 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 	# Loop through each dependency listed in the mod's manifest
 	for dependency_id in dependencies:
 		# Check if dependency is missing
-		if not mod_data.has(dependency_id):
+		if not mod_data.has(dependency_id) or not mod_data[dependency_id].is_loadable:
 			# Skip to the next dependency if it's optional
 			if not is_required:
-				ModLoaderUtils.log_info("Missing optional dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
+				ModLoaderLog.info("Missing optional dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
 				continue
 			_handle_missing_dependency(mod_id, dependency_id)
 			# Flag the mod so it's not loaded later
@@ -506,7 +500,7 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 
 			# Increase the importance score of the dependency by 1
 			dependency.importance += 1
-			ModLoaderUtils.log_debug("%s dependency -> %s importance -> %s" % [dependency_type.capitalize(), dependency_id, dependency.importance], LOG_NAME)
+			ModLoaderLog.debug("%s dependency -> %s importance -> %s" % [dependency_type.capitalize(), dependency_id, dependency.importance], LOG_NAME)
 
 			# Check if the dependency has any dependencies of its own
 			if dependency.manifest.dependencies.size() > 0:
@@ -520,7 +514,7 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 # Handles a missing dependency for a given mod ID. Logs an error message indicating the missing dependency and adds
 # the dependency ID to the mod_missing_dependencies dictionary for the specified mod.
 func _handle_missing_dependency(mod_id: String, dependency_id: String) -> void:
-	ModLoaderUtils.log_error("Missing dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
+	ModLoaderLog.error("Missing dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
 	# if mod is not present in the missing dependencies array
 	if not mod_missing_dependencies.has(mod_id):
 		# add it
@@ -537,28 +531,28 @@ func _check_load_before(mod: ModData) -> void:
 	if mod.manifest.load_before.size() == 0:
 		return
 
-	ModLoaderUtils.log_debug("Load before - In mod %s detected." % mod.dir_name, LOG_NAME)
+	ModLoaderLog.debug("Load before - In mod %s detected." % mod.dir_name, LOG_NAME)
 
 	# For each mod id in load_before
 	for load_before_id in mod.manifest.load_before:
 
 		# Check if the load_before mod exists
 		if not mod_data.has(load_before_id):
-			ModLoaderUtils.log_debug("Load before - Skipping %s because it's missing" % load_before_id, LOG_NAME)
+			ModLoaderLog.debug("Load before - Skipping %s because it's missing" % load_before_id, LOG_NAME)
 			continue
 
 		var load_before_mod_dependencies := mod_data[load_before_id].manifest.dependencies as PoolStringArray
 
 		# Check if it's already a dependency
 		if mod.dir_name in load_before_mod_dependencies:
-			ModLoaderUtils.log_debug("Load before - Skipping because it's already a dependency for %s" % load_before_id, LOG_NAME)
+			ModLoaderLog.debug("Load before - Skipping because it's already a dependency for %s" % load_before_id, LOG_NAME)
 			continue
 
 		# Add the mod to the dependency array
 		load_before_mod_dependencies.append(mod.dir_name)
 		mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
 
-		ModLoaderUtils.log_debug("Load before - Added %s as dependency for %s" % [mod.dir_name, load_before_id], LOG_NAME)
+		ModLoaderLog.debug("Load before - Added %s as dependency for %s" % [mod.dir_name, load_before_id], LOG_NAME)
 
 
 # Get the load order of mods, using a custom sorter
@@ -591,19 +585,19 @@ func _init_mod(mod: ModData) -> void:
 
 	# If the mod contains overwrites initialize the overwrites script
 	if mod.is_overwrite:
-		ModLoaderUtils.log_debug("Overwrite script detected -> %s" % mod_overwrites_path, LOG_NAME)
+		ModLoaderLog.debug("Overwrite script detected -> %s" % mod_overwrites_path, LOG_NAME)
 		var mod_overwrites_script := load(mod_overwrites_path)
 		mod_overwrites_script.new()
-		ModLoaderUtils.log_debug("Initialized overwrite script -> %s" % mod_overwrites_path, LOG_NAME)
+		ModLoaderLog.debug("Initialized overwrite script -> %s" % mod_overwrites_path, LOG_NAME)
 
-	ModLoaderUtils.log_debug("Loading script from -> %s" % mod_main_path, LOG_NAME)
+	ModLoaderLog.debug("Loading script from -> %s" % mod_main_path, LOG_NAME)
 	var mod_main_script := ResourceLoader.load(mod_main_path)
-	ModLoaderUtils.log_debug("Loaded script -> %s" % mod_main_script, LOG_NAME)
+	ModLoaderLog.debug("Loaded script -> %s" % mod_main_script, LOG_NAME)
 
 	var mod_main_instance: Node = mod_main_script.new(self)
 	mod_main_instance.name = mod.manifest.get_mod_id()
 
-	ModLoaderUtils.log_debug("Adding child -> %s" % mod_main_instance, LOG_NAME)
+	ModLoaderLog.debug("Adding child -> %s" % mod_main_instance, LOG_NAME)
 	add_child(mod_main_instance, true)
 
 
@@ -611,10 +605,10 @@ func _init_mod(mod: ModData) -> void:
 # in a ScriptExtensionData resource
 func _handle_script_extensions()->void:
 	var script_extension_data_array := []
-	for extension_path in script_extensions:
+	for extension_path in ModLoaderStore.script_extensions:
 
 		if not File.new().file_exists(extension_path):
-			ModLoaderUtils.log_error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
+			ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 			continue
 
 		var child_script = ResourceLoader.load(extension_path)
@@ -708,7 +702,7 @@ func _reload_vanilla_child_classes_for(script:Script)->void:
 func _apply_extension(extension_path)->Script:
 	# Check path to file exists
 	if not File.new().file_exists(extension_path):
-		ModLoaderUtils.log_error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
+		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 		return null
 
 	var child_script:Script = ResourceLoader.load(extension_path)
@@ -739,7 +733,7 @@ func _apply_extension(extension_path)->Script:
 		_saved_scripts[parent_script_path].append(parent_script.duplicate())
 	_saved_scripts[parent_script_path].append(child_script)
 
-	ModLoaderUtils.log_info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
+	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
 
 	return child_script
@@ -749,7 +743,7 @@ func _apply_extension(extension_path)->Script:
 func _remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(extension_path):
-		ModLoaderUtils.log_error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
+		ModLoaderLog.error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
 		return
 
 	var extension_script: Script = ResourceLoader.load(extension_path)
@@ -758,13 +752,13 @@ func _remove_specific_extension_from_script(extension_path: String) -> void:
 
 	# Check if the script to reset has been extended
 	if not _saved_scripts.has(parent_script_path):
-		ModLoaderUtils.log_error("The extension parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error("The extension parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
 	if not _saved_scripts[parent_script_path].size() > 0:
-		ModLoaderUtils.log_error("The extension script path \"%s\" does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error("The extension script path \"%s\" does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
 	var parent_script_extensions: Array = _saved_scripts[parent_script_path].duplicate()
@@ -778,7 +772,7 @@ func _remove_specific_extension_from_script(extension_path: String) -> void:
 			break
 
 	if found_script_extension == null:
-		ModLoaderUtils.log_error("The extension script path \"%s\" has not been found in the saved extension of the base script" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error("The extension script path \"%s\" has not been found in the saved extension of the base script" % [parent_script_path], LOG_NAME)
 		return
 	parent_script_extensions.erase(found_script_extension)
 
@@ -794,18 +788,18 @@ func _remove_specific_extension_from_script(extension_path: String) -> void:
 func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 	# Check path to file exists
 	if not ModLoaderUtils.file_exists(parent_script_path):
-		ModLoaderUtils.log_error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has been extended
 	if not _saved_scripts.has(parent_script_path):
-		ModLoaderUtils.log_error("The parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error("The parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
 	if not _saved_scripts[parent_script_path].size() > 0:
-		ModLoaderUtils.log_error("The parent script path \"%s\" does not have the base script saved, \nthis should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error("The parent script path \"%s\" does not have the base script saved, \nthis should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
 	var parent_script: Script = _saved_scripts[parent_script_path][0]
@@ -821,107 +815,33 @@ func _remove_all_extensions_from_all_scripts() -> void:
 		_remove_all_extensions_from_script(script)
 
 
-# Helpers
+# Deprecated
 # =============================================================================
 
-# Helper functions to build mods
-
-# Add a script that extends a vanilla script. `child_script_path` should point
-# to your mod's extender script, eg "MOD/extensions/singletons/utils.gd".
-# Inside that extender script, it should include "extends {target}", where
-# {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
-# Note that your extender script doesn't have to follow the same directory path
-# as the vanilla file, but it's good practice to do so.
-func install_script_extension(child_script_path:String):
-
-	# If this is called during initialization, add it with the other
-	# extensions to be installed taking inheritance chain into account
-	if is_initializing:
-		script_extensions.push_back(child_script_path)
-
-	# If not, apply the extension directly
-	else:
-		_apply_extension(child_script_path)
+func install_script_extension(child_script_path:String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.install_script_extension", "ModLoaderMod.install_script_extension", "6.0.0")
+	ModLoaderMod.install_script_extension(child_script_path)
 
 
-# Remove a specific script from the vanilla extension chain
-# This will remove only the specifically provided extension
-# and keep all other extensions of that vanilla script running
-func uninstall_script_extension(extension_script_path: String) -> void:
-
-	# Currently this is the only thing we do, but it is better to expose
-	# this function like this for further changes
-	_remove_specific_extension_from_script(extension_script_path)
-
-
-# This function should be called only when actually necessary
-# as it can break the game and require a restart for mods
-# that do not fully use the systems put in place by the mod loader,
-# so anything that just uses add_node, move_node ecc...
-# To not have your mod break on reload please use provided functions
-# like ModLoader::save_scene, ModLoader::append_node_in_scene and
-# all the functions that will be added in the next versions
-# Used to reload already present mods and load new ones
-func reload_mods() -> void:
-
-	# Currently this is the only thing we do, but it is better to expose
-	# this function like this for further changes
-	_reload_mods()
-
-
-# Register an array of classes to the global scope, since Godot only does that in the editor.
-# Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
-# You can find these easily in the project.godot file under "_global_script_classes"
-# (but you should only include classes belonging to your mod)
 func register_global_classes_from_array(new_global_classes: Array) -> void:
-	ModLoaderUtils.register_global_classes_from_array(new_global_classes)
-	var _savecustom_error: int = ProjectSettings.save_custom(ModLoaderUtils.get_override_path())
+	ModLoaderDeprecated.deprecated_changed("ModLoader.register_global_classes_from_array", "ModLoaderMod.register_global_classes_from_array", "6.0.0")
+	ModLoaderMod.register_global_classes_from_array(new_global_classes)
 
 
-# Add a translation file, eg "mytranslation.en.translation". The translation
-# file should have been created in Godot already: When you import a CSV, such
-# a file will be created for you.
 func add_translation_from_resource(resource_path: String) -> void:
-	if not File.new().file_exists(resource_path):
-		ModLoaderUtils.log_fatal("Tried to load a translation resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
-		return
-
-	var translation_object: Translation = load(resource_path)
-	TranslationServer.add_translation(translation_object)
-	ModLoaderUtils.log_info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
+	ModLoaderDeprecated.deprecated_changed("ModLoader.add_translation_from_resource", "ModLoaderMod.add_translation_from_resource", "6.0.0")
+	ModLoaderMod.add_translation_from_resource(resource_path)
 
 
 func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
-	var new_node: Node
-	if not instance_path == "":
-		new_node = load(instance_path).instance()
-	else:
-		new_node = Node.instance()
-	if not node_name == "":
-		new_node.name = node_name
-	if is_visible == false:
-		new_node.visible = false
-	if not node_parent == null:
-		var tmp_node: Node = modified_scene.get_node(node_parent)
-		tmp_node.add_child(new_node)
-		new_node.set_owner(modified_scene)
-	else:
-		modified_scene.add_child(new_node)
-		new_node.set_owner(modified_scene)
+	ModLoaderDeprecated.deprecated_changed("ModLoader.append_node_in_scene", "ModLoaderMod.append_node_in_scene", "6.0.0")
+	ModLoaderMod.append_node_in_scene(modified_scene, node_name, node_parent, instance_path, is_visible)
 
 
 func save_scene(modified_scene: Node, scene_path: String) -> void:
-	var packed_scene := PackedScene.new()
-	var _pack_error := packed_scene.pack(modified_scene)
-	ModLoaderUtils.log_debug("packing scene -> %s" % packed_scene, LOG_NAME)
-	packed_scene.take_over_path(scene_path)
-	ModLoaderUtils.log_debug("save_scene - taking over path - new path -> %s" % packed_scene.resource_path, LOG_NAME)
-	_saved_objects.append(packed_scene)
+	ModLoaderDeprecated.deprecated_changed("ModLoader.save_scene", "ModLoaderMod.save_scene", "6.0.0")
+	ModLoaderMod.save_scene(modified_scene, scene_path)
 
-
-
-# Deprecated
-# =============================================================================
 
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
