@@ -71,7 +71,7 @@ var ml_options := {
 	# hasn't been updated to fix the deprecated issues yet
 	ignore_deprecated_errors = false,
 
-	# TODO: Description goes here
+	# Array of mods that should be ignored when logging messages (contains mod IDs as strings)
 	ignored_mod_names_in_log = [],
 }
 

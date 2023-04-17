@@ -315,7 +315,7 @@ static func _write_to_log_file(string_to_write: String) -> void:
 	log_file.close()
 
 
-# Keeps log backups for every run, just like the Godot; gdscript implementation of
+# Keeps log backups for every run, just like the Godot gdscript implementation of
 # https://github.com/godotengine/godot/blob/1d14c054a12dacdc193b589e4afb0ef319ee2aae/core/io/logger.cpp#L151
 static func _rotate_log_file() -> void:
 	var MAX_LOGS := int(ProjectSettings.get_setting("logging/file_logging/max_log_files"))
