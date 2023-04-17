@@ -17,6 +17,25 @@ var test_is_mod_id_valid_params = [
 	["abc-%ab", false],
 ]
 
+# Test with distinct mod ids in arrays
+# Test with overlapping mod ids in arrays
+# Test with no mod ids in one array
+# Test with no mod ids in both arrays
+var test_validate_distinct_mod_ids_in_arrays_params = [
+	[["mod1-mod1", "mod2-mod2", "mod3-mod3"], ["mod4-mod4", "mod5-mod5", "mod6-mod6"], true],
+	[["mod1-mod1", "mod2-mod2", "mod3-mod3"], ["mod4-mod4", "mod5-mod5", "mod6-mod6", "mod2-mod2"], false],
+	[[], ["mod4-mod4", "mod5-mod5", "mod6-mod6"], true],
+	[["mod1-mod1", "mod2-mod2", "mod3-mod3"], [], true],
+	[[], [], true],
+]
+
+# Test with a valid mod id array
+# Test with an invalid mod id array
+var test_is_mod_id_array_valid_params = [
+	[["mod1-mod1", "mod2-mod2", "mod3-mod3"], true],
+	[["mod1-mod1", "mod2-mod2", "invalid-mod21###"], false],
+]
+
 
 func test_is_mod_id_valid(params = use_parameters(test_is_mod_id_valid_params)) -> void:
 	# prepare
@@ -33,42 +52,37 @@ func test_is_mod_id_valid(params = use_parameters(test_is_mod_id_valid_params)) 
 	)
 
 
-func test_validate_distinct_mod_ids_in_arrays():
-	var array_one: PoolStringArray = ["mod1-mod1", "mod2-mod2", "mod3-mod3"]
-	var array_two: PoolStringArray = ["mod4-mod4", "mod5-mod5", "mod6-mod6"]
-	var array_description: PoolStringArray = ["array_1", "array_2"]
+func test_validate_distinct_mod_ids_in_arrays(params = use_parameters(test_validate_distinct_mod_ids_in_arrays_params)) -> void:
+	# prepare
 	var mod_id = "test-mod"
+	var array_one = params[0]
+	var array_two = params[1]
+	var array_description = ["array_one", "array_two"]
 	var additional_info = "additional info"
+	var expected_result = params[2]
 
-	# Test with distinct mod ids in arrays
-	var result = ModManifest.validate_distinct_mod_ids_in_arrays(mod_id, array_one, array_two, ["array_one", "array_two"], additional_info, true)
-	assert_eq(result, true)
+	# test
+	var result = ModManifest.validate_distinct_mod_ids_in_arrays(mod_id, array_one, array_two, array_description, additional_info, true)
 
-	# Test with overlapping mod ids in arrays
-	array_two = ["mod4-mod4", "mod5-mod5", "mod6-mod6", "mod2-mod2"]
-	result = ModManifest.validate_distinct_mod_ids_in_arrays(mod_id, array_one, array_two, ["array_one", "array_two"], additional_info, true)
-	assert_eq(result, false)
-
-	# Test with no mod ids in one array
-	array_two = []
-	result = ModManifest.validate_distinct_mod_ids_in_arrays(mod_id, array_one, array_two, ["array_one", "array_two"], additional_info, true)
-	assert_eq(result, true)
-
-	# Test with no mod ids in both arrays
-	array_one = []
-	array_two = []
-	result = ModManifest.validate_distinct_mod_ids_in_arrays(mod_id, array_one, array_two, ["array_one", "array_two"], additional_info, true)
-	assert_eq(result, true)
+	# validate
+	assert_true(
+		result == expected_result,
+		"Expected %s but was %s instead for this arrays \"%s\" - \"%s\"" % [expected_result, result, array_one, array_two]
+	)
 
 
-func test_is_mod_id_array_valid():
-	var mod_id_array = PoolStringArray(["mod1-mod1", "mod2-mod2", "mod3-mod3"])
+func test_is_mod_id_array_valid(params = use_parameters(test_is_mod_id_array_valid_params)) -> void:
+	# prepare
+	var mod_id = "test-mod"
+	var mod_id_array = params[0]
+	var description = "array_description"
+	var expected_result = params[1]
 
-	# Test with a valid mod id array
-	var result = ModManifest.is_mod_id_array_valid("own-mod", mod_id_array, "dependencies", true)
-	assert_eq(result, true)
+	# test
+	var result = ModManifest.is_mod_id_array_valid(mod_id, mod_id_array, description, true)
 
-	# Test with an invalid mod id array
-	mod_id_array = PoolStringArray(["mod1-mod1", "mod2-mod2", "invalid-mod21###"])
-	result = ModManifest.is_mod_id_array_valid("own-mod", mod_id_array, "dependencies", true)
-	assert_eq(result, false)
+	# validate
+	assert_true(
+		result == expected_result,
+		"Expected %s but was %s instead for this array \"%s\"" % [expected_result, result, mod_id_array]
+	)
