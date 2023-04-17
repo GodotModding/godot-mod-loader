@@ -21,6 +21,6 @@ static func check_autoload_position(autoload_name: String, position_index: int, 
 		if OS.has_feature("editor"):
 			help_msg = " To configure your autoloads, go to Project > Project Settings > Autoload."
 
-		ModLoaderUtils.log_fatal(error_msg + help_msg, LOG_NAME)
+		ModLoaderLog.fatal(error_msg + help_msg, LOG_NAME)
 
 	return position_matches
