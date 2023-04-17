@@ -70,8 +70,7 @@ static func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dicti
 			# No user config file exists. Low importance as very likely to trigger
 			var full_msg = "Config JSON Notice: %s" % status_msg
 			# Only log this once, to avoid flooding the log
-			if not ModLoaderStore.logged_messages.all.has(full_msg.md5_text()):
-				ModLoaderLog.debug(full_msg, mod_dir_name)
+			ModLoaderLog.debug(full_msg, mod_dir_name, true)
 		else:
 			# Code error (eg. invalid mod ID)
 			ModLoaderLog.fatal("Config JSON Error (%s): %s" % [status_code, status_msg], mod_dir_name)

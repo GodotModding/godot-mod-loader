@@ -58,45 +58,45 @@ class ModLoaderLogEntry:
 # Logs the error in red and a stack trace. Prefixed FATAL-ERROR
 # Stops the execution in editor
 # Always logged
-static func fatal(message: String, mod_name: String) -> void:
-	_log(message, mod_name, "fatal-error")
+static func fatal(message: String, mod_name: String, only_once := false) -> void:
+	_log(message, mod_name, "fatal-error", only_once)
 
 
 # Logs the message and pushed an error. Prefixed ERROR
 # Always logged
-static func error(message: String, mod_name: String) -> void:
-	_log(message, mod_name, "error")
+static func error(message: String, mod_name: String, only_once := false) -> void:
+	_log(message, mod_name, "error", only_once)
 
 
 # Logs the message and pushes a warning. Prefixed WARNING
 # Logged with verbosity level at or above warning (-v)
-static func warning(message: String, mod_name: String) -> void:
-	_log(message, mod_name, "warning")
+static func warning(message: String, mod_name: String, only_once := false) -> void:
+	_log(message, mod_name, "warning", only_once)
 
 
 # Logs the message. Prefixed INFO
 # Logged with verbosity level at or above info (-vv)
-static func info(message: String, mod_name: String) -> void:
-	_log(message, mod_name, "info")
+static func info(message: String, mod_name: String, only_once := false) -> void:
+	_log(message, mod_name, "info", only_once)
 
 
 # Logs the message. Prefixed SUCCESS
 # Logged with verbosity level at or above info (-vv)
-static func success(message: String, mod_name: String) -> void:
-	_log(message, mod_name, "success")
+static func success(message: String, mod_name: String, only_once := false) -> void:
+	_log(message, mod_name, "success", only_once)
 
 
 # Logs the message. Prefixed DEBUG
 # Logged with verbosity level at or above debug (-vvv)
-static func debug(message: String, mod_name: String) -> void:
-	_log(message, mod_name, "debug")
+static func debug(message: String, mod_name: String, only_once := false) -> void:
+	_log(message, mod_name, "debug", only_once)
 
 
 # Logs the message formatted with [method JSON.print]. Prefixed DEBUG
 # Logged with verbosity level at or above debug (-vvv)
-static func debug_json_print(message: String, json_printable, mod_name: String) -> void:
+static func debug_json_print(message: String, json_printable, mod_name: String, only_once := false) -> void:
 	message = "%s\n%s" % [message, JSON.print(json_printable, "  ")]
-	_log(message, mod_name, "debug")
+	_log(message, mod_name, "debug", only_once)
 
 
 # API log functions - stored logs
@@ -186,12 +186,16 @@ static func get_all_entries_as_string(log_entries: Array) -> Array:
 # Internal log functions
 # =============================================================================
 
-static func _log(message: String, mod_name: String, log_type: String = "info") -> void:
+static func _log(message: String, mod_name: String, log_type: String = "info", only_once := false) -> void:
 	if _is_mod_name_ignored(mod_name):
 		return
 
 	var time := "%s   " % _get_time_string()
 	var log_entry := ModLoaderLogEntry.new(mod_name, message, log_type, time)
+
+	if only_once and _is_logged_before(log_entry):
+		return
+
 	_store_log(log_entry)
 
 	# Check if the scene_tree is available
@@ -264,6 +268,13 @@ static func _store_log(log_entry: ModLoaderLogEntry) -> void:
 
 	# Store in by_type
 	ModLoaderStore.logged_messages.by_type[log_entry.type.to_lower()][log_entry.get_md5()] = log_entry
+
+
+static func _is_logged_before(entry: ModLoaderLogEntry) -> bool:
+	if not ModLoaderStore.logged_messages.all.has(entry.get_md5()):
+		return false
+
+	return true
 
 
 class ModLoaderLogCompare:
