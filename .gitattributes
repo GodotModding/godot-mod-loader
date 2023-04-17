@@ -1,8 +1,8 @@
 # Git stuff
-/.gitattributes     										export-ignore
-/.gitignore         										export-ignore
-.github/            										export-ignore
-/README.md          										export-ignore
+/.gitattributes													export-ignore
+/.gitignore															export-ignore
+.github/																export-ignore
+/README.md															export-ignore
 
 # Tests
 test/																		export-ignore
