@@ -34,7 +34,7 @@ class ModLoaderLogEntry:
 
 
 	func get_entry() -> String:
-		return time + get_prefix() + message
+		return str(time, get_prefix(), message)
 
 
 	func get_prefix() -> String:
