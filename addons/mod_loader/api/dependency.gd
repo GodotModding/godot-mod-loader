@@ -101,11 +101,11 @@ static func _get_load_order(mod_data_array: Array) -> Array:
 	for mod in mod_data_array:
 		mod = mod as ModData
 		if mod.is_loadable:
-			mod_load_order.append(mod)
+			ModLoaderStore.mod_load_order.append(mod)
 
 	# Sort mods by the importance value
-	mod_load_order.sort_custom(CompareImportance, "_compare_importance")
-	return  mod_load_order
+	ModLoaderStore.mod_load_order.sort_custom(CompareImportance, "_compare_importance")
+	return  ModLoaderStore.mod_load_order
 
 
 # Handles a missing dependency for a given mod ID. Logs an error message indicating the missing dependency and adds
