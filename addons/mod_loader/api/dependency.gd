@@ -7,6 +7,11 @@ extends Reference
 
 const LOG_NAME := "ModLoader:Dependency"
 
+# Any mods that are missing their dependancies are added to this
+# Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
+var mod_missing_dependencies := {}
+
+
 # Run dependency checks on a mod, checking any dependencies it lists in its
 # mod_manifest (ie. its manifest.json file). If a mod depends on another mod that
 # hasn't been loaded, the dependent mod won't be loaded, if it is a required dependency.

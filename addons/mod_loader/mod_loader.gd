@@ -49,10 +49,6 @@ const LOG_NAME := "ModLoader"
 # Vars
 # =============================================================================
 
-# Any mods that are missing their dependancies are added to this
-# Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
-var mod_missing_dependencies := {}
-
 # Things to keep to ensure they are not garbage collected (used by `save_scene`)
 var _saved_objects := []
 
