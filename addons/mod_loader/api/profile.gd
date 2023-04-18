@@ -26,7 +26,7 @@ static func enable_mod(mod_id: String, profile_name := ModLoaderStore.current_us
 static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
 	# Check if it is a mandatory mod
 	if ModLoader.mod_data.has(mod_id) and ModLoader.mod_data[mod_id].is_mandatory:
-		ModLoaderUtils.log_error(
+		ModLoaderLog.error(
 			"Unable to disable mod \"%s\" as it is marked as mandatory \"%s\" and cannot be deactivated."
 			% [mod_id, ModLoaderStore.ml_options.mandatory_mods],
 		LOG_NAME)
@@ -52,7 +52,7 @@ static func delete_mod(mod_id: String, profile_name := ModLoaderStore.current_us
 static func create(profile_name: String) -> bool:
 	# Verify that the profile name is not already in use
 	if ModLoaderStore.user_profiles.has(profile_name):
-		ModLoaderUtils.log_error("User profile with the name of \"%s\" already exists." % profile_name, LOG_NAME)
+		ModLoaderLog.error("User profile with the name of \"%s\" already exists." % profile_name, LOG_NAME)
 		return false
 
 	var mod_list := {}
@@ -85,7 +85,7 @@ static func create(profile_name: String) -> bool:
 static func set_profile(profile_name: String) -> bool:
 	# Check if there is a user profile with the specified name
 	if not ModLoaderStore.user_profiles.has(profile_name):
-		ModLoaderUtils.log_error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
+		ModLoaderLog.error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
 		return false
 
 	# Update the current_user_profile in the ModLoaderStore
@@ -98,7 +98,7 @@ static func set_profile(profile_name: String) -> bool:
 static func delete(profile_name: String) -> bool:
 	# If the current_profile is about to get deleted change it to default
 	if ModLoaderStore.current_user_profile == profile_name:
-		ModLoaderUtils.log_error(str(
+		ModLoaderLog.error(str(
 			"You cannot delete the currently selected user profile \"%s\" " +
 			"because it is currently in use. Please switch to a different profile before deleting this one.") % profile_name,
 		LOG_NAME)
@@ -106,13 +106,13 @@ static func delete(profile_name: String) -> bool:
 
 	# Deleting the default profile is not allowed
 	if profile_name == "default":
-		ModLoaderUtils.log_error("You can't delete the default profile", LOG_NAME)
+		ModLoaderLog.error("You can't delete the default profile", LOG_NAME)
 		return false
 
 	# Delete the user profile
 	if not ModLoaderStore.user_profiles.erase(profile_name):
 		# Erase returns false if the the key is not present in user_profiles
-		ModLoaderUtils.log_error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
+		ModLoaderLog.error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
 		return false
 
 	# Save profiles to the user profiles JSON file
@@ -127,7 +127,7 @@ static func get_current() -> Profile:
 # Return the user profile with the given name
 static func get_profile(profile_name: String) -> Profile:
 	if not ModLoaderStore.user_profiles.has(profile_name):
-		ModLoaderUtils.log_error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
+		ModLoaderLog.error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
 		return null
 
 	return ModLoaderStore.user_profiles[profile_name]
@@ -153,7 +153,7 @@ static func _update_disabled_mods() -> void:
 
 	# Check if a current user profile is set
 	if ModLoaderStore.current_user_profile == "":
-		ModLoaderUtils.log_info("There is no current user profile. The \"default\" profile will be created.", LOG_NAME)
+		ModLoaderLog.info("There is no current user profile. The \"default\" profile will be created.", LOG_NAME)
 		return
 
 	current_user_profile = ModLoaderStore.user_profiles[ModLoaderStore.current_user_profile]
@@ -213,7 +213,7 @@ static func _is_mod_id_in_mod_list(mod_id: String, profile_name: String) -> bool
 
 	# Return false if the mod_id is not in the profile's mod_list
 	if not user_profile.mod_list.has(mod_id):
-		ModLoaderUtils.log_error("Mod id \"%s\" not found in the \"mod_list\" of user profile \"%s\"." % [mod_id, profile_name], LOG_NAME)
+		ModLoaderLog.error("Mod id \"%s\" not found in the \"mod_list\" of user profile \"%s\"." % [mod_id, profile_name], LOG_NAME)
 		return false
 
 	# Return true if the mod_id is in the profile's mod_list
@@ -227,7 +227,7 @@ static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> P
 
 	# If no name is provided, log an error and return null
 	if profile_name == "":
-		ModLoaderUtils.log_error("Please provide a name for the new profile", LOG_NAME)
+		ModLoaderLog.error("Please provide a name for the new profile", LOG_NAME)
 		return null
 
 	# Set the profile name
@@ -235,7 +235,7 @@ static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> P
 
 	# If no mods are specified in the mod_list, log a warning and return the new profile
 	if mod_list.keys().size() == 0:
-		ModLoaderUtils.log_warning("No mod_ids inside \"mod_list\" for user profile \"%s\" " % profile_name, LOG_NAME)
+		ModLoaderLog.warning("No mod_ids inside \"mod_list\" for user profile \"%s\" " % profile_name, LOG_NAME)
 		return new_profile
 
 	# Set the mod_list
@@ -251,7 +251,7 @@ static func _load() -> bool:
 
 	# If there is no data, log an error and return
 	if data.empty():
-		ModLoaderUtils.log_error("No profile file found at \"%s\"" % FILE_PATH_USER_PROFILES, LOG_NAME)
+		ModLoaderLog.error("No profile file found at \"%s\"" % FILE_PATH_USER_PROFILES, LOG_NAME)
 		return false
 
 	# Set the current user profile to the one specified in the data
