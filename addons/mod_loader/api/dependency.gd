@@ -40,7 +40,7 @@ static func _check_dependencies(mod: ModData, is_required := true, dependency_ch
 	# Loop through each dependency listed in the mod's manifest
 	for dependency_id in dependencies:
 		# Check if dependency is missing
-		if not mod_data.has(dependency_id) or not mod_data[dependency_id].is_loadable:
+		if not ModLoaderStore.mod_data.has(dependency_id) or not ModLoaderStore.mod_data[dependency_id].is_loadable:
 			# Skip to the next dependency if it's optional
 			if not is_required:
 				ModLoaderLog.info("Missing optional dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
@@ -49,7 +49,7 @@ static func _check_dependencies(mod: ModData, is_required := true, dependency_ch
 			# Flag the mod so it's not loaded later
 			mod.is_loadable = false
 		else:
-			var dependency: ModData = mod_data[dependency_id]
+			var dependency: ModData = ModLoaderStore.mod_data[dependency_id]
 
 			# Increase the importance score of the dependency by 1
 			dependency.importance += 1
@@ -76,13 +76,12 @@ static func _check_load_before(mod: ModData) -> void:
 
 	# For each mod id in load_before
 	for load_before_id in mod.manifest.load_before:
-
 		# Check if the load_before mod exists
-		if not mod_data.has(load_before_id):
+		if not ModLoaderStore.mod_data.has(load_before_id):
 			ModLoaderLog.debug("Load before - Skipping %s because it's missing" % load_before_id, LOG_NAME)
 			continue
 
-		var load_before_mod_dependencies := mod_data[load_before_id].manifest.dependencies as PoolStringArray
+		var load_before_mod_dependencies := ModLoaderStore.mod_data[load_before_id].manifest.dependencies as PoolStringArray
 
 		# Check if it's already a dependency
 		if mod.dir_name in load_before_mod_dependencies:
@@ -91,7 +90,7 @@ static func _check_load_before(mod: ModData) -> void:
 
 		# Add the mod to the dependency array
 		load_before_mod_dependencies.append(mod.dir_name)
-		mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
+		ModLoaderStore.mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
 
 		ModLoaderLog.debug("Load before - Added %s as dependency for %s" % [mod.dir_name, load_before_id], LOG_NAME)
 
