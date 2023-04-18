@@ -185,7 +185,7 @@ func _reload_mods() -> void:
 func _reset_mods() -> void:
 	ModLoaderStore.mod_data.clear()
 	ModLoaderStore.mod_load_order.clear()
-	mod_missing_dependencies.clear()
+	ModLoaderStore.mod_missing_dependencies.clear()
 	ModLoaderStore.script_extensions.clear()
 	_remove_all_extensions_from_all_scripts()
 

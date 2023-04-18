@@ -7,10 +7,6 @@ extends Reference
 
 const LOG_NAME := "ModLoader:Dependency"
 
-# Any mods that are missing their dependancies are added to this
-# Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
-var mod_missing_dependencies := {}
-
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
 # mod_manifest (ie. its manifest.json file). If a mod depends on another mod that
@@ -118,11 +114,11 @@ static func _get_load_order(mod_data_array: Array) -> Array:
 static func _handle_missing_dependency(mod_id: String, dependency_id: String) -> void:
 	ModLoaderLog.error("Missing dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
 	# if mod is not present in the missing dependencies array
-	if not mod_missing_dependencies.has(mod_id):
+	if not ModLoaderStore.mod_missing_dependencies.has(mod_id):
 		# add it
-		mod_missing_dependencies[mod_id] = []
+		ModLoaderStore.mod_missing_dependencies[mod_id] = []
 
-	mod_missing_dependencies[mod_id].append(dependency_id)
+	ModLoaderStore.mod_missing_dependencies[mod_id].append(dependency_id)
 
 
 # Inner class so the sort function can be called by _get_load_order()
