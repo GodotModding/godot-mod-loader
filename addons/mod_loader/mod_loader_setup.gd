@@ -65,24 +65,30 @@ const new_global_classes := [
 		"class": "ModLoaderSteam",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/third_party/steam.gd"
+	}, {
+		"base": "Node",
+		"class": "ModLoaderLog",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/api/log.gd"
 	}
 ]
 
-# IMPORTANT: use the ModLoaderUtils via this variable within this script!
+# IMPORTANT: use the ModLoaderLog via this variable within this script!
 # Otherwise, script compilation will break on first load since the class is not defined.
-var modloaderutils: Node = load("res://addons/mod_loader/mod_loader_utils.gd").new()
+var ModLoaderSetupLog: Object = load("res://addons/mod_loader/setup/setup_log.gd")
+var ModLoaderSetupUtils: Object = load("res://addons/mod_loader/setup/setup_utils.gd")
 
 var path := {}
 var file_name := {}
-var is_only_setup: bool = modloaderutils.is_running_with_command_line_arg("--only-setup")
-var is_setup_create_override_cfg : bool = modloaderutils.is_running_with_command_line_arg("--setup-create-override-cfg")
+var is_only_setup: bool = ModLoaderSetupUtils.is_running_with_command_line_arg("--only-setup")
+var is_setup_create_override_cfg : bool = ModLoaderSetupUtils.is_running_with_command_line_arg("--setup-create-override-cfg")
 
 
 func _init() -> void:
-	modloaderutils.log_debug("ModLoader setup initialized", LOG_NAME)
+	ModLoaderSetupLog.debug("ModLoader setup initialized", LOG_NAME)
 
-	var mod_loader_index: int = modloaderutils.get_autoload_index("ModLoader")
-	var mod_loader_store_index: int = modloaderutils.get_autoload_index("ModLoaderStore")
+	var mod_loader_index: int = ModLoaderSetupUtils.get_autoload_index("ModLoader")
+	var mod_loader_store_index: int = ModLoaderSetupUtils.get_autoload_index("ModLoaderStore")
 
 	# Avoid doubling the setup work
 	# Checks if the ModLoaderStore is the first autoload and ModLoader the second
@@ -101,7 +107,7 @@ func _init() -> void:
 
 # ModLoader already setup - switch to the main scene
 func modded_start() -> void:
-	modloaderutils.log_info("ModLoader is available, mods can be loaded!", LOG_NAME)
+	ModLoaderSetupLog.info("ModLoader is available, mods can be loaded!", LOG_NAME)
 
 	OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
 
@@ -110,13 +116,13 @@ func modded_start() -> void:
 
 # Set up the ModLoader as an autoload and register the other global classes.
 func setup_modloader() -> void:
-	modloaderutils.log_info("Setting up ModLoader", LOG_NAME)
+	ModLoaderSetupLog.info("Setting up ModLoader", LOG_NAME)
 
 	# Setup path and file_name dict with all required paths and file names.
 	setup_file_data()
 
 	# Register all new helper classes as global
-	modloaderutils.register_global_classes_from_array(new_global_classes)
+	ModLoaderSetupUtils.register_global_classes_from_array(new_global_classes)
 
 	# Add ModLoader autoload (the * marks the path as autoload)
 	reorder_autoloads()
@@ -132,7 +138,7 @@ func setup_modloader() -> void:
 		handle_project_binary()
 
 	# ModLoader is set up. A game restart is required to apply the ProjectSettings.
-	modloaderutils.log_info("ModLoader is set up, a game restart is required.", LOG_NAME)
+	ModLoaderSetupLog.info("ModLoader is set up, a game restart is required.", LOG_NAME)
 
 	match true:
 		# If the --only-setup cli argument is passed, quit with exit code 0
@@ -170,13 +176,13 @@ func reorder_autoloads() -> void:
 
 # Saves the ProjectSettings to a override.cfg file in the base game directory.
 func handle_override_cfg() -> void:
-	modloaderutils.log_debug("using the override.cfg file", LOG_NAME)
-	var _save_custom_error: int = ProjectSettings.save_custom(modloaderutils.get_override_path())
+	ModLoaderSetupLog.debug("using the override.cfg file", LOG_NAME)
+	var _save_custom_error: int = ProjectSettings.save_custom(ModLoaderSetupUtils.get_override_path())
 
 
 # Creates the project.binary file, adds it to the pck and removes the no longer needed project.binary file.
 func handle_project_binary() -> void:
-	modloaderutils.log_debug("injecting the project.binary file", LOG_NAME)
+	ModLoaderSetupLog.debug("injecting the project.binary file", LOG_NAME)
 	create_project_binary()
 	inject_project_binary()
 	clean_up_project_binary_file()
@@ -191,7 +197,7 @@ func create_project_binary() -> void:
 func inject_project_binary() -> void:
 	var output_add_project_binary := []
 	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], true, output_add_project_binary)
-	modloaderutils.log_debug_json_print("Adding custom project.binary to res://", output_add_project_binary, LOG_NAME)
+	ModLoaderSetupLog.debug_json_print("Adding custom project.binary to res://", output_add_project_binary, LOG_NAME)
 
 
 # Removes the project.binary file
@@ -205,27 +211,28 @@ func setup_file_data() -> void:
 	# C:/path/to/game/game.exe
 	path.exe = OS.get_executable_path()
 	# C:/path/to/game/
-	path.game_base_dir = modloaderutils.get_local_folder_dir()
+	path.game_base_dir = ModLoaderSetupUtils.get_local_folder_dir()
 	# C:/path/to/game/addons/mod_loader
 	path.mod_loader_dir = path.game_base_dir + "addons/mod_loader/"
 	# C:/path/to/game/addons/mod_loader/vendor/godotpcktool/godotpcktool.exe
 	path.pck_tool = path.mod_loader_dir + "vendor/godotpcktool/godotpcktool.exe"
 	# can be supplied to override the exe_name
-	file_name.cli_arg_exe = modloaderutils.get_cmd_line_arg_value("--exe-name")
+	file_name.cli_arg_exe = ModLoaderSetupUtils.get_cmd_line_arg_value("--exe-name")
 	# can be supplied to override the pck_name
-	file_name.cli_arg_pck = modloaderutils.get_cmd_line_arg_value("--pck-name")
+	file_name.cli_arg_pck = ModLoaderSetupUtils.get_cmd_line_arg_value("--pck-name")
 	# game - or use the value of cli_arg_exe_name if there is one
-	file_name.exe = modloaderutils.get_file_name_from_path(path.exe, true, true) if file_name.cli_arg_exe == '' else file_name.cli_arg_exe
+	file_name.exe = ModLoaderSetupUtils.get_file_name_from_path(path.exe, true, true) if file_name.cli_arg_exe == '' else file_name.cli_arg_exe
 	# game - or use the value of cli_arg_pck_name if there is one
 	# using exe_path.get_file() instead of exe_name
 	# so you don't override the pck_name with the --exe-name cli arg
 	# the main pack name is the same as the .exe name
 	# if --main-pack cli arg is not set
-	file_name.pck = modloaderutils.get_file_name_from_path(path.exe, true, true)  if file_name.cli_arg_pck == '' else file_name.cli_arg_pck
+	file_name.pck = ModLoaderSetupUtils.get_file_name_from_path(path.exe, true, true)  if file_name.cli_arg_pck == '' else file_name.cli_arg_pck
 	# C:/path/to/game/game.pck
 	path.pck = path.game_base_dir.plus_file(file_name.pck + '.pck')
 	# C:/path/to/game/addons/mod_loader/project.binary
 	path.project_binary = path.mod_loader_dir + "project.binary"
 
-	modloaderutils.log_debug_json_print("path: ", path, LOG_NAME)
-	modloaderutils.log_debug_json_print("file_name: ", file_name, LOG_NAME)
+	ModLoaderSetupLog.debug_json_print("path: ", path, LOG_NAME)
+	ModLoaderSetupLog.debug_json_print("file_name: ", file_name, LOG_NAME)
+  

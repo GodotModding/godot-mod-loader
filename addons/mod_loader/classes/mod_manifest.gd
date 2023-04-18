@@ -213,7 +213,7 @@ func _handle_compatible_mod_loader_version(mod_id: String, godot_details: Dictio
 	# If an empty string was passed
 	if string_value == "":
 		# Using str() here because format strings caused an error
-		ModLoaderUtils.log_fatal(
+		ModLoaderLog.fatal(
 			str (
 				"%s - \"compatible_mod_loader_version\" is a required field." +
 				" For more details visit %s"
@@ -240,13 +240,13 @@ static func is_name_or_namespace_valid(check_name: String, is_silent := false) -
 
 	if re.search(check_name) == null:
 		if not is_silent:
-			ModLoaderUtils.log_fatal("Invalid name or namespace: \"%s\". You may only use letters, numbers and underscores." % check_name, LOG_NAME)
+			ModLoaderLog.fatal("Invalid name or namespace: \"%s\". You may only use letters, numbers and underscores." % check_name, LOG_NAME)
 		return false
 
 	var _compile_error_2 = re.compile("^[a-zA-Z0-9_]{3,}$") # at least 3 long
 	if re.search(check_name) == null:
 		if not is_silent:
-			ModLoaderUtils.log_fatal("Invalid name or namespace: \"%s\". Must be longer than 3 characters." % check_name, LOG_NAME)
+			ModLoaderLog.fatal("Invalid name or namespace: \"%s\". Must be longer than 3 characters." % check_name, LOG_NAME)
 		return false
 
 	return true
@@ -272,7 +272,7 @@ static func is_semver_valid(mod_id: String, check_version_number: String, field_
 	if re.search(check_version_number) == null:
 		if not is_silent:
 			# Using str() here because format strings caused an error
-			ModLoaderUtils.log_fatal(
+			ModLoaderLog.fatal(
 				str(
 					"Invalid semantic version: \"%s\" in field \"%s\" of mod \"%s\". " +
 					"You may only use numbers without leading zero and periods" +
@@ -284,7 +284,7 @@ static func is_semver_valid(mod_id: String, check_version_number: String, field_
 
 	if check_version_number.length() > 16:
 		if not is_silent:
-			ModLoaderUtils.log_fatal(
+			ModLoaderLog.fatal(
 				str(
 					"Invalid semantic version: \"%s\" in field \"%s\" of mod \"%s\". " +
 					"Version number must be shorter than 16 characters."
@@ -318,7 +318,7 @@ static func validate_distinct_mod_ids_in_arrays(
 
 	# If any overlaps were found
 	if not is_silent:
-		ModLoaderUtils.log_fatal(
+		ModLoaderLog.fatal(
 			(
 				"The mod -> %s lists the same mod(s) -> %s - in \"%s\" and \"%s\". %s"
 				% [mod_id, overlaps, array_description[0], array_description[1], additional_info]
@@ -341,7 +341,7 @@ static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringAr
 			if mod_id == own_mod_id:
 				is_valid = false
 				if not is_silent:
-					ModLoaderUtils.log_fatal("The mod \"%s\" lists itself as \"%s\" in its own manifest.json file" % [mod_id, mod_id_array_description], LOG_NAME)
+					ModLoaderLog.fatal("The mod \"%s\" lists itself as \"%s\" in its own manifest.json file" % [mod_id, mod_id_array_description], LOG_NAME)
 
 			# Check if the mod id is a valid mod id.
 			if not is_mod_id_valid(own_mod_id, mod_id, mod_id_array_description, is_silent):
@@ -356,14 +356,14 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 	# contains hyphen?
 	if not check_mod_id.count("-") == 1:
 		if not is_silent:
-			ModLoaderUtils.log_fatal(str(intro_text, "Expected a single hyphen in the mod ID, but the %s was: \"%s\"" % [type, check_mod_id]), LOG_NAME)
+			ModLoaderLog.fatal(str(intro_text, "Expected a single hyphen in the mod ID, but the %s was: \"%s\"" % [type, check_mod_id]), LOG_NAME)
 		return false
 
 	# at least 7 long (1 for hyphen, 3 each for namespace/name)
 	var mod_id_length = check_mod_id.length()
 	if mod_id_length < 7:
 		if not is_silent:
-			ModLoaderUtils.log_fatal(str(intro_text, "Mod ID for \"%s\" is too short. It must be at least 7 characters, but its length is: %s" % [check_mod_id, mod_id_length]), LOG_NAME)
+			ModLoaderLog.fatal(str(intro_text, "Mod ID for \"%s\" is too short. It must be at least 7 characters, but its length is: %s" % [check_mod_id, mod_id_length]), LOG_NAME)
 		return false
 
 	var split = check_mod_id.split("-")
@@ -374,12 +374,12 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 
 	if re.search(check_namespace) == null:
 		if not is_silent:
-			ModLoaderUtils.log_fatal(str(intro_text, "Mod ID has an invalid namespace (author) for \"%s\". Namespace can only use letters, numbers and underscores, but was: \"%s\"" % [check_mod_id, check_namespace]), LOG_NAME)
+			ModLoaderLog.fatal(str(intro_text, "Mod ID has an invalid namespace (author) for \"%s\". Namespace can only use letters, numbers and underscores, but was: \"%s\"" % [check_mod_id, check_namespace]), LOG_NAME)
 		return false
 
 	if re.search(check_name) == null:
 		if not is_silent:
-			ModLoaderUtils.log_fatal(str(intro_text, "Mod ID has an invalid name for \"%s\". Name can only use letters, numbers and underscores, but was: \"%s\"" % [check_mod_id, check_name]), LOG_NAME)
+			ModLoaderLog.fatal(str(intro_text, "Mod ID has an invalid name for \"%s\". Name can only use letters, numbers and underscores, but was: \"%s\"" % [check_mod_id, check_name]), LOG_NAME)
 		return false
 
 	return true
