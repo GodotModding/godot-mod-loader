@@ -45,7 +45,12 @@ static func delete_mod(mod_id: String, profile_name := ModLoaderStore.current_us
 	ModLoaderStore.user_profiles[profile_name].mod_list.erase(mod_id)
 
 	# Save profiles to the user profiles JSON file
-	return _save()
+	var is_save_success := _save()
+
+	if is_save_success:
+		ModLoaderLog.debug("Mod deleted from mod_list: mod_id=%s profile_name=%s" % [mod_id, profile_name], LOG_NAME)
+
+	return is_save_success
 
 
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
@@ -78,7 +83,12 @@ static func create(profile_name: String) -> bool:
 	ModLoaderStore.user_profiles[profile_name] = new_profile
 
 	# Store the new profile in the json file
-	return _save()
+	var is_save_success := _save()
+
+	if is_save_success:
+		ModLoaderLog.debug("Created new user profile \"%s\"" % profile_name, LOG_NAME)
+
+	return is_save_success
 
 
 # Sets the current user profile to the specified profile_name.
@@ -91,7 +101,13 @@ static func set_profile(profile_name: String) -> bool:
 	# Update the current_user_profile in the ModLoaderStore
 	ModLoaderStore.current_user_profile = profile_name
 
-	return _save()
+	# Save changes in the json file
+	var is_save_success := _save()
+
+	if is_save_success:
+		ModLoaderLog.debug("Current user profile set to \"%s\"" % profile_name, LOG_NAME)
+
+	return is_save_success
 
 
 # Deletes a user profile with the given profile_name.
@@ -116,7 +132,12 @@ static func delete(profile_name: String) -> bool:
 		return false
 
 	# Save profiles to the user profiles JSON file
-	return _save()
+	var is_save_success := _save()
+
+	if is_save_success:
+		ModLoaderLog.debug("Deleted user profile \"%s\"" % profile_name, LOG_NAME)
+
+	return is_save_success
 
 
 # Returns the current user profile
@@ -166,6 +187,11 @@ static func _update_disabled_mods() -> void:
 	# Append the disabled mods to the global list of disabled mods
 	ModLoaderStore.ml_options.disabled_mods.append_array(user_profile_disabled_mods)
 
+	ModLoaderLog.debug(
+		"Updated the global list of disabled mods \"%s\", based on the current user profile \"%s\""
+		% [ModLoaderStore.ml_options.disabled_mods, current_user_profile.name],
+	LOG_NAME)
+
 
 # This function updates the mod lists of all user profiles with newly loaded mods that are not already present.
 # It does so by comparing the current set of loaded mods with the mod list of each user profile, and adding any missing mods.
@@ -186,7 +212,12 @@ static func _update_mod_lists() -> bool:
 		profile.mod_list.merge(current_mod_list)
 
 	# Save the updated user profiles to the JSON file
-	return _save()
+	var is_save_success := _save()
+
+	if is_save_success:
+		ModLoaderLog.debug("Updated the mod lists of all user profiles", LOG_NAME)
+
+	return is_save_success
 
 
 # Handles the activation or deactivation of a mod in a user profile.
@@ -199,7 +230,12 @@ static func _handle_mod_state(mod_id: String, profile_name: String, activate: bo
 	ModLoaderStore.user_profiles[profile_name].mod_list[mod_id] = activate
 
 	# Save profiles to the user profiles JSON file
-	return _save()
+	var is_save_success := _save()
+
+	if is_save_success:
+		ModLoaderLog.debug("Mod activation state changed: mod_id=%s activate=%s profile_name=%s" % [mod_id, activate, profile_name], LOG_NAME)
+
+	return is_save_success
 
 
 # Checks whether a given mod_id is present in the mod_list of the specified user profile.
