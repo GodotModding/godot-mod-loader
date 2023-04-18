@@ -168,6 +168,9 @@ static func get_all_as_array() -> Array:
 # =============================================================================
 
 # Update the global list of disabled mods based on the current user profile
+# The user profile will override the disabled_mods property that can be set via the options resource in the editor.
+# Example: If "Mod-TestMod" is set in disabled_mods via the editor, the mod will appear disabled in the user profile.
+# If the user then enables the mod in the profile the entry in disabled_mods will be removed.
 static func _update_disabled_mods() -> void:
 	var user_profile_disabled_mods := []
 	var current_user_profile : Profile
