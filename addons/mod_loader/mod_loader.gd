@@ -74,7 +74,7 @@ var _saved_scripts := {}
 
 func _init() -> void:
 	# if mods are not enabled - don't load mods
-	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
+	if REQUIRE_CMD_LINE and not ModLoaderCLI.is_running_with_command_line_arg("--enable-mods"):
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
