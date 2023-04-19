@@ -6,56 +6,6 @@ const LOG_NAME := "ModLoader:ModLoaderUtils"
 const MOD_CONFIG_DIR_PATH := "user://configs"
 
 
-# Logs the error in red and a stack trace. Prefixed FATAL-ERROR
-# Stops the execution in editor
-# Always logged
-static func log_fatal(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_fatal", "ModLoaderLog.fatal", "6.0.0")
-	ModLoaderLog.fatal(message, mod_name)
-
-
-# Logs the message and pushed an error. Prefixed ERROR
-# Always logged
-static func log_error(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_error", "ModLoaderLog.error", "6.0.0")
-	ModLoaderLog.error(message, mod_name)
-
-
-# Logs the message and pushes a warning. Prefixed WARNING
-# Logged with verbosity level at or above warning (-v)
-static func log_warning(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_warning", "ModLoaderLog.warning", "6.0.0")
-	ModLoaderLog.warning(message, mod_name)
-
-
-# Logs the message. Prefixed INFO
-# Logged with verbosity level at or above info (-vv)
-static func log_info(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_info", "ModLoaderLog.info", "6.0.0")
-	ModLoaderLog.info(message, mod_name)
-
-
-# Logs the message. Prefixed SUCCESS
-# Logged with verbosity level at or above info (-vv)
-static func log_success(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_success", "ModLoaderLog.success", "6.0.0")
-	ModLoaderLog.success(message, mod_name)
-
-
-# Logs the message. Prefixed DEBUG
-# Logged with verbosity level at or above debug (-vvv)
-static func log_debug(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_debug", "ModLoaderLog.debug", "6.0.0")
-	ModLoaderLog.debug(message, mod_name)
-
-
-# Logs the message formatted with [method JSON.print]. Prefixed DEBUG
-# Logged with verbosity level at or above debug (-vvv)
-static func log_debug_json_print(message: String, json_printable, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_debug_json_print", "ModLoaderLog.debug_json_print", "6.0.0")
-	ModLoaderLog.debug_json_print(message, json_printable, mod_name)
-
-
 # This is a dummy func. It is exclusively used to show notes in the code that
 # stay visible after decompiling a PCK, as is primarily intended to assist new
 # modders in understanding and troubleshooting issues
@@ -437,3 +387,56 @@ static func get_path_to_configs() -> String:
 		if ModLoaderStore.ml_options.override_path_to_configs:
 			configs_path = ModLoaderStore.ml_options.override_path_to_configs
 	return configs_path
+
+
+# Deprecated
+# =============================================================================
+
+# Logs the error in red and a stack trace. Prefixed FATAL-ERROR
+# Stops the execution in editor
+# Always logged
+static func log_fatal(message: String, mod_name: String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.log_fatal", "ModLoaderLog.fatal", "6.0.0")
+	ModLoaderLog.fatal(message, mod_name)
+
+
+# Logs the message and pushed an error. Prefixed ERROR
+# Always logged
+static func log_error(message: String, mod_name: String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.log_error", "ModLoaderLog.error", "6.0.0")
+	ModLoaderLog.error(message, mod_name)
+
+
+# Logs the message and pushes a warning. Prefixed WARNING
+# Logged with verbosity level at or above warning (-v)
+static func log_warning(message: String, mod_name: String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.log_warning", "ModLoaderLog.warning", "6.0.0")
+	ModLoaderLog.warning(message, mod_name)
+
+
+# Logs the message. Prefixed INFO
+# Logged with verbosity level at or above info (-vv)
+static func log_info(message: String, mod_name: String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.log_info", "ModLoaderLog.info", "6.0.0")
+	ModLoaderLog.info(message, mod_name)
+
+
+# Logs the message. Prefixed SUCCESS
+# Logged with verbosity level at or above info (-vv)
+static func log_success(message: String, mod_name: String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.log_success", "ModLoaderLog.success", "6.0.0")
+	ModLoaderLog.success(message, mod_name)
+
+
+# Logs the message. Prefixed DEBUG
+# Logged with verbosity level at or above debug (-vvv)
+static func log_debug(message: String, mod_name: String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.log_debug", "ModLoaderLog.debug", "6.0.0")
+	ModLoaderLog.debug(message, mod_name)
+
+
+# Logs the message formatted with [method JSON.print]. Prefixed DEBUG
+# Logged with verbosity level at or above debug (-vvv)
+static func log_debug_json_print(message: String, json_printable, mod_name: String) -> void:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.log_debug_json_print", "ModLoaderLog.debug_json_print", "6.0.0")
+	ModLoaderLog.debug_json_print(message, json_printable, mod_name)
