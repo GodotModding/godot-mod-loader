@@ -25,7 +25,7 @@ var script_extensions := []
 var has_shown_editor_zips_warning := false
 
 # Things to keep to ensure they are not garbage collected (used by `save_scene`)
-var _saved_objects := []
+var saved_objects := []
 
 # Store vanilla classes for script extension sorting
 var loaded_vanilla_parents_cache := {}
