@@ -120,7 +120,7 @@ static func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_
 	var configs_path := ModLoaderUtils.get_path_to_configs()
 	var json_path := configs_path.plus_file(mod_id + ".json")
 
-	return ModLoaderUtils.save_dictionary_to_json_file(data_new, json_path)
+	return ModLoaderFile.save_dictionary_to_json_file(data_new, json_path)
 
 
 # Saves a single settings to a mod's custom config file.

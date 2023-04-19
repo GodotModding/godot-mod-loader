@@ -134,48 +134,6 @@ static func get_file_name_from_path(path: String, make_lower_case := true, remov
 	return file_name
 
 
-# Parses JSON from a given file path and returns a [Dictionary].
-# Returns an empty [Dictionary] if no file exists (check with size() < 1)
-static func get_json_as_dict(path: String) -> Dictionary:
-	var file := File.new()
-
-	if !file.file_exists(path):
-		file.close()
-		return {}
-
-	var error = file.open(path, File.READ)
-	if not error == OK:
-		ModLoaderLog.error("Error opening file. Code: %s" % error, LOG_NAME)
-
-	var content := file.get_as_text()
-	return get_json_string_as_dict(content)
-
-
-# Parses JSON from a given [String] and returns a [Dictionary].
-# Returns an empty [Dictionary] on error (check with size() < 1)
-static func get_json_string_as_dict(string: String) -> Dictionary:
-	if string == "":
-		return {}
-	var parsed := JSON.parse(string)
-	if parsed.error:
-		ModLoaderLog.error("Error parsing JSON", LOG_NAME)
-		return {}
-	if not parsed.result is Dictionary:
-		ModLoaderLog.error("JSON is not a dictionary", LOG_NAME)
-		return {}
-	return parsed.result
-
-
-static func file_exists(path: String) -> bool:
-	var file = File.new()
-	return file.file_exists(path)
-
-
-static func dir_exists(path: String) -> bool:
-	var dir = Directory.new()
-	return dir.dir_exists(path)
-
-
 # Returns an empty String if the key does not exist or is not type of String
 static func get_string_from_dict(dict: Dictionary, key: String) -> String:
 	if not dict.has(key):
@@ -245,8 +203,7 @@ static func is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 		ModLoaderLog.fatal("Global class to be registered is missing one of %s" % required_fields, LOG_NAME)
 		return false
 
-	var file = File.new()
-	if not file.file_exists(global_class_dict.path):
+	if not ModLoaderFile.file_exists(global_class_dict.path):
 		ModLoaderLog.fatal('Class "%s" to be registered as global could not be found at given path "%s"' %
 		[global_class_dict.class, global_class_dict.path], LOG_NAME)
 		return false
@@ -325,47 +282,6 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 			# We've exhausted all files in this directory. Close the iterator.
 			dir.list_dir_end()
 	return data
-
-
-# Saving (Files)
-# =============================================================================
-
-# Saves a dictionary to a file, as a JSON string
-static func save_string_to_file(save_string: String, filepath: String) -> bool:
-	# Create directory if it doesn't exist yet
-	var file_directory := filepath.get_base_dir()
-	var dir := Directory.new()
-
-	code_note(str(
-		"View error codes here:",
-		"https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#enum-globalscope-error"
-	))
-
-	if not dir.dir_exists(file_directory):
-		var makedir_error = dir.make_dir_recursive(file_directory)
-		if not makedir_error == OK:
-			ModLoaderLog.fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
-			return false
-
-	var file = File.new()
-
-	# Save data to the file
-	var fileopen_error = file.open(filepath, File.WRITE)
-
-	if not fileopen_error == OK:
-		ModLoaderLog.fatal("Encountered an error (%s) when attempting to write to a file, with the path: %s" % [fileopen_error, filepath], LOG_NAME)
-		return false
-
-	file.store_string(save_string)
-	file.close()
-
-	return true
-
-
-# Saves a dictionary to a file, as a JSON string
-static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> bool:
-	var json_string = JSON.print(data, "\t")
-	return save_string_to_file(json_string, filepath)
 
 
 # Paths
