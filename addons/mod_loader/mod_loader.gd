@@ -59,9 +59,6 @@ var mod_load_order := []
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies := {}
 
-# Stores all the taken over scripts for restoration
-var _saved_scripts := {}
-
 
 # Main
 # =============================================================================
@@ -720,12 +717,12 @@ func _apply_extension(extension_path)->Script:
 
 	# We want to save scripts for resetting later
 	# All the scripts are saved in order already
-	if not _saved_scripts.has(parent_script_path):
-		_saved_scripts[parent_script_path] = []
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
+		ModLoaderStore.saved_scripts[parent_script_path] = []
 		# The first entry in the saved script array that has the path
 		# used as a key will be the duplicate of the not modified script
-		_saved_scripts[parent_script_path].append(parent_script.duplicate())
-	_saved_scripts[parent_script_path].append(child_script)
+		ModLoaderStore.saved_scripts[parent_script_path].append(parent_script.duplicate())
+		ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
 
 	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
@@ -745,17 +742,17 @@ func _remove_specific_extension_from_script(extension_path: String) -> void:
 	var parent_script_path: String = parent_script.resource_path
 
 	# Check if the script to reset has been extended
-	if not _saved_scripts.has(parent_script_path):
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
 		ModLoaderLog.error("The extension parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
-	if not _saved_scripts[parent_script_path].size() > 0:
+	if not ModLoaderStore.saved_scripts[parent_script_path].size() > 0:
 		ModLoaderLog.error("The extension script path \"%s\" does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
-	var parent_script_extensions: Array = _saved_scripts[parent_script_path].duplicate()
+	var parent_script_extensions: Array = ModLoaderStore.saved_scripts[parent_script_path].duplicate()
 	parent_script_extensions.remove(0)
 
 	# Searching for the extension that we want to remove
@@ -786,25 +783,25 @@ func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 		return
 
 	# Check if the script to reset has been extended
-	if not _saved_scripts.has(parent_script_path):
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
 		ModLoaderLog.error("The parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
-	if not _saved_scripts[parent_script_path].size() > 0:
+	if not ModLoaderStore.saved_scripts[parent_script_path].size() > 0:
 		ModLoaderLog.error("The parent script path \"%s\" does not have the base script saved, \nthis should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
-	var parent_script: Script = _saved_scripts[parent_script_path][0]
+	var parent_script: Script = ModLoaderStore.saved_scripts[parent_script_path][0]
 	parent_script.take_over_path(parent_script_path)
 
 	# Remove the script after it has been reset so we do not do it again
-	_saved_scripts.erase(parent_script_path)
+	ModLoaderStore.saved_scripts.erase(parent_script_path)
 
 
 func _remove_all_extensions_from_all_scripts() -> void:
-	var _to_remove_scripts: Dictionary = _saved_scripts.duplicate()
+	var _to_remove_scripts: Dictionary = ModLoaderStore.saved_scripts.duplicate()
 	for script in _to_remove_scripts:
 		_remove_all_extensions_from_script(script)
 

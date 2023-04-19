@@ -30,6 +30,9 @@ var _saved_objects := []
 # Store vanilla classes for script extension sorting
 var loaded_vanilla_parents_cache := {}
 
+# Stores all the taken over scripts for restoration
+var saved_scripts := {}
+
 # Keeps track of logged messages, to avoid flooding the log with duplicate notices
 # Can also be used by mods, eg. to create an in-game developer console that
 # shows messages
