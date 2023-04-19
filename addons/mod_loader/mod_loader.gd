@@ -84,7 +84,7 @@ func _init() -> void:
 	_check_autoload_positions()
 
 	# Log the autoloads order. Helpful when providing support to players
-	ModLoaderLog.debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
+	ModLoaderLog.debug_json_print("Autoload order", ModLoaderGodot._get_autoload_array(), LOG_NAME)
 
 	# Log game install dir
 	ModLoaderLog.info("game_install_directory: %s" % ModLoaderPath.get_local_folder_dir(), LOG_NAME)
