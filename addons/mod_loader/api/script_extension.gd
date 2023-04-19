@@ -7,9 +7,11 @@ extends Reference
 
 const LOG_NAME := "ModLoader:ScriptExtension"
 
+
 # Couple the extension paths with the parent paths and the extension's mod id
 # in a ScriptExtensionData resource
-static func _handle_script_extensions()->void:
+# We need to pass the UNPACKED_DIR constant because the global ModLoader is not available during _init().
+static func _handle_script_extensions(UNPACKED_DIR: String)->void:
 	var script_extension_data_array := []
 	for extension_path in ModLoaderStore.script_extensions:
 
@@ -19,7 +21,7 @@ static func _handle_script_extensions()->void:
 
 		var child_script = ResourceLoader.load(extension_path)
 
-		var mod_id:String = extension_path.trim_prefix(ModLoader.UNPACKED_DIR).get_slice("/", 0)
+		var mod_id:String = extension_path.trim_prefix(UNPACKED_DIR).get_slice("/", 0)
 
 		var parent_script:Script = child_script.get_base_script()
 		var parent_script_path:String = parent_script.resource_path
@@ -46,11 +48,51 @@ static func _handle_script_extensions()->void:
 		_reload_vanilla_child_classes_for(script)
 
 
+static func _apply_extension(extension_path)->Script:
+	# Check path to file exists
+	if not File.new().file_exists(extension_path):
+		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
+		return null
+
+	var child_script:Script = ResourceLoader.load(extension_path)
+	# Adding metadata that contains the extension script path
+	# We cannot get that path in any other way
+	# Passing the child_script as is would return the base script path
+	# Passing the .duplicate() would return a '' path
+	child_script.set_meta("extension_script_path", extension_path)
+
+	# Force Godot to compile the script now.
+	# We need to do this here to ensure that the inheritance chain is
+	# properly set up, and multiple mods can chain-extend the same
+	# class multiple times.
+	# This is also needed to make Godot instantiate the extended class
+	# when creating singletons.
+	# The actual instance is thrown away.
+	child_script.new()
+
+	var parent_script:Script = child_script.get_base_script()
+	var parent_script_path:String = parent_script.resource_path
+
+	# We want to save scripts for resetting later
+	# All the scripts are saved in order already
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
+		ModLoaderStore.saved_scripts[parent_script_path] = []
+		# The first entry in the saved script array that has the path
+		# used as a key will be the duplicate of the not modified script
+		ModLoaderStore.saved_scripts[parent_script_path].append(parent_script.duplicate())
+		ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
+
+	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
+	child_script.take_over_path(parent_script_path)
+
+	return child_script
+
+
 # Sort an array of ScriptExtensionData following the load order
 static func _sort_extensions_from_load_order(extensions:Array)->Array:
 	var extensions_sorted := []
 
-	for _mod_data in mod_load_order:
+	for _mod_data in ModLoaderStore.mod_load_order:
 		for script in extensions:
 			if script.mod_id == _mod_data.dir_name:
 				extensions_sorted.push_front(script)
@@ -106,44 +148,10 @@ static func _reload_vanilla_child_classes_for(script:Script)->void:
 				load(child_class.path).reload()
 
 
-static func _apply_extension(extension_path)->Script:
-	# Check path to file exists
-	if not File.new().file_exists(extension_path):
-		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
-		return null
-
-	var child_script:Script = ResourceLoader.load(extension_path)
-	# Adding metadata that contains the extension script path
-	# We cannot get that path in any other way
-	# Passing the child_script as is would return the base script path
-	# Passing the .duplicate() would return a '' path
-	child_script.set_meta("extension_script_path", extension_path)
-
-	# Force Godot to compile the script now.
-	# We need to do this here to ensure that the inheritance chain is
-	# properly set up, and multiple mods can chain-extend the same
-	# class multiple times.
-	# This is also needed to make Godot instantiate the extended class
-	# when creating singletons.
-	# The actual instance is thrown away.
-	child_script.new()
-
-	var parent_script:Script = child_script.get_base_script()
-	var parent_script_path:String = parent_script.resource_path
-
-	# We want to save scripts for resetting later
-	# All the scripts are saved in order already
-	if not ModLoaderStore.saved_scripts.has(parent_script_path):
-		ModLoaderStore.saved_scripts[parent_script_path] = []
-		# The first entry in the saved script array that has the path
-		# used as a key will be the duplicate of the not modified script
-		ModLoaderStore.saved_scripts[parent_script_path].append(parent_script.duplicate())
-		ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
-
-	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
-	child_script.take_over_path(parent_script_path)
-
-	return child_script
+static func _remove_all_extensions_from_all_scripts() -> void:
+	var _to_remove_scripts: Dictionary = ModLoaderStore.saved_scripts.duplicate()
+	for script in _to_remove_scripts:
+		_remove_all_extensions_from_script(script)
 
 
 # Used to remove a specific extension
@@ -214,9 +222,3 @@ static func _remove_all_extensions_from_script(parent_script_path: String) -> vo
 
 	# Remove the script after it has been reset so we do not do it again
 	ModLoaderStore.saved_scripts.erase(parent_script_path)
-
-
-static func _remove_all_extensions_from_all_scripts() -> void:
-	var _to_remove_scripts: Dictionary = ModLoaderStore.saved_scripts.duplicate()
-	for script in _to_remove_scripts:
-		_remove_all_extensions_from_script(script)
