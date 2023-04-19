@@ -59,9 +59,6 @@ var mod_load_order := []
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies := {}
 
-# Store vanilla classes for script extension sorting
-var loaded_vanilla_parents_cache := {}
-
 # Stores all the taken over scripts for restoration
 var _saved_scripts := {}
 
@@ -615,8 +612,8 @@ func _handle_script_extensions()->void:
 		var parent_script:Script = child_script.get_base_script()
 		var parent_script_path:String = parent_script.resource_path
 
-		if not loaded_vanilla_parents_cache.keys().has(parent_script_path):
-			loaded_vanilla_parents_cache[parent_script_path] = parent_script
+		if not ModLoaderStore.loaded_vanilla_parents_cache.keys().has(parent_script_path):
+			ModLoaderStore.loaded_vanilla_parents_cache[parent_script_path] = parent_script
 
 		script_extension_data_array.push_back(
 			ScriptExtensionData.new(extension_path, parent_script_path, mod_id)
@@ -629,7 +626,7 @@ func _handle_script_extensions()->void:
 	script_extension_data_array.sort_custom(self, "check_inheritances")
 
 	# This saved some bugs in the past.
-	loaded_vanilla_parents_cache.clear()
+	ModLoaderStore.loaded_vanilla_parents_cache.clear()
 
 	# Load and install all extensions
 	for extension in script_extension_data_array:
@@ -654,11 +651,11 @@ func _sort_extensions_from_load_order(extensions:Array)->Array:
 func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
 	var a_child_script:Script
 
-	if loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
+	if ModLoaderStore.loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
 		a_child_script = ResourceLoader.load(extension_a.parent_script_path)
 	else:
 		a_child_script = ResourceLoader.load(extension_a.parent_script_path)
-		loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
+		ModLoaderStore.loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
 
 	var a_parent_script:Script = a_child_script.get_base_script()
 
