@@ -117,7 +117,7 @@ static func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_
 		data_new = data_original.duplicate(true)
 		data_new.merge(data, true)
 
-	var configs_path := ModLoaderUtils.get_path_to_configs()
+	var configs_path := ModLoaderPath.get_path_to_configs()
 	var json_path := configs_path.plus_file(mod_id + ".json")
 
 	return ModLoaderFile.save_dictionary_to_json_file(data_new, json_path)

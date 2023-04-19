@@ -60,8 +60,8 @@ var ml_options := {
 	# Only applied if custom settings are provided, either via the options.tres
 	# resource, or via CLI args. Note that CLI args can be tested in the editor
 	# via: Project Settings > Display> Editor > Main Run Args
-	override_path_to_mods = "",    # Default if unspecified: "res://mods"    -- get with ModLoaderUtils.get_path_to_mods()
-	override_path_to_configs = "", # Default if unspecified: "res://configs" -- get with ModLoaderUtils.get_path_to_configs()
+	override_path_to_mods = "",    # Default if unspecified: "res://mods"    -- get with ModLoaderPath.get_path_to_mods()
+	override_path_to_configs = "", # Default if unspecified: "res://configs" -- get with ModLoaderPath.get_path_to_configs()
 
 	# Can be used in the editor to load mods from your Steam workshop directory
 	override_path_to_workshop = "",
