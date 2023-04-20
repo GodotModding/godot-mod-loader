@@ -1,4 +1,4 @@
-class_name ModLoaderCLI
+class_name _ModLoaderCLI
 extends Reference
 
 

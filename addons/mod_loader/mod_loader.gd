@@ -74,7 +74,7 @@ var _saved_scripts := {}
 
 func _init() -> void:
 	# if mods are not enabled - don't load mods
-	if REQUIRE_CMD_LINE and not ModLoaderCLI.is_running_with_command_line_arg("--enable-mods"):
+	if REQUIRE_CMD_LINE and not _ModLoaderCLI.is_running_with_command_line_arg("--enable-mods"):
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
@@ -87,7 +87,7 @@ func _init() -> void:
 	ModLoaderLog.debug_json_print("Autoload order", ModLoaderGodot._get_autoload_array(), LOG_NAME)
 
 	# Log game install dir
-	ModLoaderLog.info("game_install_directory: %s" % ModLoaderPath.get_local_folder_dir(), LOG_NAME)
+	ModLoaderLog.info("game_install_directory: %s" % _ModLoaderPath.get_local_folder_dir(), LOG_NAME)
 
 	if not ModLoaderStore.ml_options.enable_mods:
 		ModLoaderLog.info("Mods are currently disabled", LOG_NAME)
@@ -205,7 +205,7 @@ func _reset_mods() -> void:
 func _check_autoload_positions() -> void:
 	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
 	# In that case the ModLoader will be the last entry in the autoload array
-	var override_cfg_path := ModLoaderPath.get_override_path()
+	var override_cfg_path := _ModLoaderPath.get_override_path()
 	var is_override_cfg_setup :=  _ModLoaderFile.file_exists(override_cfg_path)
 	if is_override_cfg_setup:
 		ModLoaderLog.info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
@@ -221,7 +221,7 @@ func _load_mod_zips() -> int:
 	var zipped_mods_count := 0
 
 	if not ModLoaderStore.ml_options.steam_workshop_enabled:
-		var mods_folder_path := ModLoaderPath.get_path_to_mods()
+		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
 
 		# If we're not using Steam workshop, just loop over the mod ZIPs.
 		zipped_mods_count += _load_zips_in_folder(mods_folder_path)
@@ -390,7 +390,7 @@ func _setup_mods() -> int:
 # Load mod config JSONs from res://configs
 func _load_mod_configs() -> void:
 	var found_configs_count := 0
-	var configs_path := ModLoaderPath.get_path_to_configs()
+	var configs_path := _ModLoaderPath.get_path_to_configs()
 
 	for dir_name in mod_data:
 		var json_path := configs_path.plus_file(dir_name + ".json")
@@ -434,7 +434,7 @@ func _load_mod_configs() -> void:
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
 func _init_mod_data(mod_folder_path: String) -> void:
 	# The file name should be a valid mod id
-	var dir_name := ModLoaderPath.get_file_name_from_path(mod_folder_path, false, true)
+	var dir_name := _ModLoaderPath.get_file_name_from_path(mod_folder_path, false, true)
 
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
 	var local_mod_path := UNPACKED_DIR.plus_file(dir_name)
@@ -451,7 +451,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
 	# which has ~1,000 files). That's why it's disabled by default
 	if DEBUG_ENABLE_STORING_FILEPATHS:
-		mod.file_paths = ModLoaderPath.get_flat_view_dict(local_mod_path)
+		mod.file_paths = _ModLoaderPath.get_flat_view_dict(local_mod_path)
 
 
 # Run dependency checks on a mod, checking any dependencies it lists in its
