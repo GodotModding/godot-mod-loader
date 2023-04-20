@@ -52,7 +52,7 @@ func reload_mods() -> void:
 # (but you should only include classes belonging to your mod)
 static func register_global_classes_from_array(new_global_classes: Array) -> void:
 	ModLoaderUtils.register_global_classes_from_array(new_global_classes)
-	var _savecustom_error: int = ProjectSettings.save_custom(ModLoaderPath.get_override_path())
+	var _savecustom_error: int = ProjectSettings.save_custom(_ModLoaderPath.get_override_path())
 
 
 # Add a translation file, eg "mytranslation.en.translation". The translation

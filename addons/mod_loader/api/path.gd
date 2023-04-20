@@ -1,4 +1,4 @@
-class_name ModLoaderPath
+class_name _ModLoaderPath
 extends Reference
 
 
