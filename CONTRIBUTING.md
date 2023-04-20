@@ -36,7 +36,7 @@ Reasoning:
 
 ### String Standards
 - Double quotes over single quotes: `"string"`, not `'string'`
-- Quote escaping over single quotes : `"\"hello\" world"`, not `'"hello" world'` (see comment below)
+- Quote escaping over single quotes : `"\"hello\" world"`, not `'"hello" world'`
 - Format strings over string concatenation and `str()`: `"hello %s!" % place`, not `"hello " + place + "!"`, not `str("hello", place)`. Except for very simple cases/single concatenation: `"hello " + place`, not `"hello %s" % place`
 - split long strings into shorter ones with string concatenation `"" + "" + ...`, not `str("", "", ...)`
 ```gdscript
