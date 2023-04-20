@@ -127,7 +127,7 @@ func _load_mods() -> void:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
-		ModLoaderDependency._check_load_before(mod)
+		_ModLoaderDependency._check_load_before(mod)
 
 
 	# Run optional dependency checks after loading mod_manifest.
@@ -137,7 +137,7 @@ func _load_mods() -> void:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
-		var _is_circular := ModLoaderDependency._check_dependencies(mod, false)
+		var _is_circular := _ModLoaderDependency._check_dependencies(mod, false)
 
 
 	# Run dependency checks after loading mod_manifest. If a mod depends on another
@@ -146,10 +146,10 @@ func _load_mods() -> void:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
-		var _is_circular := ModLoaderDependency._check_dependencies(mod)
+		var _is_circular := _ModLoaderDependency._check_dependencies(mod)
 
 	# Sort mod_load_order by the importance score of the mod
-	ModLoaderStore.mod_load_order = ModLoaderDependency._get_load_order(ModLoaderStore.mod_data.values())
+	ModLoaderStore.mod_load_order = _ModLoaderDependency._get_load_order(ModLoaderStore.mod_data.values())
 
 	# Log mod order
 	var mod_i := 1
