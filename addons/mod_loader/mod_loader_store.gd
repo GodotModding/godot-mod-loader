@@ -91,7 +91,7 @@ func _update_ml_options_from_options_resource() -> void:
 	var ml_options_path := "res://addons/mod_loader/options/options.tres"
 
 	# Get user options for ModLoader
-	if ModLoaderFile.file_exists(ml_options_path):
+	if _ModLoaderFile.file_exists(ml_options_path):
 		var options_resource := load(ml_options_path)
 		if not options_resource.current_options == null:
 			var current_options: Resource = options_resource.current_options

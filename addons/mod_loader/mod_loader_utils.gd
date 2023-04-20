@@ -81,7 +81,7 @@ static func is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 		ModLoaderLog.fatal("Global class to be registered is missing one of %s" % required_fields, LOG_NAME)
 		return false
 
-	if not ModLoaderFile.file_exists(global_class_dict.path):
+	if not _ModLoaderFile.file_exists(global_class_dict.path):
 		ModLoaderLog.fatal('Class "%s" to be registered as global could not be found at given path "%s"' %
 		[global_class_dict.class, global_class_dict.path], LOG_NAME)
 		return false

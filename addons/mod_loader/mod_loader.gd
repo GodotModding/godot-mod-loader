@@ -206,7 +206,7 @@ func _check_autoload_positions() -> void:
 	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
 	# In that case the ModLoader will be the last entry in the autoload array
 	var override_cfg_path := ModLoaderPath.get_override_path()
-	var is_override_cfg_setup :=  ModLoaderFile.file_exists(override_cfg_path)
+	var is_override_cfg_setup :=  _ModLoaderFile.file_exists(override_cfg_path)
 	if is_override_cfg_setup:
 		ModLoaderLog.info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
 		return
@@ -394,7 +394,7 @@ func _load_mod_configs() -> void:
 
 	for dir_name in mod_data:
 		var json_path := configs_path.plus_file(dir_name + ".json")
-		var mod_config := ModLoaderFile.get_json_as_dict(json_path)
+		var mod_config := _ModLoaderFile.get_json_as_dict(json_path)
 
 		ModLoaderLog.debug("Config JSON: Looking for config at path: %s" % json_path, LOG_NAME)
 
@@ -413,7 +413,7 @@ func _load_mod_configs() -> void:
 				var new_path: String = mod_config.load_from
 				if not new_path == "" and not new_path == str(dir_name, ".json"):
 					ModLoaderLog.info("Config JSON: Following load_from path: %s" % new_path, LOG_NAME)
-					var new_config := ModLoaderFile.get_json_as_dict(configs_path + new_path)
+					var new_config := _ModLoaderFile.get_json_as_dict(configs_path + new_path)
 					if new_config.size() > 0:
 						mod_config = new_config
 						ModLoaderLog.info("Config JSON: Loaded from custom json: %s" % new_path, LOG_NAME)
@@ -442,7 +442,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	var mod := ModData.new(local_mod_path)
 	mod.dir_name = dir_name
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
-	mod.is_overwrite = ModLoaderFile.file_exists(mod_overwrites_path)
+	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
 	mod_data[dir_name] = mod
 
 	# Get the mod file paths
@@ -607,7 +607,7 @@ func _handle_script_extensions()->void:
 	var script_extension_data_array := []
 	for extension_path in ModLoaderStore.script_extensions:
 
-		if not ModLoaderFile.file_exists(extension_path):
+		if not _ModLoaderFile.file_exists(extension_path):
 			ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 			continue
 
@@ -701,7 +701,7 @@ func _reload_vanilla_child_classes_for(script:Script)->void:
 
 func _apply_extension(extension_path)->Script:
 	# Check path to file exists
-	if not ModLoaderFile.file_exists(extension_path):
+	if not _ModLoaderFile.file_exists(extension_path):
 		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 		return null
 
@@ -742,7 +742,7 @@ func _apply_extension(extension_path)->Script:
 # Used to remove a specific extension
 func _remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
-	if not ModLoaderFile.file_exists(extension_path):
+	if not _ModLoaderFile.file_exists(extension_path):
 		ModLoaderLog.error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
 		return
 
@@ -787,7 +787,7 @@ func _remove_specific_extension_from_script(extension_path: String) -> void:
 # Used to fully reset the provided script to a state prior of any extension
 func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 	# Check path to file exists
-	if not ModLoaderFile.file_exists(parent_script_path):
+	if not _ModLoaderFile.file_exists(parent_script_path):
 		ModLoaderLog.error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
 		return
 

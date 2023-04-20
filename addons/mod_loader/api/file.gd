@@ -1,4 +1,4 @@
-class_name ModLoaderFile
+class_name _ModLoaderFile
 extends Reference
 
 

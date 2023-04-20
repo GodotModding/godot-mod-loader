@@ -55,7 +55,7 @@ func load_manifest() -> void:
 
 	# Load meta data file
 	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
-	var manifest_dict := ModLoaderFile.get_json_as_dict(manifest_path)
+	var manifest_dict := _ModLoaderFile.get_json_as_dict(manifest_path)
 
 	if USE_EXTENDED_DEBUGLOG:
 		ModLoaderLog.debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
@@ -85,7 +85,7 @@ func has_required_files() -> bool:
 	for required_file in required_mod_files:
 		var file_path := get_required_mod_file_path(required_mod_files[required_file])
 
-		if !ModLoaderFile.file_exists(file_path):
+		if !_ModLoaderFile.file_exists(file_path):
 			ModLoaderLog.fatal("ERROR - %s is missing a required file: %s" % [dir_name, file_path], LOG_NAME)
 			is_loadable = false
 	return is_loadable
