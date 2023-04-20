@@ -1,4 +1,4 @@
-class_name ModLoaderGodot
+class_name _ModLoaderGodot
 extends Object
 
 

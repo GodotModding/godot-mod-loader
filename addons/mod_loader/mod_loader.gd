@@ -84,7 +84,7 @@ func _init() -> void:
 	_check_autoload_positions()
 
 	# Log the autoloads order. Helpful when providing support to players
-	ModLoaderLog.debug_json_print("Autoload order", ModLoaderGodot._get_autoload_array(), LOG_NAME)
+	ModLoaderLog.debug_json_print("Autoload order", _ModLoaderGodot._get_autoload_array(), LOG_NAME)
 
 	# Log game install dir
 	ModLoaderLog.info("game_install_directory: %s" % _ModLoaderPath.get_local_folder_dir(), LOG_NAME)
@@ -211,8 +211,8 @@ func _check_autoload_positions() -> void:
 		ModLoaderLog.info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
 		return
 
-	var _pos_ml_store := ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
-	var _pos_ml_core := ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
+	var _pos_ml_store := _ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
+	var _pos_ml_core := _ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
 
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
