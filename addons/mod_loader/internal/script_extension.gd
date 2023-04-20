@@ -1,4 +1,4 @@
-class_name ModLoaderScriptExtension
+class_name _ModLoaderScriptExtension
 extends Reference
 
 
