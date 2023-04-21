@@ -8,7 +8,7 @@ const LOG_NAME := "ModLoader:ModLoaderUtils"
 # This is a dummy func. It is exclusively used to show notes in the code that
 # stay visible after decompiling a PCK, as is primarily intended to assist new
 # modders in understanding and troubleshooting issues
-static func code_note(_msg:String):
+static func _code_note(_msg:String):
 	pass
 
 
@@ -56,7 +56,7 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 	var registered_class_icons: Dictionary = ProjectSettings.get_setting("_global_script_class_icons")
 
 	for new_class in new_global_classes:
-		if not is_valid_global_class_dict(new_class):
+		if not _is_valid_global_class_dict(new_class):
 			continue
 		for old_class in registered_classes:
 			if old_class.class == new_class.class:
@@ -75,7 +75,7 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 
 # Checks if all required fields are in the given [Dictionary]
 # Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
-static func is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
+static func _is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 	var required_fields := ["base", "class", "language", "path"]
 	if not global_class_dict.has_all(required_fields):
 		ModLoaderLog.fatal("Global class to be registered is missing one of %s" % required_fields, LOG_NAME)
