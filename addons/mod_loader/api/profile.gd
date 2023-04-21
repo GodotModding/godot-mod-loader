@@ -19,7 +19,7 @@ class Profile:
 
 # Enables a mod - it will be loaded on the next game start
 static func enable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
-	return _handle_mod_state(mod_id, profile_name, true)
+	return _set_mod_state(mod_id, profile_name, true)
 
 
 # Disables a mod - it will not be loaded on the next game start
@@ -32,7 +32,7 @@ static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_u
 		LOG_NAME)
 		return false
 
-	return _handle_mod_state(mod_id, profile_name, false)
+	return _set_mod_state(mod_id, profile_name, false)
 
 
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
@@ -216,7 +216,7 @@ static func _update_mod_lists() -> bool:
 
 
 # Handles the activation or deactivation of a mod in a user profile.
-static func _handle_mod_state(mod_id: String, profile_name: String, activate: bool) -> bool:
+static func _set_mod_state(mod_id: String, profile_name: String, activate: bool) -> bool:
 	# Verify whether the mod_id is present in the profile's mod_list.
 	if not _is_mod_id_in_mod_list(mod_id, profile_name):
 		return false
