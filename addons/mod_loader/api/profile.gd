@@ -35,24 +35,6 @@ static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_u
 	return _handle_mod_state(mod_id, profile_name, false)
 
 
-# Delete a mod from a user profiles mod_list
-static func delete_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
-	# Verify whether the mod_id is present in the profile's mod_list.
-	if not _is_mod_id_in_mod_list(mod_id, profile_name):
-		return false
-
-	# Erase the mod from the mod_list
-	ModLoaderStore.user_profiles[profile_name].mod_list.erase(mod_id)
-
-	# Save profiles to the user profiles JSON file
-	var is_save_success := _save()
-
-	if is_save_success:
-		ModLoaderLog.debug("Mod deleted from mod_list: mod_id=%s profile_name=%s" % [mod_id, profile_name], LOG_NAME)
-
-	return is_save_success
-
-
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
 static func create(profile_name: String) -> bool:
 	# Verify that the profile name is not already in use
@@ -198,20 +180,30 @@ static func _update_disabled_mods() -> void:
 
 # This function updates the mod lists of all user profiles with newly loaded mods that are not already present.
 # It does so by comparing the current set of loaded mods with the mod list of each user profile, and adding any missing mods.
+# Additionally, it checks for and deletes any mods from each profile's mod list that are no longer installed on the system.
 static func _update_mod_lists() -> bool:
 	var current_mod_list := {}
 
 	# Create a mod_list with the currently loaded mods
-	for mod_id in ModLoader.mod_data.keys():
+	for mod_id in ModLoaderStore.mod_data.keys():
 		current_mod_list[mod_id] = true
 
 	# Add the deactivated mods to the list
 	for mod_id in ModLoaderStore.ml_options.disabled_mods:
 		current_mod_list[mod_id] = false
 
-	# Iterate over all user profiles and merge the current mod list with each profile's mod list
+	# Iterate over all user profiles
 	for profile_name in ModLoaderStore.user_profiles.keys():
 		var profile: Profile = ModLoaderStore.user_profiles[profile_name]
+
+		# Delete no longer installed mods
+		for mod_id in profile.mod_list:
+			# Check if the mod_dir for the mod-id exists
+			if not _ModLoaderFile.dir_exists(ModLoader.UNPACKED_DIR + mod_id):
+				# if not the mod is no longer installed and can be removed
+				profile.mod_list.erase(mod_id)
+
+		# Merge the profiles mod_list with the previously created current_mod_list
 		profile.mod_list.merge(current_mod_list)
 
 	# Save the updated user profiles to the JSON file
