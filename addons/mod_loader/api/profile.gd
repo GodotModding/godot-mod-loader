@@ -25,7 +25,7 @@ static func enable_mod(mod_id: String, profile_name := ModLoaderStore.current_us
 # Disables a mod - it will not be loaded on the next game start
 static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
 	# Check if it is a mandatory mod
-	if ModLoader.mod_data.has(mod_id) and ModLoader.mod_data[mod_id].is_mandatory:
+	if ModLoaderStore.mod_data.has(mod_id) and ModLoaderStore.mod_data[mod_id].is_mandatory:
 		ModLoaderLog.error(
 			"Unable to disable mod \"%s\" as it is marked as mandatory \"%s\" and cannot be deactivated."
 			% [mod_id, ModLoaderStore.ml_options.mandatory_mods],
@@ -45,7 +45,7 @@ static func create(profile_name: String) -> bool:
 	var mod_list := {}
 
 	# Add all currently loaded mods to the mod_list as active
-	for mod_id in ModLoader.mod_data.keys():
+	for mod_id in ModLoaderStore.mod_data.keys():
 		mod_list[mod_id] = true
 
 	# Add all deactivated mods to the mod list
@@ -278,7 +278,7 @@ static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> P
 # Loads user profiles from the JSON file and adds them to ModLoaderStore.
 static func _load() -> bool:
 	# Load JSON data from the user profiles file
-	var data := ModLoaderUtils.get_json_as_dict(FILE_PATH_USER_PROFILES)
+	var data := _ModLoaderFile.get_json_as_dict(FILE_PATH_USER_PROFILES)
 
 	# If there is no data, log an error and return
 	if data.empty():
@@ -324,4 +324,4 @@ static func _save() -> bool:
 			save_dict.profiles[profile.name].mod_list[mod_id] = is_activated
 
 	# Save the serialized user profiles data to the user profiles JSON file
-	return ModLoaderUtils.save_dictionary_to_json_file(save_dict, FILE_PATH_USER_PROFILES)
+	return _ModLoaderFile.save_dictionary_to_json_file(save_dict, FILE_PATH_USER_PROFILES)
