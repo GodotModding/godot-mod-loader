@@ -173,7 +173,7 @@ static func get_all_as_array() -> Array:
 # If the user then enables the mod in the profile the entry in disabled_mods will be removed.
 static func _update_disabled_mods() -> void:
 	var user_profile_disabled_mods := []
-	var current_user_profile : Profile
+	var current_user_profile: Profile
 
 	# Check if a current user profile is set
 	if ModLoaderStore.current_user_profile == "":
