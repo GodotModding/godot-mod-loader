@@ -1,0 +1,14 @@
+# Git stuff
+/.gitattributes                         export-ignore
+/.gitignore                             export-ignore
+.github/                                export-ignore
+/README.md                              export-ignore
+/CONTRIBUTING.md                        export-ignore
+/LICENSE                                export-ignore
+
+# Tests
+test/                                   export-ignore
+
+# Files not required by AssetLib downloads (provided via download for manual installers)
+addons/mod_loader/vendor/               export-ignore
+addons/mod_loader/mod_loader_setup.gd   export-ignore
