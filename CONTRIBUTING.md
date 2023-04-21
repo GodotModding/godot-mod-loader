@@ -50,6 +50,7 @@ ModLoaderLog.info(
 ## Documentation
 
 The documentation for this project is located in the repository's wiki. Please make sure to update the relevant documentation pages when making changes to the code. If you're not sure what needs to be updated, please ask in your pull request or issue.
+*Note that you will mostly edit the [Upcoming Features](https://github.com/GodotModding/godot-mod-loader/wiki/Upcoming-Features) page, where all changes to the dev branch are documented until they become part of the next major update.*
 
 ## Communicating over Discord
 We use Discord for communication and collaboration. You can join our Discord server at [discord.godotmodding.com](https://discord.godotmodding.com). Please use appropriate channels for your discussions and keep conversations respectful and on-topic.
