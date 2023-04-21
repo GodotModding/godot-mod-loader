@@ -11,7 +11,7 @@ const LOG_NAME := "ModLoader:ScriptExtension"
 # Couple the extension paths with the parent paths and the extension's mod id
 # in a ScriptExtensionData resource
 # We need to pass the UNPACKED_DIR constant because the global ModLoader is not available during _init().
-static func handle_script_extensions(UNPACKED_DIR: String)->void:
+static func handle_script_extensions(UNPACKED_DIR: String) -> void:
 	var script_extension_data_array := []
 	for extension_path in ModLoaderStore.script_extensions:
 
@@ -21,10 +21,10 @@ static func handle_script_extensions(UNPACKED_DIR: String)->void:
 
 		var child_script = ResourceLoader.load(extension_path)
 
-		var mod_id:String = extension_path.trim_prefix(UNPACKED_DIR).get_slice("/", 0)
+		var mod_id: String = extension_path.trim_prefix(UNPACKED_DIR).get_slice("/", 0)
 
-		var parent_script:Script = child_script.get_base_script()
-		var parent_script_path:String = parent_script.resource_path
+		var parent_script: Script = child_script.get_base_script()
+		var parent_script_path: String = parent_script.resource_path
 
 		if not ModLoaderStore.loaded_vanilla_parents_cache.keys().has(parent_script_path):
 			ModLoaderStore.loaded_vanilla_parents_cache[parent_script_path] = parent_script
@@ -44,15 +44,15 @@ static func handle_script_extensions(UNPACKED_DIR: String)->void:
 
 	# Load and install all extensions
 	for extension in script_extension_data_array:
-		var script:Script = apply_extension(extension.extension_path)
+		var script: Script = apply_extension(extension.extension_path)
 		_reload_vanilla_child_classes_for(script)
 
 
 # Inner class so the sort function can be called by handle_script_extensions()
 class InheritanceSorting:
 	# Go up extension_a's inheritance tree to find if any parent shares the same vanilla path as extension_b
-	static func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
-		var a_child_script:Script
+	static func _check_inheritances(extension_a: ScriptExtensionData, extension_b: ScriptExtensionData)->bool:
+		var a_child_script: Script
 
 		if ModLoaderStore.loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
 			a_child_script = ResourceLoader.load(extension_a.parent_script_path)
@@ -60,7 +60,7 @@ class InheritanceSorting:
 			a_child_script = ResourceLoader.load(extension_a.parent_script_path)
 			ModLoaderStore.loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
 
-		var a_parent_script:Script = a_child_script.get_base_script()
+		var a_parent_script: Script = a_child_script.get_base_script()
 
 		if a_parent_script == null:
 			return true
@@ -73,13 +73,13 @@ class InheritanceSorting:
 			return _check_inheritances(ScriptExtensionData.new(extension_a.extension_path, a_parent_script_path, extension_a.mod_id), extension_b)
 
 
-static func apply_extension(extension_path)->Script:
+static func apply_extension(extension_path: String) -> Script:
 	# Check path to file exists
 	if not File.new().file_exists(extension_path):
 		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 		return null
 
-	var child_script:Script = ResourceLoader.load(extension_path)
+	var child_script: Script = ResourceLoader.load(extension_path)
 	# Adding metadata that contains the extension script path
 	# We cannot get that path in any other way
 	# Passing the child_script as is would return the base script path
@@ -95,8 +95,8 @@ static func apply_extension(extension_path)->Script:
 	# The actual instance is thrown away.
 	child_script.new()
 
-	var parent_script:Script = child_script.get_base_script()
-	var parent_script_path:String = parent_script.resource_path
+	var parent_script: Script = child_script.get_base_script()
+	var parent_script_path: String = parent_script.resource_path
 
 	# We want to save scripts for resetting later
 	# All the scripts are saved in order already
@@ -114,7 +114,7 @@ static func apply_extension(extension_path)->Script:
 
 
 # Sort an array of ScriptExtensionData following the load order
-static func _sort_extensions_from_load_order(extensions:Array)->Array:
+static func _sort_extensions_from_load_order(extensions: Array) -> Array:
 	var extensions_sorted := []
 
 	for _mod_data in ModLoaderStore.mod_load_order:
@@ -128,13 +128,12 @@ static func _sort_extensions_from_load_order(extensions:Array)->Array:
 # Reload all children classes of the vanilla class we just extended
 # Calling reload() the children of an extended class seems to allow them to be extended
 # e.g if B is a child class of A, reloading B after apply an extender of A allows extenders of B to properly extend B, taking A's extender(s) into account
-static func _reload_vanilla_child_classes_for(script:Script)->void:
-
+static func _reload_vanilla_child_classes_for(script: Script) -> void:
 	if script == null:
 		return
 	var current_child_classes := []
-	var actual_path:String = script.get_base_script().resource_path
-	var classes:Array = ProjectSettings.get_setting("_global_script_classes")
+	var actual_path: String = script.get_base_script().resource_path
+	var classes: Array = ProjectSettings.get_setting("_global_script_classes")
 
 	for _class in classes:
 		if _class.path == actual_path:
