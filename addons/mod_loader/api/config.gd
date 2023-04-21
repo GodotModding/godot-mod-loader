@@ -25,13 +25,13 @@ static func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dicti
 	var defaults := {}
 
 	# Invalid mod ID
-	if not ModLoader.mod_data.has(mod_dir_name):
+	if not ModLoaderStore.mod_data.has(mod_dir_name):
 		status_code = MLConfigStatus.INVALID_MOD_ID
 		status_msg = "Mod ID was invalid: %s" % mod_dir_name
 
 	# Mod ID is valid
 	if status_code == MLConfigStatus.OK:
-		var mod := ModLoader.mod_data[mod_dir_name] as ModData
+		var mod := ModLoaderStore.mod_data[mod_dir_name] as ModData
 		var config_data := mod.config
 		defaults = mod.manifest.config_defaults
 
@@ -117,10 +117,10 @@ static func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_
 		data_new = data_original.duplicate(true)
 		data_new.merge(data, true)
 
-	var configs_path := ModLoaderUtils.get_path_to_configs()
+	var configs_path := _ModLoaderPath.get_path_to_configs()
 	var json_path := configs_path.plus_file(mod_id + ".json")
 
-	return ModLoaderUtils.save_dictionary_to_json_file(data_new, json_path)
+	return _ModLoaderFile.save_dictionary_to_json_file(data_new, json_path)
 
 
 # Saves a single settings to a mod's custom config file.
