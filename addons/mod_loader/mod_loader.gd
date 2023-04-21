@@ -153,7 +153,7 @@ func _load_mods() -> void:
 		var _is_circular := _check_dependencies(mod)
 
 	# Sort mod_load_order by the importance score of the mod
-	ModLoaderStore.mod_load_order = _get_load_order(mod_data.values())
+	ModLoaderStore.mod_load_order = _get_load_order(ModLoaderStore.mod_data.values())
 
 	# Log mod order
 	var mod_i := 1
