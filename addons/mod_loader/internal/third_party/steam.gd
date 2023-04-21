@@ -30,7 +30,7 @@ static func get_path_to_workshop() -> String:
 	path = "/".join(path_array)
 
 	# Append the workgame's workshop path
-	path = path.plus_file("workshop/content/" + get_steam_app_id())
+	path = path.plus_file("workshop/content/" + _get_steam_app_id())
 
 	return path
 
@@ -39,7 +39,7 @@ static func get_path_to_workshop() -> String:
 # directory (ie. res://steam_data.json). This file is used by Godot Workshop
 # Utility (GWU), which was developed by Brotato developer Blobfish:
 # https://github.com/thomasgvd/godot-workshop-utility
-static func get_steam_app_id() -> String:
+static func _get_steam_app_id() -> String:
 	var game_install_directory := _ModLoaderPath.get_local_folder_dir()
 	var steam_app_id := ""
 	var file := File.new()
