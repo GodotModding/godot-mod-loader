@@ -49,9 +49,6 @@ const LOG_NAME := "ModLoader"
 # Vars
 # =============================================================================
 
-# Stores data for every found/loaded mod
-var mod_data := {}
-
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order := []
 
@@ -123,8 +120,8 @@ func _load_mods() -> void:
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
 	# (from their manifest.json file), and verify that the meta JSON has all
 	# required properties (REQUIRED_META_TAGS)
-	for dir_name in mod_data:
-		var mod: ModData = mod_data[dir_name]
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		mod.load_manifest()
 
 	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
@@ -133,8 +130,8 @@ func _load_mods() -> void:
 	# Check for mods with load_before. If a mod is listed in load_before,
 	# add the current mod to the dependencies of the the mod specified
 	# in load_before.
-	for dir_name in mod_data:
-		var mod: ModData = mod_data[dir_name]
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
 		_check_load_before(mod)
@@ -143,8 +140,8 @@ func _load_mods() -> void:
 	# Run optional dependency checks after loading mod_manifest.
 	# If a mod depends on another mod that hasn't been loaded,
 	# that dependent mod will be loaded regardless.
-	for dir_name in mod_data:
-		var mod: ModData = mod_data[dir_name]
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
 		var _is_circular := _check_dependencies(mod, false)
@@ -152,14 +149,14 @@ func _load_mods() -> void:
 
 	# Run dependency checks after loading mod_manifest. If a mod depends on another
 	# mod that hasn't been loaded, that dependent mod won't be loaded.
-	for dir_name in mod_data:
-		var mod: ModData = mod_data[dir_name]
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
 		var _is_circular := _check_dependencies(mod)
 
 	# Sort mod_load_order by the importance score of the mod
-	mod_load_order = _get_load_order(mod_data.values())
+	mod_load_order = _get_load_order(ModLoaderStore.mod_data.values())
 
 	# Log mod order
 	var mod_i := 1
@@ -174,7 +171,7 @@ func _load_mods() -> void:
 		ModLoaderLog.info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
 
-	ModLoaderLog.debug_json_print("mod data", mod_data, LOG_NAME)
+	ModLoaderLog.debug_json_print("mod data", ModLoaderStore.mod_data, LOG_NAME)
 
 	ModLoaderLog.success("DONE: Completely finished loading mods", LOG_NAME)
 
@@ -193,7 +190,7 @@ func _reload_mods() -> void:
 
 # Internal call that handles the resetting of all mod related data
 func _reset_mods() -> void:
-	mod_data.clear()
+	ModLoaderStore.mod_data.clear()
 	mod_load_order.clear()
 	mod_missing_dependencies.clear()
 	ModLoaderStore.script_extensions.clear()
@@ -392,7 +389,7 @@ func _load_mod_configs() -> void:
 	var found_configs_count := 0
 	var configs_path := ModLoaderUtils.get_path_to_configs()
 
-	for dir_name in mod_data:
+	for dir_name in ModLoaderStore.mod_data:
 		var json_path := configs_path.plus_file(dir_name + ".json")
 		var mod_config := ModLoaderUtils.get_json_as_dict(json_path)
 
@@ -421,7 +418,7 @@ func _load_mod_configs() -> void:
 					else:
 						ModLoaderLog.error("Config JSON: ERROR - Could not load data via `load_from` for %s, at path: %s" % [dir_name, new_path], LOG_NAME)
 
-			mod_data[dir_name].config = mod_config
+			ModLoaderStore.mod_data[dir_name].config = mod_config
 
 	if found_configs_count > 0:
 		ModLoaderLog.success("Config JSON: Loaded %s config(s)" % found_configs_count, LOG_NAME)
@@ -443,7 +440,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	mod.dir_name = dir_name
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = ModLoaderUtils.file_exists(mod_overwrites_path)
-	mod_data[dir_name] = mod
+	ModLoaderStore.mod_data[dir_name] = mod
 
 	# Get the mod file paths
 	# Note: This was needed in the original version of this script, but it's
@@ -487,7 +484,7 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 	# Loop through each dependency listed in the mod's manifest
 	for dependency_id in dependencies:
 		# Check if dependency is missing
-		if not mod_data.has(dependency_id) or not mod_data[dependency_id].is_loadable:
+		if not ModLoaderStore.mod_data.has(dependency_id) or not ModLoaderStore.mod_data[dependency_id].is_loadable:
 			# Skip to the next dependency if it's optional
 			if not is_required:
 				ModLoaderLog.info("Missing optional dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
@@ -496,7 +493,7 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 			# Flag the mod so it's not loaded later
 			mod.is_loadable = false
 		else:
-			var dependency: ModData = mod_data[dependency_id]
+			var dependency: ModData = ModLoaderStore.mod_data[dependency_id]
 
 			# Increase the importance score of the dependency by 1
 			dependency.importance += 1
@@ -537,11 +534,11 @@ func _check_load_before(mod: ModData) -> void:
 	for load_before_id in mod.manifest.load_before:
 
 		# Check if the load_before mod exists
-		if not mod_data.has(load_before_id):
+		if not ModLoaderStore.mod_data.has(load_before_id):
 			ModLoaderLog.debug("Load before - Skipping %s because it's missing" % load_before_id, LOG_NAME)
 			continue
 
-		var load_before_mod_dependencies := mod_data[load_before_id].manifest.dependencies as PoolStringArray
+		var load_before_mod_dependencies := ModLoaderStore.mod_data[load_before_id].manifest.dependencies as PoolStringArray
 
 		# Check if it's already a dependency
 		if mod.dir_name in load_before_mod_dependencies:
@@ -550,7 +547,7 @@ func _check_load_before(mod: ModData) -> void:
 
 		# Add the mod to the dependency array
 		load_before_mod_dependencies.append(mod.dir_name)
-		mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
+		ModLoaderStore.mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
 
 		ModLoaderLog.debug("Load before - Added %s as dependency for %s" % [mod.dir_name, load_before_id], LOG_NAME)
 
