@@ -12,7 +12,7 @@ const LOG_NAME := "ModLoader:Godot"
 # Returns a bool if the position does not match.
 # Optionally triggers a fatal error
 static func check_autoload_position(autoload_name: String, position_index: int, trigger_error: bool = false) -> bool:
-	var autoload_array := _get_autoload_array()
+	var autoload_array := get_autoload_array()
 	var autoload_index := autoload_array.find(autoload_name)
 	var position_matches := autoload_index == position_index
 
@@ -29,7 +29,7 @@ static func check_autoload_position(autoload_name: String, position_index: int, 
 
 
 # Get an array of all autoloads -> ["autoload/AutoloadName", ...]
-static func _get_autoload_array() -> Array:
+static func get_autoload_array() -> Array:
 	var autoloads := []
 
 	# Get all autoload settings
