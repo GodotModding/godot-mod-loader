@@ -196,15 +196,15 @@ static func _update_mod_lists() -> bool:
 	for profile_name in ModLoaderStore.user_profiles.keys():
 		var profile: Profile = ModLoaderStore.user_profiles[profile_name]
 
+		# Merge the profiles mod_list with the previously created current_mod_list
+		profile.mod_list.merge(current_mod_list)
+
 		# Delete no longer installed mods
 		for mod_id in profile.mod_list:
 			# Check if the mod_dir for the mod-id exists
 			if not _ModLoaderFile.dir_exists(ModLoader.UNPACKED_DIR + mod_id):
 				# if not the mod is no longer installed and can be removed
 				profile.mod_list.erase(mod_id)
-
-		# Merge the profiles mod_list with the previously created current_mod_list
-		profile.mod_list.merge(current_mod_list)
 
 	# Save the updated user profiles to the JSON file
 	var is_save_success := _save()
