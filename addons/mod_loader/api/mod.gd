@@ -94,3 +94,7 @@ static func save_scene(modified_scene: Node, scene_path: String) -> void:
 	packed_scene.take_over_path(scene_path)
 	ModLoaderLog.debug("save_scene - taking over path - new path -> %s" % packed_scene.resource_path, LOG_NAME)
 	ModLoaderStore.saved_objects.append(packed_scene)
+
+
+static func get_unpacked_dir() -> String:
+	return _ModLoaderPath.get_unpacked_mods_dir_path()

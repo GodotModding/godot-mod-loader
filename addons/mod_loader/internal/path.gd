@@ -114,6 +114,9 @@ static func get_path_to_mods() -> String:
 	return mods_folder_path
 
 
+static func get_unpacked_mods_dir_path() -> String:
+	return ModLoaderStore.UNPACKED_DIR
+
 # Get the path to the configs folder, with any applicable overrides applied
 static func get_path_to_configs() -> String:
 	var configs_path := MOD_CONFIG_DIR_PATH
