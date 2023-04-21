@@ -1,4 +1,4 @@
-class_name ModLoaderSteam
+class_name _ModLoaderSteam
 extends Node
 
 const LOG_NAME := "ModLoader:ThirdParty:Steam"
