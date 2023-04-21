@@ -46,25 +46,12 @@ const REQUIRE_CMD_LINE := false
 const LOG_NAME := "ModLoader"
 
 
-# Vars
-# =============================================================================
-
-# Things to keep to ensure they are not garbage collected (used by `save_scene`)
-var _saved_objects := []
-
-# Store vanilla classes for script extension sorting
-var loaded_vanilla_parents_cache := {}
-
-# Stores all the taken over scripts for restoration
-var _saved_scripts := {}
-
-
 # Main
 # =============================================================================
 
 func _init() -> void:
 	# if mods are not enabled - don't load mods
-	if REQUIRE_CMD_LINE and not ModLoaderUtils.is_running_with_command_line_arg("--enable-mods"):
+	if REQUIRE_CMD_LINE and not _ModLoaderCLI.is_running_with_command_line_arg("--enable-mods"):
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
@@ -74,10 +61,10 @@ func _init() -> void:
 	_check_autoload_positions()
 
 	# Log the autoloads order. Helpful when providing support to players
-	ModLoaderLog.debug_json_print("Autoload order", ModLoaderUtils.get_autoload_array(), LOG_NAME)
+	ModLoaderLog.debug_json_print("Autoload order", _ModLoaderGodot._get_autoload_array(), LOG_NAME)
 
 	# Log game install dir
-	ModLoaderLog.info("game_install_directory: %s" % ModLoaderUtils.get_local_folder_dir(), LOG_NAME)
+	ModLoaderLog.info("game_install_directory: %s" % _ModLoaderPath.get_local_folder_dir(), LOG_NAME)
 
 	if not ModLoaderStore.ml_options.enable_mods:
 		ModLoaderLog.info("Mods are currently disabled", LOG_NAME)
@@ -195,14 +182,14 @@ func _reset_mods() -> void:
 func _check_autoload_positions() -> void:
 	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
 	# In that case the ModLoader will be the last entry in the autoload array
-	var override_cfg_path := ModLoaderUtils.get_override_path()
-	var is_override_cfg_setup :=  ModLoaderUtils.file_exists(override_cfg_path)
+	var override_cfg_path := _ModLoaderPath.get_override_path()
+	var is_override_cfg_setup :=  _ModLoaderFile.file_exists(override_cfg_path)
 	if is_override_cfg_setup:
 		ModLoaderLog.info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
 		return
 
-	var _pos_ml_store := ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
-	var _pos_ml_core := ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
+	var _pos_ml_store := _ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
+	var _pos_ml_core := _ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
 
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
@@ -211,7 +198,7 @@ func _load_mod_zips() -> int:
 	var zipped_mods_count := 0
 
 	if not ModLoaderStore.ml_options.steam_workshop_enabled:
-		var mods_folder_path := ModLoaderUtils.get_path_to_mods()
+		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
 
 		# If we're not using Steam workshop, just loop over the mod ZIPs.
 		zipped_mods_count += _load_zips_in_folder(mods_folder_path)
@@ -380,11 +367,11 @@ func _setup_mods() -> int:
 # Load mod config JSONs from res://configs
 func _load_mod_configs() -> void:
 	var found_configs_count := 0
-	var configs_path := ModLoaderUtils.get_path_to_configs()
+	var configs_path := _ModLoaderPath.get_path_to_configs()
 
 	for dir_name in ModLoaderStore.mod_data:
 		var json_path := configs_path.plus_file(dir_name + ".json")
-		var mod_config := ModLoaderUtils.get_json_as_dict(json_path)
+		var mod_config := _ModLoaderFile.get_json_as_dict(json_path)
 
 		ModLoaderLog.debug("Config JSON: Looking for config at path: %s" % json_path, LOG_NAME)
 
@@ -403,7 +390,7 @@ func _load_mod_configs() -> void:
 				var new_path: String = mod_config.load_from
 				if not new_path == "" and not new_path == str(dir_name, ".json"):
 					ModLoaderLog.info("Config JSON: Following load_from path: %s" % new_path, LOG_NAME)
-					var new_config := ModLoaderUtils.get_json_as_dict(configs_path + new_path)
+					var new_config := _ModLoaderFile.get_json_as_dict(configs_path + new_path)
 					if new_config.size() > 0:
 						mod_config = new_config
 						ModLoaderLog.info("Config JSON: Loaded from custom json: %s" % new_path, LOG_NAME)
@@ -424,7 +411,7 @@ func _load_mod_configs() -> void:
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
 func _init_mod_data(mod_folder_path: String) -> void:
 	# The file name should be a valid mod id
-	var dir_name := ModLoaderUtils.get_file_name_from_path(mod_folder_path, false, true)
+	var dir_name := _ModLoaderPath.get_file_name_from_path(mod_folder_path, false, true)
 
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
 	var local_mod_path := UNPACKED_DIR.plus_file(dir_name)
@@ -432,7 +419,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	var mod := ModData.new(local_mod_path)
 	mod.dir_name = dir_name
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
-	mod.is_overwrite = ModLoaderUtils.file_exists(mod_overwrites_path)
+	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
 	ModLoaderStore.mod_data[dir_name] = mod
 
 	# Get the mod file paths
@@ -441,7 +428,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
 	# which has ~1,000 files). That's why it's disabled by default
 	if DEBUG_ENABLE_STORING_FILEPATHS:
-		mod.file_paths = ModLoaderUtils.get_flat_view_dict(local_mod_path)
+		mod.file_paths = _ModLoaderPath.get_flat_view_dict(local_mod_path)
 
 
 # Instance every mod and add it as a node to the Mod Loader.
@@ -474,7 +461,7 @@ func _handle_script_extensions()->void:
 	var script_extension_data_array := []
 	for extension_path in ModLoaderStore.script_extensions:
 
-		if not File.new().file_exists(extension_path):
+		if not _ModLoaderFile.file_exists(extension_path):
 			ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 			continue
 
@@ -485,8 +472,8 @@ func _handle_script_extensions()->void:
 		var parent_script:Script = child_script.get_base_script()
 		var parent_script_path:String = parent_script.resource_path
 
-		if not loaded_vanilla_parents_cache.keys().has(parent_script_path):
-			loaded_vanilla_parents_cache[parent_script_path] = parent_script
+		if not ModLoaderStore.loaded_vanilla_parents_cache.keys().has(parent_script_path):
+			ModLoaderStore.loaded_vanilla_parents_cache[parent_script_path] = parent_script
 
 		script_extension_data_array.push_back(
 			ScriptExtensionData.new(extension_path, parent_script_path, mod_id)
@@ -499,7 +486,7 @@ func _handle_script_extensions()->void:
 	script_extension_data_array.sort_custom(self, "check_inheritances")
 
 	# This saved some bugs in the past.
-	loaded_vanilla_parents_cache.clear()
+	ModLoaderStore.loaded_vanilla_parents_cache.clear()
 
 	# Load and install all extensions
 	for extension in script_extension_data_array:
@@ -524,11 +511,11 @@ func _sort_extensions_from_load_order(extensions:Array)->Array:
 func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
 	var a_child_script:Script
 
-	if loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
+	if ModLoaderStore.loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
 		a_child_script = ResourceLoader.load(extension_a.parent_script_path)
 	else:
 		a_child_script = ResourceLoader.load(extension_a.parent_script_path)
-		loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
+		ModLoaderStore.loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
 
 	var a_parent_script:Script = a_child_script.get_base_script()
 
@@ -568,7 +555,7 @@ func _reload_vanilla_child_classes_for(script:Script)->void:
 
 func _apply_extension(extension_path)->Script:
 	# Check path to file exists
-	if not File.new().file_exists(extension_path):
+	if not _ModLoaderFile.file_exists(extension_path):
 		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 		return null
 
@@ -593,12 +580,12 @@ func _apply_extension(extension_path)->Script:
 
 	# We want to save scripts for resetting later
 	# All the scripts are saved in order already
-	if not _saved_scripts.has(parent_script_path):
-		_saved_scripts[parent_script_path] = []
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
+		ModLoaderStore.saved_scripts[parent_script_path] = []
 		# The first entry in the saved script array that has the path
 		# used as a key will be the duplicate of the not modified script
-		_saved_scripts[parent_script_path].append(parent_script.duplicate())
-	_saved_scripts[parent_script_path].append(child_script)
+		ModLoaderStore.saved_scripts[parent_script_path].append(parent_script.duplicate())
+		ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
 
 	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
@@ -609,7 +596,7 @@ func _apply_extension(extension_path)->Script:
 # Used to remove a specific extension
 func _remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
-	if not ModLoaderUtils.file_exists(extension_path):
+	if not _ModLoaderFile.file_exists(extension_path):
 		ModLoaderLog.error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
 		return
 
@@ -618,17 +605,17 @@ func _remove_specific_extension_from_script(extension_path: String) -> void:
 	var parent_script_path: String = parent_script.resource_path
 
 	# Check if the script to reset has been extended
-	if not _saved_scripts.has(parent_script_path):
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
 		ModLoaderLog.error("The extension parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
-	if not _saved_scripts[parent_script_path].size() > 0:
+	if not ModLoaderStore.saved_scripts[parent_script_path].size() > 0:
 		ModLoaderLog.error("The extension script path \"%s\" does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
-	var parent_script_extensions: Array = _saved_scripts[parent_script_path].duplicate()
+	var parent_script_extensions: Array = ModLoaderStore.saved_scripts[parent_script_path].duplicate()
 	parent_script_extensions.remove(0)
 
 	# Searching for the extension that we want to remove
@@ -654,30 +641,30 @@ func _remove_specific_extension_from_script(extension_path: String) -> void:
 # Used to fully reset the provided script to a state prior of any extension
 func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 	# Check path to file exists
-	if not ModLoaderUtils.file_exists(parent_script_path):
+	if not _ModLoaderFile.file_exists(parent_script_path):
 		ModLoaderLog.error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has been extended
-	if not _saved_scripts.has(parent_script_path):
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
 		ModLoaderLog.error("The parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
-	if not _saved_scripts[parent_script_path].size() > 0:
+	if not ModLoaderStore.saved_scripts[parent_script_path].size() > 0:
 		ModLoaderLog.error("The parent script path \"%s\" does not have the base script saved, \nthis should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
-	var parent_script: Script = _saved_scripts[parent_script_path][0]
+	var parent_script: Script = ModLoaderStore.saved_scripts[parent_script_path][0]
 	parent_script.take_over_path(parent_script_path)
 
 	# Remove the script after it has been reset so we do not do it again
-	_saved_scripts.erase(parent_script_path)
+	ModLoaderStore.saved_scripts.erase(parent_script_path)
 
 
 func _remove_all_extensions_from_all_scripts() -> void:
-	var _to_remove_scripts: Dictionary = _saved_scripts.duplicate()
+	var _to_remove_scripts: Dictionary = ModLoaderStore.saved_scripts.duplicate()
 	for script in _to_remove_scripts:
 		_remove_all_extensions_from_script(script)
 
