@@ -12,7 +12,7 @@ Thank you for considering contributing to our project! We welcome contributions 
 
 ## Reporting bugs
 
-If you find a bug, please report it by opening an issue. Please provide as much information as possible to help us reproduce the issue.
+If you find a bug, please let us know by opening an issue. Be as detailed as possible when describing the issue, including any steps to reproduce the bug. If applicable, please provide your `modloader.log` file from the `user://` (Godot app_userdata) folder. This file contains valuable information that can help us identify the cause of the issue.
 
 ## Suggesting features
 
