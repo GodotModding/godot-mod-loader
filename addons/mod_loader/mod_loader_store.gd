@@ -9,6 +9,22 @@ extends Node
 # Constants
 # =============================================================================
 
+# Most of these settings should never need to change, aside from the DEBUG_*
+# options (which should be `false` when distributing compiled PCKs)
+
+const MODLOADER_VERSION = "5.0.1"
+
+# If true, a complete array of filepaths is stored for each mod. This is
+# disabled by default because the operation can be very expensive, but may
+# be useful for debugging
+const DEBUG_ENABLE_STORING_FILEPATHS := false
+
+# This is where mod ZIPs are unpacked to
+const UNPACKED_DIR := "res://mods-unpacked/"
+
+# Set to true to require using "--enable-mods" to enable them
+const REQUIRE_CMD_LINE := false
+
 const LOG_NAME = "ModLoader:Store"
 
 # Vars
