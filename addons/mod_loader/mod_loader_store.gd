@@ -15,7 +15,7 @@ const LOG_NAME = "ModLoader:Store"
 # =============================================================================
 
 # Set to false after ModLoader._init()
-# Helps to decide whether a script extension should go through the _handle_script_extensions process
+# Helps to decide whether a script extension should go through the _ModLoaderScriptExtension.handle_script_extensions() process
 var is_initializing := true
 
 # Store all extenders paths

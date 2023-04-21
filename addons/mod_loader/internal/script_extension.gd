@@ -11,7 +11,7 @@ const LOG_NAME := "ModLoader:ScriptExtension"
 # Couple the extension paths with the parent paths and the extension's mod id
 # in a ScriptExtensionData resource
 # We need to pass the UNPACKED_DIR constant because the global ModLoader is not available during _init().
-static func _handle_script_extensions(UNPACKED_DIR: String)->void:
+static func handle_script_extensions(UNPACKED_DIR: String)->void:
 	var script_extension_data_array := []
 	for extension_path in ModLoaderStore.script_extensions:
 
@@ -44,11 +44,36 @@ static func _handle_script_extensions(UNPACKED_DIR: String)->void:
 
 	# Load and install all extensions
 	for extension in script_extension_data_array:
-		var script:Script = _apply_extension(extension.extension_path)
+		var script:Script = apply_extension(extension.extension_path)
 		_reload_vanilla_child_classes_for(script)
 
 
-static func _apply_extension(extension_path)->Script:
+# Inner class so the sort function can be called by handle_script_extensions()
+class InheritanceSorting:
+	# Go up extension_a's inheritance tree to find if any parent shares the same vanilla path as extension_b
+	static func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
+		var a_child_script:Script
+
+		if ModLoaderStore.loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
+			a_child_script = ResourceLoader.load(extension_a.parent_script_path)
+		else:
+			a_child_script = ResourceLoader.load(extension_a.parent_script_path)
+			ModLoaderStore.loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
+
+		var a_parent_script:Script = a_child_script.get_base_script()
+
+		if a_parent_script == null:
+			return true
+
+		var a_parent_script_path = a_parent_script.resource_path
+		if a_parent_script_path == extension_b.parent_script_path:
+			return false
+
+		else:
+			return _check_inheritances(ScriptExtensionData.new(extension_a.extension_path, a_parent_script_path, extension_a.mod_id), extension_b)
+
+
+static func apply_extension(extension_path)->Script:
 	# Check path to file exists
 	if not File.new().file_exists(extension_path):
 		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
@@ -100,31 +125,6 @@ static func _sort_extensions_from_load_order(extensions:Array)->Array:
 	return extensions_sorted
 
 
-# Inner class so the sort function can be called by _handle_script_extensions()
-class InheritanceSorting:
-	# Go up extension_a's inheritance tree to find if any parent shares the same vanilla path as extension_b
-	static func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
-		var a_child_script:Script
-
-		if ModLoaderStore.loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
-			a_child_script = ResourceLoader.load(extension_a.parent_script_path)
-		else:
-			a_child_script = ResourceLoader.load(extension_a.parent_script_path)
-			ModLoaderStore.loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
-
-		var a_parent_script:Script = a_child_script.get_base_script()
-
-		if a_parent_script == null:
-			return true
-
-		var a_parent_script_path = a_parent_script.resource_path
-		if a_parent_script_path == extension_b.parent_script_path:
-			return false
-
-		else:
-			return _check_inheritances(ScriptExtensionData.new(extension_a.extension_path, a_parent_script_path, extension_a.mod_id), extension_b)
-
-
 # Reload all children classes of the vanilla class we just extended
 # Calling reload() the children of an extended class seems to allow them to be extended
 # e.g if B is a child class of A, reloading B after apply an extender of A allows extenders of B to properly extend B, taking A's extender(s) into account
@@ -148,7 +148,7 @@ static func _reload_vanilla_child_classes_for(script:Script)->void:
 				load(child_class.path).reload()
 
 
-static func _remove_all_extensions_from_all_scripts() -> void:
+static func remove_all_extensions_from_all_scripts() -> void:
 	var _to_remove_scripts: Dictionary = ModLoaderStore.saved_scripts.duplicate()
 	for script in _to_remove_scripts:
 		_remove_all_extensions_from_script(script)
@@ -196,7 +196,7 @@ static func _remove_specific_extension_from_script(extension_path: String) -> vo
 
 	# Reapplying all the extensions without the removed one
 	for script_extension in parent_script_extensions:
-		_apply_extension(script_extension.get_meta("extension_script_path"))
+		apply_extension(script_extension.get_meta("extension_script_path"))
 
 
 # Used to fully reset the provided script to a state prior of any extension

@@ -178,7 +178,7 @@ func _load_mods() -> void:
 
 	ModLoaderLog.success("DONE: Completely finished loading mods", LOG_NAME)
 
-	_ModLoaderScriptExtension._handle_script_extensions(UNPACKED_DIR)
+	_ModLoaderScriptExtension.handle_script_extensions(UNPACKED_DIR)
 
 	ModLoaderLog.success("DONE: Installed all script extensions", LOG_NAME)
 
@@ -197,7 +197,7 @@ func _reset_mods() -> void:
 	mod_load_order.clear()
 	mod_missing_dependencies.clear()
 	ModLoaderStore.script_extensions.clear()
-	_ModLoaderScriptExtension._remove_all_extensions_from_all_scripts()
+	_ModLoaderScriptExtension.remove_all_extensions_from_all_scripts()
 
 
 # Check autoload positions:
