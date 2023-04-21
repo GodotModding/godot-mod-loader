@@ -17,6 +17,9 @@ const LOG_NAME = "ModLoader:Store"
 # Order for mods to be loaded in, set by `_get_load_order`
 var mod_load_order := []
 
+# Stores data for every found/loaded mod
+var mod_data := {}
+
 # Set to false after ModLoader._init()
 # Helps to decide whether a script extension should go through the _handle_script_extensions process
 var is_initializing := true
