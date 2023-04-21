@@ -3,6 +3,7 @@
 /.gitignore                             export-ignore
 .github/                                export-ignore
 /README.md                              export-ignore
+/CONTRIBUTING.md                        export-ignore
 
 # Tests
 test/                                   export-ignore
