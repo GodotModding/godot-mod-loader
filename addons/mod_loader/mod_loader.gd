@@ -49,24 +49,9 @@ const LOG_NAME := "ModLoader"
 # Vars
 # =============================================================================
 
-# Stores data for every found/loaded mod
-var mod_data := {}
-
-# Order for mods to be loaded in, set by `_get_load_order`
-var mod_load_order := []
-
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies := {}
-
-# Things to keep to ensure they are not garbage collected (used by `save_scene`)
-var _saved_objects := []
-
-# Store vanilla classes for script extension sorting
-var loaded_vanilla_parents_cache := {}
-
-# Stores all the taken over scripts for restoration
-var _saved_scripts := {}
 
 
 # Main
@@ -123,8 +108,8 @@ func _load_mods() -> void:
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
 	# (from their manifest.json file), and verify that the meta JSON has all
 	# required properties (REQUIRED_META_TAGS)
-	for dir_name in mod_data:
-		var mod: ModData = mod_data[dir_name]
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		mod.load_manifest()
 
 	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
@@ -133,8 +118,8 @@ func _load_mods() -> void:
 	# Check for mods with load_before. If a mod is listed in load_before,
 	# add the current mod to the dependencies of the the mod specified
 	# in load_before.
-	for dir_name in mod_data:
-		var mod: ModData = mod_data[dir_name]
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
 		_check_load_before(mod)
@@ -143,8 +128,8 @@ func _load_mods() -> void:
 	# Run optional dependency checks after loading mod_manifest.
 	# If a mod depends on another mod that hasn't been loaded,
 	# that dependent mod will be loaded regardless.
-	for dir_name in mod_data:
-		var mod: ModData = mod_data[dir_name]
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
 		var _is_circular := _check_dependencies(mod, false)
@@ -152,29 +137,29 @@ func _load_mods() -> void:
 
 	# Run dependency checks after loading mod_manifest. If a mod depends on another
 	# mod that hasn't been loaded, that dependent mod won't be loaded.
-	for dir_name in mod_data:
-		var mod: ModData = mod_data[dir_name]
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if not mod.is_loadable:
 			continue
 		var _is_circular := _check_dependencies(mod)
 
 	# Sort mod_load_order by the importance score of the mod
-	mod_load_order = _get_load_order(mod_data.values())
+	ModLoaderStore.mod_load_order = _get_load_order(ModLoaderStore.mod_data.values())
 
 	# Log mod order
 	var mod_i := 1
-	for mod in mod_load_order: # mod === mod_data
+	for mod in ModLoaderStore.mod_load_order: # mod === mod_data
 		mod = mod as ModData
 		ModLoaderLog.info("mod_load_order -> %s) %s" % [mod_i, mod.dir_name], LOG_NAME)
 		mod_i += 1
 
 	# Instance every mod and add it as a node to the Mod Loader
-	for mod in mod_load_order:
+	for mod in ModLoaderStore.mod_load_order:
 		mod = mod as ModData
 		ModLoaderLog.info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
 
-	ModLoaderLog.debug_json_print("mod data", mod_data, LOG_NAME)
+	ModLoaderLog.debug_json_print("mod data", ModLoaderStore.mod_data, LOG_NAME)
 
 	ModLoaderLog.success("DONE: Completely finished loading mods", LOG_NAME)
 
@@ -193,8 +178,8 @@ func _reload_mods() -> void:
 
 # Internal call that handles the resetting of all mod related data
 func _reset_mods() -> void:
-	mod_data.clear()
-	mod_load_order.clear()
+	ModLoaderStore.mod_data.clear()
+	ModLoaderStore.mod_load_order.clear()
 	mod_missing_dependencies.clear()
 	ModLoaderStore.script_extensions.clear()
 	_remove_all_extensions_from_all_scripts()
@@ -392,7 +377,7 @@ func _load_mod_configs() -> void:
 	var found_configs_count := 0
 	var configs_path := _ModLoaderPath.get_path_to_configs()
 
-	for dir_name in mod_data:
+	for dir_name in ModLoaderStore.mod_data:
 		var json_path := configs_path.plus_file(dir_name + ".json")
 		var mod_config := _ModLoaderFile.get_json_as_dict(json_path)
 
@@ -421,7 +406,7 @@ func _load_mod_configs() -> void:
 					else:
 						ModLoaderLog.error("Config JSON: ERROR - Could not load data via `load_from` for %s, at path: %s" % [dir_name, new_path], LOG_NAME)
 
-			mod_data[dir_name].config = mod_config
+			ModLoaderStore.mod_data[dir_name].config = mod_config
 
 	if found_configs_count > 0:
 		ModLoaderLog.success("Config JSON: Loaded %s config(s)" % found_configs_count, LOG_NAME)
@@ -443,7 +428,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	mod.dir_name = dir_name
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
-	mod_data[dir_name] = mod
+	ModLoaderStore.mod_data[dir_name] = mod
 
 	# Get the mod file paths
 	# Note: This was needed in the original version of this script, but it's
@@ -487,7 +472,7 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 	# Loop through each dependency listed in the mod's manifest
 	for dependency_id in dependencies:
 		# Check if dependency is missing
-		if not mod_data.has(dependency_id) or not mod_data[dependency_id].is_loadable:
+		if not ModLoaderStore.mod_data.has(dependency_id) or not ModLoaderStore.mod_data[dependency_id].is_loadable:
 			# Skip to the next dependency if it's optional
 			if not is_required:
 				ModLoaderLog.info("Missing optional dependency - mod: -> %s dependency -> %s" % [mod_id, dependency_id], LOG_NAME)
@@ -496,7 +481,7 @@ func _check_dependencies(mod: ModData, is_required := true, dependency_chain := 
 			# Flag the mod so it's not loaded later
 			mod.is_loadable = false
 		else:
-			var dependency: ModData = mod_data[dependency_id]
+			var dependency: ModData = ModLoaderStore.mod_data[dependency_id]
 
 			# Increase the importance score of the dependency by 1
 			dependency.importance += 1
@@ -537,11 +522,11 @@ func _check_load_before(mod: ModData) -> void:
 	for load_before_id in mod.manifest.load_before:
 
 		# Check if the load_before mod exists
-		if not mod_data.has(load_before_id):
+		if not ModLoaderStore.mod_data.has(load_before_id):
 			ModLoaderLog.debug("Load before - Skipping %s because it's missing" % load_before_id, LOG_NAME)
 			continue
 
-		var load_before_mod_dependencies := mod_data[load_before_id].manifest.dependencies as PoolStringArray
+		var load_before_mod_dependencies := ModLoaderStore.mod_data[load_before_id].manifest.dependencies as PoolStringArray
 
 		# Check if it's already a dependency
 		if mod.dir_name in load_before_mod_dependencies:
@@ -550,7 +535,7 @@ func _check_load_before(mod: ModData) -> void:
 
 		# Add the mod to the dependency array
 		load_before_mod_dependencies.append(mod.dir_name)
-		mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
+		ModLoaderStore.mod_data[load_before_id].manifest.dependencies = load_before_mod_dependencies
 
 		ModLoaderLog.debug("Load before - Added %s as dependency for %s" % [mod.dir_name, load_before_id], LOG_NAME)
 
@@ -562,11 +547,11 @@ func _get_load_order(mod_data_array: Array) -> Array:
 	for mod in mod_data_array:
 		mod = mod as ModData
 		if mod.is_loadable:
-			mod_load_order.append(mod)
+			ModLoaderStore.mod_load_order.append(mod)
 
 	# Sort mods by the importance value
-	mod_load_order.sort_custom(self, "_compare_importance")
-	return  mod_load_order
+	ModLoaderStore.mod_load_order.sort_custom(self, "_compare_importance")
+	return  ModLoaderStore.mod_load_order
 
 
 # Custom sorter that orders mods by important
@@ -618,8 +603,8 @@ func _handle_script_extensions()->void:
 		var parent_script:Script = child_script.get_base_script()
 		var parent_script_path:String = parent_script.resource_path
 
-		if not loaded_vanilla_parents_cache.keys().has(parent_script_path):
-			loaded_vanilla_parents_cache[parent_script_path] = parent_script
+		if not ModLoaderStore.loaded_vanilla_parents_cache.keys().has(parent_script_path):
+			ModLoaderStore.loaded_vanilla_parents_cache[parent_script_path] = parent_script
 
 		script_extension_data_array.push_back(
 			ScriptExtensionData.new(extension_path, parent_script_path, mod_id)
@@ -632,7 +617,7 @@ func _handle_script_extensions()->void:
 	script_extension_data_array.sort_custom(self, "check_inheritances")
 
 	# This saved some bugs in the past.
-	loaded_vanilla_parents_cache.clear()
+	ModLoaderStore.loaded_vanilla_parents_cache.clear()
 
 	# Load and install all extensions
 	for extension in script_extension_data_array:
@@ -644,7 +629,7 @@ func _handle_script_extensions()->void:
 func _sort_extensions_from_load_order(extensions:Array)->Array:
 	var extensions_sorted := []
 
-	for _mod_data in mod_load_order:
+	for _mod_data in ModLoaderStore.mod_load_order:
 		for script in extensions:
 			if script.mod_id == _mod_data.dir_name:
 				extensions_sorted.push_front(script)
@@ -657,11 +642,11 @@ func _sort_extensions_from_load_order(extensions:Array)->Array:
 func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
 	var a_child_script:Script
 
-	if loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
+	if ModLoaderStore.loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
 		a_child_script = ResourceLoader.load(extension_a.parent_script_path)
 	else:
 		a_child_script = ResourceLoader.load(extension_a.parent_script_path)
-		loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
+		ModLoaderStore.loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
 
 	var a_parent_script:Script = a_child_script.get_base_script()
 
@@ -726,12 +711,12 @@ func _apply_extension(extension_path)->Script:
 
 	# We want to save scripts for resetting later
 	# All the scripts are saved in order already
-	if not _saved_scripts.has(parent_script_path):
-		_saved_scripts[parent_script_path] = []
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
+		ModLoaderStore.saved_scripts[parent_script_path] = []
 		# The first entry in the saved script array that has the path
 		# used as a key will be the duplicate of the not modified script
-		_saved_scripts[parent_script_path].append(parent_script.duplicate())
-	_saved_scripts[parent_script_path].append(child_script)
+		ModLoaderStore.saved_scripts[parent_script_path].append(parent_script.duplicate())
+		ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
 
 	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
@@ -751,17 +736,17 @@ func _remove_specific_extension_from_script(extension_path: String) -> void:
 	var parent_script_path: String = parent_script.resource_path
 
 	# Check if the script to reset has been extended
-	if not _saved_scripts.has(parent_script_path):
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
 		ModLoaderLog.error("The extension parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
-	if not _saved_scripts[parent_script_path].size() > 0:
+	if not ModLoaderStore.saved_scripts[parent_script_path].size() > 0:
 		ModLoaderLog.error("The extension script path \"%s\" does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
-	var parent_script_extensions: Array = _saved_scripts[parent_script_path].duplicate()
+	var parent_script_extensions: Array = ModLoaderStore.saved_scripts[parent_script_path].duplicate()
 	parent_script_extensions.remove(0)
 
 	# Searching for the extension that we want to remove
@@ -792,25 +777,25 @@ func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 		return
 
 	# Check if the script to reset has been extended
-	if not _saved_scripts.has(parent_script_path):
+	if not ModLoaderStore.saved_scripts.has(parent_script_path):
 		ModLoaderLog.error("The parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
-	if not _saved_scripts[parent_script_path].size() > 0:
+	if not ModLoaderStore.saved_scripts[parent_script_path].size() > 0:
 		ModLoaderLog.error("The parent script path \"%s\" does not have the base script saved, \nthis should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
 		return
 
-	var parent_script: Script = _saved_scripts[parent_script_path][0]
+	var parent_script: Script = ModLoaderStore.saved_scripts[parent_script_path][0]
 	parent_script.take_over_path(parent_script_path)
 
 	# Remove the script after it has been reset so we do not do it again
-	_saved_scripts.erase(parent_script_path)
+	ModLoaderStore.saved_scripts.erase(parent_script_path)
 
 
 func _remove_all_extensions_from_all_scripts() -> void:
-	var _to_remove_scripts: Dictionary = _saved_scripts.duplicate()
+	var _to_remove_scripts: Dictionary = ModLoaderStore.saved_scripts.duplicate()
 	for script in _to_remove_scripts:
 		_remove_all_extensions_from_script(script)
 

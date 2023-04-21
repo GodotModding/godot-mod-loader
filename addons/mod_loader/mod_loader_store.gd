@@ -14,6 +14,12 @@ const LOG_NAME = "ModLoader:Store"
 # Vars
 # =============================================================================
 
+# Order for mods to be loaded in, set by `_get_load_order`
+var mod_load_order := []
+
+# Stores data for every found/loaded mod
+var mod_data := {}
+
 # Set to false after ModLoader._init()
 # Helps to decide whether a script extension should go through the _handle_script_extensions process
 var is_initializing := true
@@ -23,6 +29,15 @@ var script_extensions := []
 
 # True if ModLoader has displayed the warning about using zipped mods
 var has_shown_editor_zips_warning := false
+
+# Things to keep to ensure they are not garbage collected (used by `save_scene`)
+var saved_objects := []
+
+# Store vanilla classes for script extension sorting
+var loaded_vanilla_parents_cache := {}
+
+# Stores all the taken over scripts for restoration
+var saved_scripts := {}
 
 # Keeps track of logged messages, to avoid flooding the log with duplicate notices
 # Can also be used by mods, eg. to create an in-game developer console that

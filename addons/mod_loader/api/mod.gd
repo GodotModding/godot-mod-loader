@@ -93,4 +93,4 @@ static func save_scene(modified_scene: Node, scene_path: String) -> void:
 	ModLoaderLog.debug("packing scene -> %s" % packed_scene, LOG_NAME)
 	packed_scene.take_over_path(scene_path)
 	ModLoaderLog.debug("save_scene - taking over path - new path -> %s" % packed_scene.resource_path, LOG_NAME)
-	ModLoader._saved_objects.append(packed_scene)
+	ModLoaderStore.saved_objects.append(packed_scene)
