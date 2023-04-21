@@ -21,7 +21,7 @@ static func install_script_extension(child_script_path:String) -> void:
 
 	# If not, apply the extension directly
 	else:
-		ModLoader._apply_extension(child_script_path)
+		_ModLoaderScriptExtension.apply_extension(child_script_path)
 
 
 static func uninstall_script_extension(extension_script_path: String) -> void:
