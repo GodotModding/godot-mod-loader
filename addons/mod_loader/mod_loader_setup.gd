@@ -57,7 +57,7 @@ const new_global_classes := [
 		"path": "res://addons/mod_loader/api/mod.gd"
 	}, {
 		"base": "Object",
-		"class": "ModLoaderGodot",
+		"class": "_ModLoaderGodot",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/godot.gd"
 	}, {
@@ -235,4 +235,3 @@ func setup_file_data() -> void:
 
 	ModLoaderSetupLog.debug_json_print("path: ", path, LOG_NAME)
 	ModLoaderSetupLog.debug_json_print("file_name: ", file_name, LOG_NAME)
-  

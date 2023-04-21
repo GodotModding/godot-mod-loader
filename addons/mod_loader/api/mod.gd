@@ -52,14 +52,14 @@ func reload_mods() -> void:
 # (but you should only include classes belonging to your mod)
 static func register_global_classes_from_array(new_global_classes: Array) -> void:
 	ModLoaderUtils.register_global_classes_from_array(new_global_classes)
-	var _savecustom_error: int = ProjectSettings.save_custom(ModLoaderUtils.get_override_path())
+	var _savecustom_error: int = ProjectSettings.save_custom(_ModLoaderPath.get_override_path())
 
 
 # Add a translation file, eg "mytranslation.en.translation". The translation
 # file should have been created in Godot already: When you import a CSV, such
 # a file will be created for you.
 static func add_translation_from_resource(resource_path: String) -> void:
-	if not File.new().file_exists(resource_path):
+	if not _ModLoaderFile.file_exists(resource_path):
 		ModLoaderLog.fatal("Tried to load a translation resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
 		return
 
