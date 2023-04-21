@@ -19,7 +19,7 @@ static func get_path_to_workshop() -> String:
 	if ModLoaderStore.ml_options.override_path_to_workshop:
 		return ModLoaderStore.ml_options.override_path_to_workshop
 
-	var game_install_directory := ModLoaderUtils.get_local_folder_dir()
+	var game_install_directory := _ModLoaderPath.get_local_folder_dir()
 	var path := ""
 
 	# Traverse up to the steamapps directory (ie. `cd ..\..\` on Windows)
@@ -40,7 +40,7 @@ static func get_path_to_workshop() -> String:
 # Utility (GWU), which was developed by Brotato developer Blobfish:
 # https://github.com/thomasgvd/godot-workshop-utility
 static func get_steam_app_id() -> String:
-	var game_install_directory := ModLoaderUtils.get_local_folder_dir()
+	var game_install_directory := _ModLoaderPath.get_local_folder_dir()
 	var steam_app_id := ""
 	var file := File.new()
 

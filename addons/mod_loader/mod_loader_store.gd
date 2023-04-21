@@ -14,8 +14,18 @@ const LOG_NAME = "ModLoader:Store"
 # Vars
 # =============================================================================
 
+# Order for mods to be loaded in, set by `_get_load_order`
+var mod_load_order := []
+
+# Stores data for every found/loaded mod
+var mod_data := {}
+
+# Any mods that are missing their dependancies are added to this
+# Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
+var mod_missing_dependencies := {}
+
 # Set to false after ModLoader._init()
-# Helps to decide whether a script extension should go through the _handle_script_extensions process
+# Helps to decide whether a script extension should go through the _ModLoaderScriptExtension.handle_script_extensions() process
 var is_initializing := true
 
 # Store all extenders paths
@@ -23,6 +33,15 @@ var script_extensions := []
 
 # True if ModLoader has displayed the warning about using zipped mods
 var has_shown_editor_zips_warning := false
+
+# Things to keep to ensure they are not garbage collected (used by `save_scene`)
+var saved_objects := []
+
+# Store vanilla classes for script extension sorting
+var loaded_vanilla_parents_cache := {}
+
+# Stores all the taken over scripts for restoration
+var saved_scripts := {}
 
 # Keeps track of logged messages, to avoid flooding the log with duplicate notices
 # Can also be used by mods, eg. to create an in-game developer console that
@@ -60,8 +79,8 @@ var ml_options := {
 	# Only applied if custom settings are provided, either via the options.tres
 	# resource, or via CLI args. Note that CLI args can be tested in the editor
 	# via: Project Settings > Display> Editor > Main Run Args
-	override_path_to_mods = "",    # Default if unspecified: "res://mods"    -- get with ModLoaderUtils.get_path_to_mods()
-	override_path_to_configs = "", # Default if unspecified: "res://configs" -- get with ModLoaderUtils.get_path_to_configs()
+	override_path_to_mods = "",    # Default if unspecified: "res://mods"    -- get with _ModLoaderPath.get_path_to_mods()
+	override_path_to_configs = "", # Default if unspecified: "res://configs" -- get with _ModLoaderPath.get_path_to_configs()
 
 	# Can be used in the editor to load mods from your Steam workshop directory
 	override_path_to_workshop = "",
@@ -91,7 +110,7 @@ func _update_ml_options_from_options_resource() -> void:
 	var ml_options_path := "res://addons/mod_loader/options/options.tres"
 
 	# Get user options for ModLoader
-	if File.new().file_exists(ml_options_path):
+	if _ModLoaderFile.file_exists(ml_options_path):
 		var options_resource := load(ml_options_path)
 		if not options_resource.current_options == null:
 			var current_options: Resource = options_resource.current_options
@@ -105,13 +124,13 @@ func _update_ml_options_from_options_resource() -> void:
 # Update ModLoader's options, via CLI args
 func _update_ml_options_from_cli_args() -> void:
 	# Disable mods
-	if ModLoaderUtils.is_running_with_command_line_arg("--disable-mods"):
+	if _ModLoaderCLI.is_running_with_command_line_arg("--disable-mods"):
 		ml_options.enable_mods = false
 
 	# Override paths to mods
 	# Set via: --mods-path
 	# Example: --mods-path="C://path/mods"
-	var cmd_line_mod_path := ModLoaderUtils.get_cmd_line_arg_value("--mods-path")
+	var cmd_line_mod_path := _ModLoaderCLI.get_cmd_line_arg_value("--mods-path")
 	if cmd_line_mod_path:
 		ml_options.override_path_to_mods = cmd_line_mod_path
 		ModLoaderLog.info("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
@@ -119,20 +138,20 @@ func _update_ml_options_from_cli_args() -> void:
 	# Override paths to configs
 	# Set via: --configs-path
 	# Example: --configs-path="C://path/configs"
-	var cmd_line_configs_path := ModLoaderUtils.get_cmd_line_arg_value("--configs-path")
+	var cmd_line_configs_path := _ModLoaderCLI.get_cmd_line_arg_value("--configs-path")
 	if cmd_line_configs_path:
 		ml_options.override_path_to_configs = cmd_line_configs_path
 		ModLoaderLog.info("The path configs are loaded from has been changed via the CLI arg `--configs-path`, to: " + cmd_line_configs_path, LOG_NAME)
 
 	# Log level verbosity
-	if ModLoaderUtils.is_running_with_command_line_arg("-vvv") or ModLoaderUtils.is_running_with_command_line_arg("--log-debug"):
+	if _ModLoaderCLI.is_running_with_command_line_arg("-vvv") or _ModLoaderCLI.is_running_with_command_line_arg("--log-debug"):
 		ml_options.log_level = ModLoaderLog.VERBOSITY_LEVEL.DEBUG
-	elif ModLoaderUtils.is_running_with_command_line_arg("-vv") or ModLoaderUtils.is_running_with_command_line_arg("--log-info"):
+	elif _ModLoaderCLI.is_running_with_command_line_arg("-vv") or _ModLoaderCLI.is_running_with_command_line_arg("--log-info"):
 		ml_options.log_level = ModLoaderLog.VERBOSITY_LEVEL.INFO
-	elif ModLoaderUtils.is_running_with_command_line_arg("-v") or ModLoaderUtils.is_running_with_command_line_arg("--log-warning"):
+	elif _ModLoaderCLI.is_running_with_command_line_arg("-v") or _ModLoaderCLI.is_running_with_command_line_arg("--log-warning"):
 		ml_options.log_level = ModLoaderLog.VERBOSITY_LEVEL.WARNING
 
 	# Ignored mod_names in log
-	var ignore_mod_names := ModLoaderUtils.get_cmd_line_arg_value("--log-ignore")
+	var ignore_mod_names := _ModLoaderCLI.get_cmd_line_arg_value("--log-ignore")
 	if not ignore_mod_names == "":
 		ml_options.ignored_mod_names_in_log = ignore_mod_names.split(",")

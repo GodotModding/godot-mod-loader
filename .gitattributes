@@ -4,6 +4,7 @@
 .github/                                export-ignore
 /README.md                              export-ignore
 /CONTRIBUTING.md                        export-ignore
+/LICENSE                                export-ignore
 
 # Tests
 test/                                   export-ignore
