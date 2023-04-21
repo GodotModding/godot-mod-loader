@@ -49,7 +49,7 @@ ModLoaderLog.info(
 
 ## Documentation
 
-The documentation for this project is located in the repository's wiki. Please make sure to update the relevant documentation pages when making changes to the code. If you're not sure what needs to be updated, please ask in your pull request or issue.
+The documentation for this project is located in the repository's wiki. Please make sure to update the relevant documentation pages when making changes to the code. If you're not sure what needs to be updated, please ask in your pull request or issue.  
 *Note that you will mostly edit the [Upcoming Features](https://github.com/GodotModding/godot-mod-loader/wiki/Upcoming-Features) page, where all changes to the dev branch are documented until they become part of the next major update.*
 
 ## Communicating over Discord
