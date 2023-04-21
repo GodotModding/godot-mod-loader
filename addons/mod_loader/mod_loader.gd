@@ -49,9 +49,6 @@ const LOG_NAME := "ModLoader"
 # Vars
 # =============================================================================
 
-# Order for mods to be loaded in, set by `_get_load_order`
-var mod_load_order := []
-
 # Any mods that are missing their dependancies are added to this
 # Example property: "mod_id": ["dep_mod_id_0", "dep_mod_id_2"]
 var mod_missing_dependencies := {}
@@ -156,17 +153,17 @@ func _load_mods() -> void:
 		var _is_circular := _check_dependencies(mod)
 
 	# Sort mod_load_order by the importance score of the mod
-	mod_load_order = _get_load_order(ModLoaderStore.mod_data.values())
+	ModLoaderStore.mod_load_order = _get_load_order(ModLoaderStore.mod_data.values())
 
 	# Log mod order
 	var mod_i := 1
-	for mod in mod_load_order: # mod === mod_data
+	for mod in ModLoaderStore.mod_load_order: # mod === mod_data
 		mod = mod as ModData
 		ModLoaderLog.info("mod_load_order -> %s) %s" % [mod_i, mod.dir_name], LOG_NAME)
 		mod_i += 1
 
 	# Instance every mod and add it as a node to the Mod Loader
-	for mod in mod_load_order:
+	for mod in ModLoaderStore.mod_load_order:
 		mod = mod as ModData
 		ModLoaderLog.info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
@@ -191,7 +188,7 @@ func _reload_mods() -> void:
 # Internal call that handles the resetting of all mod related data
 func _reset_mods() -> void:
 	ModLoaderStore.mod_data.clear()
-	mod_load_order.clear()
+	ModLoaderStore.mod_load_order.clear()
 	mod_missing_dependencies.clear()
 	ModLoaderStore.script_extensions.clear()
 	_remove_all_extensions_from_all_scripts()
@@ -559,11 +556,11 @@ func _get_load_order(mod_data_array: Array) -> Array:
 	for mod in mod_data_array:
 		mod = mod as ModData
 		if mod.is_loadable:
-			mod_load_order.append(mod)
+			ModLoaderStore.mod_load_order.append(mod)
 
 	# Sort mods by the importance value
-	mod_load_order.sort_custom(self, "_compare_importance")
-	return  mod_load_order
+	ModLoaderStore.mod_load_order.sort_custom(self, "_compare_importance")
+	return  ModLoaderStore.mod_load_order
 
 
 # Custom sorter that orders mods by important
@@ -641,7 +638,7 @@ func _handle_script_extensions()->void:
 func _sort_extensions_from_load_order(extensions:Array)->Array:
 	var extensions_sorted := []
 
-	for _mod_data in mod_load_order:
+	for _mod_data in ModLoaderStore.mod_load_order:
 		for script in extensions:
 			if script.mod_id == _mod_data.dir_name:
 				extensions_sorted.push_front(script)

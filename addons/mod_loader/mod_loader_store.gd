@@ -14,6 +14,9 @@ const LOG_NAME = "ModLoader:Store"
 # Vars
 # =============================================================================
 
+# Order for mods to be loaded in, set by `_get_load_order`
+var mod_load_order := []
+
 # Stores data for every found/loaded mod
 var mod_data := {}
 
