@@ -70,9 +70,24 @@ func _init() -> void:
 		ModLoaderLog.info("Mods are currently disabled", LOG_NAME)
 		return
 
+	# Load user profiles into ModLoaderStore
+	var _success_user_profile_load := ModLoaderUserProfile._load()
+	# Update the list of disabled mods in ModLoaderStore based on the current user profile
+	ModLoaderUserProfile._update_disabled_mods()
+
 	_load_mods()
 
 	ModLoaderStore.is_initializing = false
+
+
+func _ready():
+	# Create the default user profile if it doesn't exist already
+	# This should always be present unless the JSON file was manually edited
+	if not ModLoaderStore.user_profiles.has("default"):
+		var _success_user_profile_create := ModLoaderUserProfile.create_profile("default")
+
+	# Update the mod_list for each user profile
+	var _success_update_mod_lists := ModLoaderUserProfile._update_mod_lists()
 
 
 func _load_mods() -> void:
@@ -420,6 +435,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	mod.dir_name = dir_name
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
+	mod.is_locked = true if dir_name in ModLoaderStore.ml_options.locked_mods else false
 	ModLoaderStore.mod_data[dir_name] = mod
 
 	# Get the mod file paths

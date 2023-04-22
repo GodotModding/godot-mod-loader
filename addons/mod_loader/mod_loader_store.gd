@@ -59,6 +59,11 @@ var logged_messages := {
 	}
 }
 
+# Active user profile
+var current_user_profile := ""
+# List of user profiles loaded from user://mods.json
+var user_profiles :=  {}
+
 # These variables handle various options, which can be changed either via
 # Godot's GUI (with the options.tres resource file), or via CLI args.
 # Usage: `ModLoaderStore.ml_options.KEY`
@@ -67,6 +72,9 @@ var logged_messages := {
 var ml_options := {
 	enable_mods = true,
 	log_level = ModLoaderLog.VERBOSITY_LEVEL.DEBUG,
+
+	# Mods that can't be disabled or enabled in a user profile (contains mod IDs as strings)
+	locked_mods = [],
 
 	# Array of disabled mods (contains mod IDs as strings)
 	disabled_mods = [],

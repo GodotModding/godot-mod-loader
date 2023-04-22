@@ -31,6 +31,8 @@ var dir_path := ""
 var is_loadable := true
 # True if overwrites.gd exists
 var is_overwrite := false
+# True if mod can't be disabled or enabled in a user profile
+var is_locked := false
 # Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
 # Contents of the manifest
