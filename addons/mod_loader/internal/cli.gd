@@ -19,7 +19,7 @@ static func is_running_with_command_line_arg(argument: String) -> bool:
 
 # Get the command line argument value if present when launching the game
 static func get_cmd_line_arg_value(argument: String) -> String:
-	var args := get_fixed_cmdline_args()
+	var args := _get_fixed_cmdline_args()
 
 	for arg_index in args.size():
 		var arg := args[arg_index] as String
@@ -40,7 +40,7 @@ static func get_cmd_line_arg_value(argument: String) -> String:
 	return ""
 
 
-static func get_fixed_cmdline_args() -> PoolStringArray:
+static func _get_fixed_cmdline_args() -> PoolStringArray:
 	return fix_godot_cmdline_args_string_space_splitting(OS.get_cmdline_args())
 
 

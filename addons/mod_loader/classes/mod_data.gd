@@ -50,7 +50,7 @@ func _init(_dir_path: String) -> void:
 
 # Load meta data from a mod's manifest.json file
 func load_manifest() -> void:
-	if not has_required_files():
+	if not _has_required_files():
 		return
 
 	ModLoaderLog.info("Loading mod_manifest (manifest.json) for -> %s" % dir_name, LOG_NAME)
@@ -66,15 +66,15 @@ func load_manifest() -> void:
 
 	var mod_manifest := ModManifest.new(manifest_dict)
 
-	is_loadable = has_manifest(mod_manifest)
+	is_loadable = _has_manifest(mod_manifest)
 	if not is_loadable: return
-	is_loadable = is_mod_dir_name_same_as_id(mod_manifest)
+	is_loadable = _is_mod_dir_name_same_as_id(mod_manifest)
 	if not is_loadable: return
 	manifest = mod_manifest
 
 
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]
-func is_mod_dir_name_same_as_id(mod_manifest: ModManifest) -> bool:
+func _is_mod_dir_name_same_as_id(mod_manifest: ModManifest) -> bool:
 	var manifest_id := mod_manifest.get_mod_id()
 	if not dir_name == manifest_id:
 		ModLoaderLog.fatal('Mod directory name "%s" does not match the data in manifest.json. Expected "%s" (Format: {namespace}-{name})' % [ dir_name, manifest_id ], LOG_NAME)
@@ -83,7 +83,7 @@ func is_mod_dir_name_same_as_id(mod_manifest: ModManifest) -> bool:
 
 
 # Confirms that all files from [member required_mod_files] exist
-func has_required_files() -> bool:
+func _has_required_files() -> bool:
 	for required_file in required_mod_files:
 		var file_path := get_required_mod_file_path(required_mod_files[required_file])
 
@@ -94,7 +94,7 @@ func has_required_files() -> bool:
 
 
 # Validates if manifest is set
-func has_manifest(mod_manifest: ModManifest) -> bool:
+func _has_manifest(mod_manifest: ModManifest) -> bool:
 	if mod_manifest == null:
 		ModLoaderLog.fatal("Mod manifest could not be created correctly due to errors.", LOG_NAME)
 		return false

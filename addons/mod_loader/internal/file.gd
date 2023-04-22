@@ -25,12 +25,12 @@ static func get_json_as_dict(path: String) -> Dictionary:
 		ModLoaderLog.error("Error opening file. Code: %s" % error, LOG_NAME)
 
 	var content := file.get_as_text()
-	return get_json_string_as_dict(content)
+	return _get_json_string_as_dict(content)
 
 
 # Parses JSON from a given [String] and returns a [Dictionary].
 # Returns an empty [Dictionary] on error (check with size() < 1)
-static func get_json_string_as_dict(string: String) -> Dictionary:
+static func _get_json_string_as_dict(string: String) -> Dictionary:
 	if string == "":
 		return {}
 	var parsed := JSON.parse(string)
@@ -47,7 +47,7 @@ static func get_json_string_as_dict(string: String) -> Dictionary:
 # =============================================================================
 
 # Saves a dictionary to a file, as a JSON string
-static func save_string_to_file(save_string: String, filepath: String) -> bool:
+static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 	# Create directory if it doesn't exist yet
 	var file_directory := filepath.get_base_dir()
 	var dir := Directory.new()
@@ -81,7 +81,7 @@ static func save_string_to_file(save_string: String, filepath: String) -> bool:
 # Saves a dictionary to a file, as a JSON string
 static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> bool:
 	var json_string = JSON.print(data, "\t")
-	return save_string_to_file(json_string, filepath)
+	return _save_string_to_file(json_string, filepath)
 
 
 # Checks

@@ -21,7 +21,7 @@ const LOG_NAME := "ModLoader:Dependency"
 #   loading if they are missing.
 #
 # Returns: A boolean indicating whether a circular dependency was detected.
-static func _check_dependencies(mod: ModData, is_required := true, dependency_chain := []) -> bool:
+static func check_dependencies(mod: ModData, is_required := true, dependency_chain := []) -> bool:
 	var dependency_type := "required" if is_required else "optional"
 	# Get the dependency array based on the is_required flag
 	var dependencies := mod.manifest.dependencies if is_required else mod.manifest.optional_dependencies
@@ -58,7 +58,7 @@ static func _check_dependencies(mod: ModData, is_required := true, dependency_ch
 
 			# Check if the dependency has any dependencies of its own
 			if dependency.manifest.dependencies.size() > 0:
-				if _check_dependencies(dependency, is_required, dependency_chain):
+				if check_dependencies(dependency, is_required, dependency_chain):
 					return true
 
 	# Return false if all dependencies have been resolved
@@ -68,7 +68,7 @@ static func _check_dependencies(mod: ModData, is_required := true, dependency_ch
 # Run load before check on a mod, checking any load_before entries it lists in its
 # mod_manifest (ie. its manifest.json file). Add the mod to the dependency of the
 # mods inside the load_before array.
-static func _check_load_before(mod: ModData) -> void:
+static func check_load_before(mod: ModData) -> void:
 	# Skip if no entries in load_before
 	if mod.manifest.load_before.size() == 0:
 		return
@@ -97,7 +97,7 @@ static func _check_load_before(mod: ModData) -> void:
 
 
 # Get the load order of mods, using a custom sorter
-static func _get_load_order(mod_data_array: Array) -> Array:
+static func get_load_order(mod_data_array: Array) -> Array:
 	# Add loadable mods to the mod load order array
 	for mod in mod_data_array:
 		mod = mod as ModData
@@ -121,7 +121,7 @@ static func _handle_missing_dependency(mod_id: String, dependency_id: String) ->
 	ModLoaderStore.mod_missing_dependencies[mod_id].append(dependency_id)
 
 
-# Inner class so the sort function can be called by _get_load_order()
+# Inner class so the sort function can be called by get_load_order()
 class CompareImportance:
 	# Custom sorter that orders mods by important
 	static func _compare_importance(a: ModData, b: ModData) -> bool:
