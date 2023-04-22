@@ -25,6 +25,10 @@ signal logged(entry)
 # Prefix for this file when using mod_log or dev_log
 const LOG_NAME := "ModLoader"
 
+# --- DEPRECATED ---
+# UNPACKED_DIR was moved to ModLoaderStore.
+# However, many Brotato mods use this const directly, which is why the deprecation warning was added.
+var UNPACKED_DIR := "res://mods-unpacked/" setget ,deprecated_direct_access_UNPACKED_DIR
 
 # Main
 # =============================================================================
@@ -466,3 +470,8 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
 	return ModLoaderConfig.get_mod_config(mod_dir_name, key)
+
+
+func deprecated_direct_access_UNPACKED_DIR() -> String:
+	ModLoaderDeprecated.deprecated_message("The const \"UNPACKED_DIR\" was removed, use \"ModLoaderMod.get_unpacked_dir()\" instead", "6.0.0")
+	return _ModLoaderPath.get_unpacked_mods_dir_path()
