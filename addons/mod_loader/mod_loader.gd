@@ -22,36 +22,20 @@ extends Node
 
 signal logged(entry)
 
-# Config
-# =============================================================================
-
-# Most of these settings should never need to change, aside from the DEBUG_*
-# options (which should be `false` when distributing compiled PCKs)
-
-const MODLOADER_VERSION = "5.0.1"
-
-# If true, a complete array of filepaths is stored for each mod. This is
-# disabled by default because the operation can be very expensive, but may
-# be useful for debugging
-const DEBUG_ENABLE_STORING_FILEPATHS := false
-
-# This is where mod ZIPs are unpacked to
-const UNPACKED_DIR := "res://mods-unpacked/"
-
-
-# Set to true to require using "--enable-mods" to enable them
-const REQUIRE_CMD_LINE := false
-
 # Prefix for this file when using mod_log or dev_log
 const LOG_NAME := "ModLoader"
 
+# --- DEPRECATED ---
+# UNPACKED_DIR was moved to ModLoaderStore.
+# However, many Brotato mods use this const directly, which is why the deprecation warning was added.
+var UNPACKED_DIR := "res://mods-unpacked/" setget ,deprecated_direct_access_UNPACKED_DIR
 
 # Main
 # =============================================================================
 
 func _init() -> void:
 	# if mods are not enabled - don't load mods
-	if REQUIRE_CMD_LINE and not _ModLoaderCLI.is_running_with_command_line_arg("--enable-mods"):
+	if ModLoaderStore.REQUIRE_CMD_LINE and not _ModLoaderCLI.is_running_with_command_line_arg("--enable-mods"):
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
@@ -170,7 +154,7 @@ func _load_mods() -> void:
 
 	ModLoaderLog.success("DONE: Completely finished loading mods", LOG_NAME)
 
-	_ModLoaderScriptExtension.handle_script_extensions(UNPACKED_DIR)
+	_ModLoaderScriptExtension.handle_script_extensions()
 
 	ModLoaderLog.success("DONE: Installed all script extensions", LOG_NAME)
 
@@ -271,8 +255,8 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		if OS.has_feature("editor") and not ModLoaderStore.has_shown_editor_zips_warning:
 			ModLoaderLog.warning(str(
 				"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
-				"If you have any unpacked mods in ", UNPACKED_DIR, ", they will not be loaded. ",
-				"Please unpack your mod ZIPs instead, and add them to ", UNPACKED_DIR), LOG_NAME)
+				"If you have any unpacked mods in ", ModLoaderStore.UNPACKED_DIR, ", they will not be loaded. ",
+				"Please unpack your mod ZIPs instead, and add them to ", ModLoaderStore.UNPACKED_DIR), LOG_NAME)
 			ModLoaderStore.has_shown_editor_zips_warning = true
 
 		ModLoaderLog.debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
@@ -339,7 +323,7 @@ func _load_steam_workshop_zips() -> int:
 # which adds their data to mod_data.
 func _setup_mods() -> int:
 	# Path to the unpacked mods folder
-	var unpacked_mods_path := UNPACKED_DIR
+	var unpacked_mods_path := ModLoaderStore.UNPACKED_DIR
 
 	var dir := Directory.new()
 	if not dir.open(unpacked_mods_path) == OK:
@@ -429,7 +413,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	var dir_name := _ModLoaderPath.get_file_name_from_path(mod_folder_path, false, true)
 
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
-	var local_mod_path := UNPACKED_DIR.plus_file(dir_name)
+	var local_mod_path := ModLoaderStore.UNPACKED_DIR.plus_file(dir_name)
 
 	var mod := ModData.new(local_mod_path)
 	mod.dir_name = dir_name
@@ -443,7 +427,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	# not needed anymore. It can be useful when debugging, but it's also an expensive
 	# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
 	# which has ~1,000 files). That's why it's disabled by default
-	if DEBUG_ENABLE_STORING_FILEPATHS:
+	if ModLoaderStore.DEBUG_ENABLE_STORING_FILEPATHS:
 		mod.file_paths = _ModLoaderPath.get_flat_view_dict(local_mod_path)
 
 
@@ -502,3 +486,8 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
 	return ModLoaderConfig.get_mod_config(mod_dir_name, key)
+
+
+func deprecated_direct_access_UNPACKED_DIR() -> String:
+	ModLoaderDeprecated.deprecated_message("The const \"UNPACKED_DIR\" was removed, use \"ModLoaderMod.get_unpacked_dir()\" instead", "6.0.0")
+	return _ModLoaderPath.get_unpacked_mods_dir_path()
