@@ -62,7 +62,7 @@ const new_global_classes := [
 		"path": "res://addons/mod_loader/api/godot.gd"
 	}, {
 		"base": "Node",
-		"class": "ModLoaderSteam",
+		"class": "_ModLoaderSteam",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/third_party/steam.gd"
 	}, {

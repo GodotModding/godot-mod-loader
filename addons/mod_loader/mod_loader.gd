@@ -297,7 +297,7 @@ func _load_zips_in_folder(folder_path: String) -> int:
 # inside each workshop item's folder
 func _load_steam_workshop_zips() -> int:
 	var temp_zipped_mods_count := 0
-	var workshop_folder_path := ModLoaderSteam.get_path_to_workshop()
+	var workshop_folder_path := _ModLoaderSteam.get_path_to_workshop()
 
 	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 
