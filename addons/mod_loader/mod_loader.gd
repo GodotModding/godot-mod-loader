@@ -255,8 +255,8 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		if OS.has_feature("editor") and not ModLoaderStore.has_shown_editor_zips_warning:
 			ModLoaderLog.warning(str(
 				"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
-				"If you have any unpacked mods in ", ModLoaderStore.UNPACKED_DIR, ", they will not be loaded. ",
-				"Please unpack your mod ZIPs instead, and add them to ", ModLoaderStore.UNPACKED_DIR), LOG_NAME)
+				"If you have any unpacked mods in ", _ModLoaderPath.get_unpacked_mods_dir_path(), ", they will not be loaded. ",
+				"Please unpack your mod ZIPs instead, and add them to ", _ModLoaderPath.get_unpacked_mods_dir_path()), LOG_NAME)
 			ModLoaderStore.has_shown_editor_zips_warning = true
 
 		ModLoaderLog.debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
@@ -323,7 +323,7 @@ func _load_steam_workshop_zips() -> int:
 # which adds their data to mod_data.
 func _setup_mods() -> int:
 	# Path to the unpacked mods folder
-	var unpacked_mods_path := ModLoaderStore.UNPACKED_DIR
+	var unpacked_mods_path := _ModLoaderPath.get_unpacked_mods_dir_path()
 
 	var dir := Directory.new()
 	if not dir.open(unpacked_mods_path) == OK:
@@ -413,7 +413,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	var dir_name := _ModLoaderPath.get_file_name_from_path(mod_folder_path, false, true)
 
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
-	var local_mod_path := ModLoaderStore.UNPACKED_DIR.plus_file(dir_name)
+	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().plus_file(dir_name)
 
 	var mod := ModData.new(local_mod_path)
 	mod.dir_name = dir_name

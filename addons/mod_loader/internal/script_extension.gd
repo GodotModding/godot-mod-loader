@@ -21,7 +21,7 @@ static func handle_script_extensions() -> void:
 
 		var child_script = ResourceLoader.load(extension_path)
 
-		var mod_id: String = extension_path.trim_prefix(ModLoaderStore.UNPACKED_DIR).get_slice("/", 0)
+		var mod_id: String = extension_path.trim_prefix(_ModLoaderPath.get_unpacked_mods_dir_path()).get_slice("/", 0)
 
 		var parent_script: Script = child_script.get_base_script()
 		var parent_script_path: String = parent_script.resource_path
