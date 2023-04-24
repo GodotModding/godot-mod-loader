@@ -194,7 +194,7 @@ static func _update_mod_lists() -> bool:
 		# Delete no longer installed mods
 		for mod_id in profile.mod_list:
 			# Check if the mod_dir for the mod-id exists
-			if not _ModLoaderFile.dir_exists(ModLoader.UNPACKED_DIR + mod_id):
+			if not _ModLoaderFile.dir_exists(_ModLoaderPath.get_unpacked_mods_dir_path() + mod_id):
 				# if not the mod is no longer installed and can be removed
 				profile.mod_list.erase(mod_id)
 
