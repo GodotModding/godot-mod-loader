@@ -10,7 +10,6 @@ const LOG_NAME := "ModLoader:ScriptExtension"
 
 # Couple the extension paths with the parent paths and the extension's mod id
 # in a ScriptExtensionData resource
-# We need to pass the UNPACKED_DIR constant because the global ModLoader is not available during _init().
 static func handle_script_extensions() -> void:
 	var script_extension_data_array := []
 	for extension_path in ModLoaderStore.script_extensions:
