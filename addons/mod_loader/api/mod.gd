@@ -25,10 +25,9 @@ static func install_script_extension(child_script_path:String) -> void:
 
 
 static func uninstall_script_extension(extension_script_path: String) -> void:
-
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
-	ModLoader._remove_extension(extension_script_path)
+	_ModLoaderScriptExtension.remove_specific_extension_from_script(extension_script_path)
 
 
 # This function should be called only when actually necessary
