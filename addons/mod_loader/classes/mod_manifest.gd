@@ -31,6 +31,8 @@ var compatible_mod_loader_version: PoolStringArray = []
 var incompatibilities: PoolStringArray = []
 var load_before: PoolStringArray = []
 var tags : PoolStringArray = []
+var config_schema := {}
+# Is generated based on the default values in config_schema
 var config_defaults := {}
 var description_rich := ""
 var image: StreamTexture
@@ -53,7 +55,7 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"compatible_mod_loader_version",
 	"compatible_game_version",
 	"incompatibilities",
-	"config_defaults",
+	"config_schema",
 ]
 
 
@@ -95,7 +97,7 @@ func _init(manifest: Dictionary) -> void:
 	compatible_mod_loader_version = _handle_compatible_mod_loader_version(mod_id, godot_details)
 	description_rich = ModLoaderUtils.get_string_from_dict(godot_details, "description_rich")
 	tags = ModLoaderUtils.get_array_from_dict(godot_details, "tags")
-	config_defaults = godot_details.config_defaults
+	config_schema = godot_details.config_schema
 
 	if (
 		not is_mod_id_array_valid(mod_id, dependencies, "dependency") or
@@ -134,6 +136,8 @@ func _init(manifest: Dictionary) -> void:
 	):
 		return
 
+	_handle_mod_config()
+
 
 # Mod ID used in the mod loader
 # Format: {namespace}-{name}
@@ -163,7 +167,7 @@ func get_as_dict() -> Dictionary:
 		"incompatibilities": incompatibilities,
 		"load_before": load_before,
 		"tags": tags,
-		"config_defaults": config_defaults,
+		"config_schema": config_schema,
 		"description_rich": description_rich,
 		"image": image,
 	}
@@ -187,12 +191,68 @@ func to_json() -> String:
 				"incompatibilities": incompatibilities,
 				"load_before": load_before,
 				"tags": tags,
-				"config_defaults": config_defaults,
+				"config_schema": config_schema,
 				"description_rich": description_rich,
 				"image": image,
 			}
 		}
 	}, "\t")
+
+
+func _handle_mod_config() -> void:
+	_get_config_default_data(config_schema.properties)
+
+	is_config_valid(
+		get_config_default_data_as_string(),
+		get_config_schema_as_string()
+	)
+
+
+# Recursively searches for default values
+func _get_config_default_data(property: Dictionary, current_prop := config_defaults) -> void:
+	# Exit function if property is empty
+	if property.empty():
+		return
+
+	for property_key in property.keys():
+		var prop = property[property_key]
+
+		# If this property contains nested properties, we recursively call this function
+		if "properties" in prop:
+			current_prop[property_key] = {}
+			_get_config_default_data(prop.properties, current_prop[property_key])
+			# Return early here because a object will not have a "default" key
+			return
+
+		# If this property contains a default value, add it to the global config_defaults dictionary
+		if "default" in prop:
+			# Initialize the current_key if it is missing in config_defaults
+			if not current_prop.has(property_key):
+				current_prop[property_key] = {}
+
+			# Add the default value to the config_defaults
+			current_prop[property_key] = prop.default
+
+
+# Returns a JSON string representing the default configuration data
+func get_config_default_data_as_string() -> String:
+	return JSON.print(config_defaults)
+
+
+# Returns a JSON string representing the configuration schema
+func get_config_schema_as_string() -> String:
+	return JSON.print(config_schema)
+
+
+func is_config_valid(config_data: String, config_schema: String) -> bool:
+	var json_schema := JSONSchema.new()
+	var error := json_schema.validate(config_data, config_schema)
+
+	if not error == "":
+		ModLoaderLog.fatal(error, LOG_NAME)
+		return false
+
+	return true
 
 
 # Handles deprecation of the single string value in the compatible_mod_loader_version.
