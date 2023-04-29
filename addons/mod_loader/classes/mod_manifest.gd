@@ -200,12 +200,20 @@ func to_json() -> String:
 
 
 func _handle_mod_config() -> void:
+	var config_path := _ModLoaderPath.get_path_to_configs().plus_file("%s-%s.json" % [namespace, name])
+
+	# Generate config_default based on the default values in config_schema
 	_get_config_default_data(config_schema.properties)
 
+	# Validate the config defaults
 	is_config_valid(
 		get_config_default_data_as_string(),
 		get_config_schema_as_string()
 	)
+
+	# Save the default config to disk if there is no file yet
+	if not _ModLoaderFile.file_exists(config_path):
+		_ModLoaderFile.save_dictionary_to_json_file(config_defaults, config_path)
 
 
 # Recursively searches for default values
