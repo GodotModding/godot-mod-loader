@@ -97,7 +97,7 @@ func _init(manifest: Dictionary) -> void:
 	compatible_mod_loader_version = _handle_compatible_mod_loader_version(mod_id, godot_details)
 	description_rich = ModLoaderUtils.get_string_from_dict(godot_details, "description_rich")
 	tags = ModLoaderUtils.get_array_from_dict(godot_details, "tags")
-	config_schema = godot_details.config_schema
+	config_schema = ModLoaderUtils.get_dict_from_dict(godot_details, "config_schema")
 
 	if (
 		not is_mod_id_array_valid(mod_id, dependencies, "dependency") or
@@ -136,7 +136,8 @@ func _init(manifest: Dictionary) -> void:
 	):
 		return
 
-	_handle_mod_config()
+	if not config_schema.empty():
+		_handle_mod_config()
 
 
 # Mod ID used in the mod loader
