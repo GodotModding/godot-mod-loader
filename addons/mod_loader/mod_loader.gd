@@ -91,10 +91,6 @@ func _load_mods() -> void:
 	else:
 		ModLoaderLog.info("No mods were setup", LOG_NAME)
 
-	# Set up mod configs. If a mod's JSON file is found, its data gets added
-	# to mod_data.{dir_name}.config
-	_load_mod_configs()
-
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
 	# (from their manifest.json file), and verify that the meta JSON has all
@@ -102,6 +98,10 @@ func _load_mods() -> void:
 	for dir_name in ModLoaderStore.mod_data:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		mod.load_manifest()
+
+	# Set up mod configs. If a mod's JSON file is found, its data gets added
+	# to mod_data.{dir_name}.config
+	_load_mod_configs()
 
 	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
 
