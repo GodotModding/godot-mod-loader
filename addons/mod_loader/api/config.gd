@@ -5,7 +5,7 @@ extends Object
 
 const LOG_NAME := "ModLoader:Config"
 
-enum MLConfigStatus {
+enum ML_CONFIG_STATUS {
 	OK,                  # 0 = No errors
 	NO_JSON_OK,          # 1 = No custom JSON (file probably does not exist). Uses defaults from manifest, if available
 	INVALID_MOD_ID,      # 2 = Invalid mod ID
@@ -14,65 +14,55 @@ enum MLConfigStatus {
 }
 
 
-# Get the config data for a specific mod. Always returns a dictionary with two
-# keys: `error` and `data`.
-# Data (`data`) is either the full config, or data from a specific key if one was specified.
-# Error (`error`) is 0 if there were no errors, or > 0 if the setting could not be retrieved:
-static func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
-	var status_code = MLConfigStatus.OK
+# Retrieves the configuration data for a specific mod.
+# Returns a dictionary with three keys:
+# - "status_code": an integer indicating the status of the request
+# - "status_msg": a string containing a message explaining the status code
+# - "data": the configuration data
+#
+# Parameters:
+# - mod_dir_name: the name of the mod's directory / id
+#
+# Status Codes:
+# - ML_CONFIG_STATUS.OK: the request was successful and the configuration data is included in the "data" key
+# - ML_CONFIG_STATUS.INVALID_MOD_ID: the mod ID is not valid, and the "status_msg" key contains an error message
+# - ML_CONFIG_STATUS.NO_JSON_OK: there is no configuration file for the mod, the "data" key contains an empty dictionary
+#
+# Returns:
+# A dictionary with three keys: "status_code", "status_msg", and "data"
+static func get_mod_config(mod_dir_name: String) -> Dictionary:
+	var status_code = ML_CONFIG_STATUS.OK
 	var status_msg := ""
 	var data = {} # can be anything
-	var defaults := {}
 
-	# Invalid mod ID
+	# Check if the mod ID is invalid
 	if not ModLoaderStore.mod_data.has(mod_dir_name):
-		status_code = MLConfigStatus.INVALID_MOD_ID
+		status_code = ML_CONFIG_STATUS.INVALID_MOD_ID
 		status_msg = "Mod ID was invalid: %s" % mod_dir_name
 
 	# Mod ID is valid
-	if status_code == MLConfigStatus.OK:
+	if status_code == ML_CONFIG_STATUS.OK:
 		var mod := ModLoaderStore.mod_data[mod_dir_name] as ModData
 		var config_data := mod.config
-		defaults = mod.manifest.config_defaults
 
-		# No custom JSON file
-		if config_data.size() == MLConfigStatus.OK:
-			status_code = MLConfigStatus.NO_JSON_OK
-			var noconfig_msg = "No config file for %s.json. " % mod_dir_name
-			if key == "":
-				data = defaults
-				status_msg += str(noconfig_msg, "Using defaults (extra.godot.config_defaults)")
-			else:
-				if defaults.has(key):
-					data = defaults[key]
-					status_msg += str(noconfig_msg, "Using defaults for key '%s' (extra.godot.config_defaults.%s)" % [key, key])
-				else:
-					status_code = MLConfigStatus.NO_JSON_INVALID_KEY
-					status_msg += str(
-						"Could not get the requested data for %s: " % mod_dir_name,
-						"Requested key '%s' is not present in the 'config_defaults' of the mod's manifest.json file (extra.godot.config_defaults.%s). " % [key, key]
-					)
+		# Check if there is no config file for the mod
+		if config_data.size() == 0:
+			status_code = ML_CONFIG_STATUS.NO_JSON_OK
+			status_msg = "No config file for %s.json. " % mod_dir_name
 
-		# JSON file exists
-		if status_code == MLConfigStatus.OK:
-			if key == "":
+		# Config file exists
+		if status_code == ML_CONFIG_STATUS.OK:
 				data = config_data
-			else:
-				if config_data.has(key):
-					data = config_data[key]
-				else:
-					status_code = MLConfigStatus.INVALID_KEY
-					status_msg = "Invalid key '%s' for mod ID: %s" % [key, mod_dir_name]
 
-	# Log if any errors occured
-	if not status_code == MLConfigStatus.OK:
-		if status_code == MLConfigStatus.NO_JSON_OK:
-			# No user config file exists. Low importance as very likely to trigger
+	# Log any errors that occurred
+	if not status_code == ML_CONFIG_STATUS.OK:
+		if status_code == ML_CONFIG_STATUS.NO_JSON_OK:
+			# The mod has no user config file, which is not a critical error
 			var full_msg = "Config JSON Notice: %s" % status_msg
 			# Only log this once, to avoid flooding the log
 			ModLoaderLog.debug(full_msg, mod_dir_name, true)
 		else:
-			# Code error (eg. invalid mod ID)
+			# The error is critical (e.g. invalid mod ID)
 			ModLoaderLog.fatal("Config JSON Error (%s): %s" % [status_code, status_msg], mod_dir_name)
 
 	return {
@@ -86,7 +76,7 @@ static func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dicti
 # Requires the full config object (ie. the dictionary that's returned by
 # `get_mod_config`)
 static func is_mod_config_data_valid(config_obj: Dictionary) -> bool:
-	return config_obj.status_code <= MLConfigStatus.NO_JSON_OK
+	return config_obj.status_code <= ML_CONFIG_STATUS.NO_JSON_OK
 
 
 # Saves a full dictionary object to a mod's custom config file, as JSON.
