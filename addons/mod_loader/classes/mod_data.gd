@@ -38,7 +38,7 @@ var importance := 0
 # Contents of the manifest
 var manifest: ModManifest
 # Updated in _load_mod_configs
-var config := {}
+var config: ModConfig
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PoolStringArray = []
@@ -71,6 +71,51 @@ func load_manifest() -> void:
 	is_loadable = _is_mod_dir_name_same_as_id(mod_manifest)
 	if not is_loadable: return
 	manifest = mod_manifest
+
+
+func load_mod_config() -> void:
+	config = ModConfig.new()
+	config.save_path = _ModLoaderPath.get_path_to_configs().plus_file("%s.json" % dir_name)
+	config.schema = manifest.config_schema
+
+	# Generate config_default based on the default values in config_schema
+	_get_config_default_data(config.schema.properties)
+
+	# Validate the config defaults
+	manifest.is_config_valid(
+		config.get_data_as_string(),
+		config.get_schema_as_string()
+	)
+
+	# Save the default config to disk if there is no file yet
+	if not _ModLoaderFile.file_exists(config.save_path):
+		_ModLoaderFile.save_dictionary_to_json_file(config.data, config.save_path)
+
+
+# Recursively searches for default values
+func _get_config_default_data(property: Dictionary, current_prop := config.data) -> void:
+	# Exit function if property is empty
+	if property.empty():
+		return
+
+	for property_key in property.keys():
+		var prop = property[property_key]
+
+		# If this property contains nested properties, we recursively call this function
+		if "properties" in prop:
+			current_prop[property_key] = {}
+			_get_config_default_data(prop.properties, current_prop[property_key])
+			# Return early here because a object will not have a "default" key
+			return
+
+		# If this property contains a default value, add it to the global config_defaults dictionary
+		if "default" in prop:
+			# Initialize the current_key if it is missing in config_defaults
+			if not current_prop.has(property_key):
+				current_prop[property_key] = {}
+
+			# Add the default value to the config_defaults
+			current_prop[property_key] = prop.default
 
 
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]

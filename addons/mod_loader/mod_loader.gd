@@ -98,6 +98,8 @@ func _load_mods() -> void:
 	for dir_name in ModLoaderStore.mod_data:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		mod.load_manifest()
+		if not mod.manifest.get("config_schema") and not mod.manifest.config_schema.empty():
+			mod.load_mod_config()
 
 	# Set up mod configs. If a mod's JSON file is found, its data gets added
 	# to mod_data.{dir_name}.config
@@ -485,7 +487,7 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
-	return ModLoaderConfig.get_mod_config(mod_dir_name, key)
+	return ModLoaderConfig.get_mod_config(mod_dir_name)
 
 
 func deprecated_direct_access_UNPACKED_DIR() -> String:
