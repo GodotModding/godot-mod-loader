@@ -155,7 +155,7 @@ static func remove_all_extensions_from_all_scripts() -> void:
 # Used to remove a specific extension
 static func remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
-	if not ModLoaderUtils.file_exists(extension_path):
+	if not _ModLoaderFile.file_exists(extension_path):
 		ModLoaderLog.error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
 		return
 
@@ -200,7 +200,7 @@ static func remove_specific_extension_from_script(extension_path: String) -> voi
 # Used to fully reset the provided script to a state prior of any extension
 static func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 	# Check path to file exists
-	if not ModLoaderUtils.file_exists(parent_script_path):
+	if not _ModLoaderFile.file_exists(parent_script_path):
 		ModLoaderLog.error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
 		return
 
