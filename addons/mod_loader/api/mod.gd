@@ -12,7 +12,13 @@ const LOG_NAME := "ModLoader:Mod"
 # {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
 # Note that your extender script doesn't have to follow the same directory path
 # as the vanilla file, but it's good practice to do so.
-static func install_script_extension(child_script_path:String) -> void:
+static func install_script_extension(child_script_path: String) -> void:
+
+	var namespace: String = ModLoaderUtils._get_string_in_between(child_script_path, "res://mods-unpacked/", "/")
+	var mod_data: ModData = ModData.get_mod_data_from_namespace(namespace)
+	if not ModLoaderStore.saved_extension_paths.has(mod_data.manifest.get_mod_id()):
+		ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()] = []
+	ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()].append(child_script_path)
 
 	# If this is called during initialization, add it with the other
 	# extensions to be installed taking inheritance chain into account

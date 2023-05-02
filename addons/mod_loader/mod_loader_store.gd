@@ -59,6 +59,12 @@ var loaded_vanilla_parents_cache := {}
 # Stores all the taken over scripts for restoration
 var saved_scripts := {}
 
+# Stores main scripts for mod disabling
+var saved_mod_mains := {}
+
+# Stores script extension paths with the key being the namespace of a mod
+var saved_extension_paths := {}
+
 # Keeps track of logged messages, to avoid flooding the log with duplicate notices
 # Can also be used by mods, eg. to create an in-game developer console that
 # shows messages

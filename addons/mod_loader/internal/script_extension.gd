@@ -152,6 +152,14 @@ static func remove_all_extensions_from_all_scripts() -> void:
 		_remove_all_extensions_from_script(script)
 
 
+static func remove_all_extensions_of_mod(mod: ModData) -> void:
+	var _to_remove_extension_paths: Array = ModLoaderStore.saved_extension_paths[mod.manifest.get_mod_id()]
+	ModLoaderLog.warning("Extension paths %s" % _to_remove_extension_paths, LOG_NAME)
+	for extension_path in _to_remove_extension_paths:
+		remove_specific_extension_from_script(extension_path)
+		ModLoaderStore.saved_extension_paths.erase(mod.manifest.get_mod_id())
+
+
 # Used to remove a specific extension
 static func remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
