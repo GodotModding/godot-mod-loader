@@ -77,6 +77,7 @@ func load_mod_config() -> void:
 	config = ModConfig.new()
 	config.save_path = _ModLoaderPath.get_path_to_configs().plus_file("%s.json" % dir_name)
 	config.schema = manifest.config_schema
+	config.mod_id = dir_name
 
 	# Generate config_default based on the default values in config_schema
 	_get_config_default_data(config.schema.properties)

@@ -98,15 +98,10 @@ func _load_mods() -> void:
 	for dir_name in ModLoaderStore.mod_data:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		mod.load_manifest()
-		if not mod.manifest.get("config_schema") and not mod.manifest.config_schema.empty():
+		if mod.manifest.get("config_schema") and not mod.manifest.config_schema.empty():
 			mod.load_mod_config()
 
-	# Set up mod configs. If a mod's JSON file is found, its data gets added
-	# to mod_data.{dir_name}.config
-	_load_mod_configs()
-
 	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
-
 
 	# Check for mods with load_before. If a mod is listed in load_before,
 	# add the current mod to the dependencies of the the mod specified
