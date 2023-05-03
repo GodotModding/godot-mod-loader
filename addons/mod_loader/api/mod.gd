@@ -51,6 +51,34 @@ func reload_mods() -> void:
 	ModLoader._reload_mods()
 
 
+# This function should be called only when actually necessary
+# as it can break the game and require a restart for mods
+# that do not fully use the systems put in place by the mod loader,
+# so anything that just uses add_node, move_node ecc...
+# To not have your mod break on disable please use provided functions
+# and implement a _disable function in your mod_main.gd that will
+# handle removing all the changes that were not done through the Mod Loader
+func disable_mods() -> void:
+
+	# Currently this is the only thing we do, but it is better to expose
+	# this function like this for further changes
+	ModLoader._disable_mods()
+
+
+# This function should be called only when actually necessary
+# as it can break the game and require a restart for mods
+# that do not fully use the systems put in place by the mod loader,
+# so anything that just uses add_node, move_node ecc...
+# To not have your mod break on disable please use provided functions
+# and implement a _disable function in your mod_main.gd that will
+# handle removing all the changes that were not done through the Mod Loader
+func disable_mod(mod: ModData) -> void:
+
+	# Currently this is the only thing we do, but it is better to expose
+	# this function like this for further changes
+	ModLoader._disable_mod(mod)
+
+
 # Register an array of classes to the global scope, since Godot only does that in the editor.
 # Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
 # You can find these easily in the project.godot file under "_global_script_classes"
