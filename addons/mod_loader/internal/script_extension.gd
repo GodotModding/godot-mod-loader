@@ -104,6 +104,7 @@ static func apply_extension(extension_path: String) -> Script:
 		# The first entry in the saved script array that has the path
 		# used as a key will be the duplicate of the not modified script
 		ModLoaderStore.saved_scripts[parent_script_path].append(parent_script.duplicate())
+
 	ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
 
 	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
@@ -144,19 +145,6 @@ static func _reload_vanilla_child_classes_for(script: Script) -> void:
 
 			if child_class.base == _class.class:
 				load(child_class.path).reload()
-
-
-static func _remove_all_extensions_from_all_scripts() -> void:
-	var _to_remove_scripts: Dictionary = ModLoaderStore.saved_scripts.duplicate()
-	for script in _to_remove_scripts:
-		_remove_all_extensions_from_script(script)
-
-
-static func remove_all_extensions_of_mod(mod: ModData) -> void:
-	var _to_remove_extension_paths: Array = ModLoaderStore.saved_extension_paths[mod.manifest.get_mod_id()]
-	for extension_path in _to_remove_extension_paths:
-		remove_specific_extension_from_script(extension_path)
-		ModLoaderStore.saved_extension_paths.erase(mod.manifest.get_mod_id())
 
 
 # Used to remove a specific extension
@@ -227,3 +215,11 @@ static func _remove_all_extensions_from_script(parent_script_path: String) -> vo
 
 	# Remove the script after it has been reset so we do not do it again
 	ModLoaderStore.saved_scripts.erase(parent_script_path)
+
+
+# Used to remove all extensions that are of a specific mod
+static func remove_all_extensions_of_mod(mod: ModData) -> void:
+	var _to_remove_extension_paths: Array = ModLoaderStore.saved_extension_paths[mod.manifest.get_mod_id()]
+	for extension_path in _to_remove_extension_paths:
+		remove_specific_extension_from_script(extension_path)
+		ModLoaderStore.saved_extension_paths.erase(mod.manifest.get_mod_id())

@@ -115,14 +115,3 @@ func get_optional_mod_file_path(optional_file: int) -> String:
 		optional_mod_files.OVERWRITES:
 			return dir_path.plus_file("overwrites.gd")
 	return ""
-
-
-# Gets the ModData from the provided namespace
-static func get_mod_data_from_namespace(mod_id: String) -> ModData:
-	for mod in ModLoaderStore.mod_data:
-		var mod_data: ModData = ModLoaderStore.mod_data[mod]
-
-		if mod_data.manifest.get_mod_id() == mod_id:
-			return mod_data
-
-	return null

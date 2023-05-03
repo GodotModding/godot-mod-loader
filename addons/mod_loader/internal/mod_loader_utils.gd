@@ -90,7 +90,7 @@ static func _is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 
 
 # Returns the string in between two strings in a provided string
-static func _get_string_in_between(string: String, initial: String, ending: String) -> String:
+static func get_string_in_between(string: String, initial: String, ending: String) -> String:
 	var start_index: int = string.find(initial)
 	if start_index == -1:
 		ModLoaderLog.error("Initial string not found.", LOG_NAME)

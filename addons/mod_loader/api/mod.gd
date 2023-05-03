@@ -14,8 +14,8 @@ const LOG_NAME := "ModLoader:Mod"
 # as the vanilla file, but it's good practice to do so.
 static func install_script_extension(child_script_path: String) -> void:
 
-	var namespace: String = ModLoaderUtils._get_string_in_between(child_script_path, "res://mods-unpacked/", "/")
-	var mod_data: ModData = ModData.get_mod_data_from_namespace(namespace)
+	var mod_id: String = ModLoaderUtils.get_string_in_between(child_script_path, "res://mods-unpacked/", "/")
+	var mod_data: ModData = get_mod_data_from_mod_id(mod_id)
 	if not ModLoaderStore.saved_extension_paths.has(mod_data.manifest.get_mod_id()):
 		ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()] = []
 	ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()].append(child_script_path)
@@ -72,11 +72,11 @@ func disable_mods() -> void:
 # To not have your mod break on disable please use provided functions
 # and implement a _disable function in your mod_main.gd that will
 # handle removing all the changes that were not done through the Mod Loader
-func disable_mod(mod: ModData) -> void:
+func disable_mod(mod_data: ModData) -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
-	ModLoader._disable_mod(mod)
+	ModLoader._disable_mod(mod_data)
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
@@ -99,6 +99,15 @@ static func add_translation_from_resource(resource_path: String) -> void:
 	var translation_object: Translation = load(resource_path)
 	TranslationServer.add_translation(translation_object)
 	ModLoaderLog.info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
+
+
+# Gets the ModData from the provided namespace
+static func get_mod_data_from_mod_id(mod_id: String) -> ModData:
+	if not ModLoaderStore.mod_data.has(mod_id):
+		ModLoaderLog.error("The provided mod_id %s does not have ModData" % mod_id, LOG_NAME)
+		return null
+
+	return ModLoaderStore.mod_data[mod_id]
 
 
 static func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
