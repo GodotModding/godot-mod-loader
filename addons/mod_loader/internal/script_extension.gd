@@ -104,7 +104,7 @@ static func apply_extension(extension_path: String) -> Script:
 		# The first entry in the saved script array that has the path
 		# used as a key will be the duplicate of the not modified script
 		ModLoaderStore.saved_scripts[parent_script_path].append(parent_script.duplicate())
-		ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
+	ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
 
 	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
 	child_script.take_over_path(parent_script_path)
