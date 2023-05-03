@@ -473,14 +473,14 @@ func _disable_mod(mod: ModData) -> void:
 	var mod_main_path := mod.get_required_mod_file_path(ModData.required_mod_files.MOD_MAIN)
 
 	if not ModLoaderStore.saved_mod_mains.has(mod_main_path):
-		ModLoaderLog.error("The provided ModData %s has no saved mod main" % mod.manifest.get_mod_id(), LOG_NAME)
+		ModLoaderLog.error("The provided Mod %s has no saved mod main" % mod.manifest.get_mod_id(), LOG_NAME)
 		return
 
 	var mod_main_instance: Node = ModLoaderStore.saved_mod_mains[mod_main_path]
 	if mod_main_instance.has_method("_disable"):
 		mod_main_instance._disable()
 	else:
-		ModLoaderLog.warning("Mod %s does not have a \"_disable\" method" % mod.manifest.name, LOG_NAME)
+		ModLoaderLog.warning("The provided Mod %s does not have a \"_disable\" method" % mod.manifest.get_mod_id(), LOG_NAME)
 
 	ModLoaderStore.saved_mod_mains.erase(mod_main_path)
 	_ModLoaderScriptExtension.remove_all_extensions_of_mod(mod)
