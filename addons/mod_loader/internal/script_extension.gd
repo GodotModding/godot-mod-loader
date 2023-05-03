@@ -146,7 +146,7 @@ static func _reload_vanilla_child_classes_for(script: Script) -> void:
 				load(child_class.path).reload()
 
 
-static func remove_all_extensions_from_all_scripts() -> void:
+static func _remove_all_extensions_from_all_scripts() -> void:
 	var _to_remove_scripts: Dictionary = ModLoaderStore.saved_scripts.duplicate()
 	for script in _to_remove_scripts:
 		_remove_all_extensions_from_script(script)
