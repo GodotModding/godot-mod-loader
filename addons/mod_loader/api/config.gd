@@ -23,11 +23,6 @@ static func get_mod_config(mod_id: String) -> Dictionary:
 	return config_data
 
 
-static func is_mod_config_data_valid(config_data: ModConfig):
-	var json_schema := JSONSchema.new()
-	var error := json_schema.validate(config_data.get_data_as_string(), config_data.get_schema_as_string())
-
-
 static func update_mod_config(mod_id: String, data: Dictionary) -> void:
 	# Update the config held in memory
 	ModLoaderStore.mod_data[mod_id].config.merge(data, true)

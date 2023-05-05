@@ -99,7 +99,7 @@ func _load_mods() -> void:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		mod.load_manifest()
 		if mod.manifest.get("config_schema") and not mod.manifest.config_schema.empty():
-			mod.load_mod_config()
+			mod.load_configs()
 
 	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
 
@@ -358,48 +358,6 @@ func _setup_mods() -> int:
 
 	dir.list_dir_end()
 	return unpacked_mods_count
-
-
-# Load mod config JSONs from res://configs
-func _load_mod_configs() -> void:
-	var found_configs_count := 0
-	var configs_path := _ModLoaderPath.get_path_to_configs()
-
-	for dir_name in ModLoaderStore.mod_data:
-		var json_path := configs_path.plus_file(dir_name + ".json")
-		var mod_config := _ModLoaderFile.get_json_as_dict(json_path)
-
-		ModLoaderLog.debug("Config JSON: Looking for config at path: %s" % json_path, LOG_NAME)
-
-		if mod_config.size() > 0:
-			found_configs_count += 1
-
-			ModLoaderLog.info("Config JSON: Found a config file: '%s'" % json_path, LOG_NAME)
-			ModLoaderLog.debug_json_print("Config JSON: File data: ", mod_config, LOG_NAME)
-
-			# Check `load_from` option. This lets you specify the name of a
-			# different JSON file to load your config from. Must be in the same
-			# dir. Means you can have multiple config files for a single mod
-			# and switch between them quickly. Should include ".json" extension.
-			# Ignored if the filename matches the mod ID, or is empty
-			if mod_config.has("load_from"):
-				var new_path: String = mod_config.load_from
-				if not new_path == "" and not new_path == str(dir_name, ".json"):
-					ModLoaderLog.info("Config JSON: Following load_from path: %s" % new_path, LOG_NAME)
-					var new_config := _ModLoaderFile.get_json_as_dict(configs_path + new_path)
-					if new_config.size() > 0:
-						mod_config = new_config
-						ModLoaderLog.info("Config JSON: Loaded from custom json: %s" % new_path, LOG_NAME)
-						ModLoaderLog.debug_json_print("Config JSON: File data:", mod_config, LOG_NAME)
-					else:
-						ModLoaderLog.error("Config JSON: ERROR - Could not load data via `load_from` for %s, at path: %s" % [dir_name, new_path], LOG_NAME)
-
-			ModLoaderStore.mod_data[dir_name].config = mod_config
-
-	if found_configs_count > 0:
-		ModLoaderLog.success("Config JSON: Loaded %s config(s)" % found_configs_count, LOG_NAME)
-	else:
-		ModLoaderLog.info("Config JSON: No mod configs were found", LOG_NAME)
 
 
 # Add a mod's data to mod_data.

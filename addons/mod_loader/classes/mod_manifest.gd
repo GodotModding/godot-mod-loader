@@ -195,15 +195,52 @@ func to_json() -> String:
 	}, "\t")
 
 
-func is_config_valid(config_data: String, config_schema: String) -> bool:
-	var json_schema := JSONSchema.new()
-	var error := json_schema.validate(config_data, config_schema)
+func load_mod_config_defaults() -> void:
+	var config := ModConfig.new()
+	config.save_path = _ModLoaderPath.get_path_to_configs().plus_file("%s.json" % get_mod_id())
+	config.schema = config_schema
+	config.mod_id = get_mod_id()
 
-	if not error == "":
-		ModLoaderLog.fatal(error, LOG_NAME)
-		return false
+	# Check if there is no default.json file in the mods config directory
+	if not _ModLoaderFile.file_exists(config.save_path):
+		# Generate config_default based on the default values in config_schema
+		config.data = _generate_default_config_from_schema(config.schema.properties)
+		# Save the default config to disk
+		_ModLoaderFile.save_dictionary_to_json_file(config.data, config.save_path)
+	else:
+		# If there is a default.json just load that
+		config.data = _ModLoaderFile.get_json_as_dict(config.save_path)
 
-	return true
+	# Validate the config defaults
+	config.is_valid()
+
+
+# Recursively searches for default values
+func _generate_default_config_from_schema(property: Dictionary, current_prop := {}) -> Dictionary:
+	# Exit function if property is empty
+	if property.empty():
+		return current_prop
+
+	for property_key in property.keys():
+		var prop = property[property_key]
+
+		# If this property contains nested properties, we recursively call this function
+		if "properties" in prop:
+			current_prop[property_key] = {}
+			_generate_default_config_from_schema(prop.properties, current_prop[property_key])
+			# Return early here because a object will not have a "default" key
+			return current_prop
+
+		# If this property contains a default value, add it to the global config_defaults dictionary
+		if "default" in prop:
+			# Initialize the current_key if it is missing in config_defaults
+			if not current_prop.has(property_key):
+				current_prop[property_key] = {}
+
+			# Add the default value to the config_defaults
+			current_prop[property_key] = prop.default
+
+	return current_prop
 
 
 # Handles deprecation of the single string value in the compatible_mod_loader_version.
