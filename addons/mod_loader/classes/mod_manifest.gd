@@ -196,10 +196,11 @@ func to_json() -> String:
 
 
 func load_mod_config_defaults() -> void:
-	var config := ModConfig.new()
-	config.save_path = _ModLoaderPath.get_path_to_configs().plus_file("%s.json" % get_mod_id())
-	config.schema = config_schema
-	config.mod_id = get_mod_id()
+	var config := ModConfig.new(
+		get_mod_id(),
+		{},
+		_ModLoaderPath.get_path_to_configs().plus_file("%s.json" % get_mod_id())
+	)
 
 	# Check if there is no default.json file in the mods config directory
 	if not _ModLoaderFile.file_exists(config.save_path):
