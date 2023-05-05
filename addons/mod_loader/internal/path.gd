@@ -129,6 +129,27 @@ static func get_dir_paths_in_dir(src_dir_path: String) -> Array:
 	return dir_paths
 
 
+# Returns an array of file paths inside the src dir
+static func get_file_paths_in_dir(src_dir_path: String) -> Array:
+	var file_paths := []
+
+	var directory := Directory.new()
+	var error := directory.open(src_dir_path)
+
+	if not error  == OK:
+		return file_paths
+		ModLoaderLog.error("Error opening directory", LOG_NAME)
+
+	directory.list_dir_begin()
+	var file_name := directory.get_next()
+	while (file_name != ""):
+		if not directory.current_is_dir():
+			file_paths.push_back(src_dir_path.plus_file(file_name))
+		file_name = directory.get_next()
+
+	return file_paths
+
+
 # Get the path to the mods folder, with any applicable overrides applied
 static func get_path_to_mods() -> String:
 	var mods_folder_path := get_local_folder_dir("mods")
