@@ -104,7 +104,7 @@ static func add_translation_from_resource(resource_path: String) -> void:
 # Gets the ModData from the provided namespace
 static func get_mod_data_from_mod_id(mod_id: String) -> ModData:
 	if not ModLoaderStore.mod_data.has(mod_id):
-		ModLoaderLog.error("The provided mod_id %s does not have ModData" % mod_id, LOG_NAME)
+		ModLoaderLog.error("%s is an invalid mod_id" % mod_id, LOG_NAME)
 		return null
 
 	return ModLoaderStore.mod_data[mod_id]
