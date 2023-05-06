@@ -6,6 +6,14 @@ extends Object
 const LOG_NAME := "ModLoader:Config"
 
 
+static func get_mod_config_schema(mod_id: String) -> Dictionary:
+	if not ModLoaderStore.mod_data[mod_id].manifest.get("config_schema") or ModLoaderStore.mod_data[mod_id].manifest.config_schema.empty():
+		ModLoaderLog.debug("No config for mod id \"%s\"" % mod_id, LOG_NAME, true)
+		return {}
+
+	return ModLoaderStore.mod_data[mod_id].manifest.config_schema
+
+
 # Retrieves the configuration data for a specific mod
 static func get_mod_config(mod_id: String) -> Dictionary:
 	# Check if the mod ID is invalid
