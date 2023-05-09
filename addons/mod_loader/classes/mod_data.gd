@@ -39,7 +39,7 @@ var importance := 0
 var manifest: ModManifest
 # Updated in load_mod_configs
 var configs := []
-var current_config: ModConfig
+var current_config: ModConfig setget _set_current_config
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PoolStringArray = []
@@ -76,25 +76,34 @@ func load_manifest() -> void:
 
 # Load each mod config json from the mods config directiory.
 func load_configs() -> void:
-	var config_dir_paths := _ModLoaderPath.get_dir_paths_in_dir(_ModLoaderPath.get_path_to_configs())
+	var config_dir_path := _ModLoaderPath.get_path_to_configs().plus_file(dir_name)
 
-	for config_dir_path in config_dir_paths:
-		var config_file_paths := _ModLoaderPath.get_file_paths_in_dir(config_dir_path)
-		for config_file_path in config_file_paths:
-			_load_config(config_file_path)
+	var config_file_paths := _ModLoaderPath.get_file_paths_in_dir(config_dir_path)
+	for config_file_path in config_file_paths:
+		_load_config(config_file_path)
+
+	# Set the current_config based on the user profile
+	current_config = ModLoaderConfig.get_current_config(dir_name)
 
 
 # Create a new ModConfig instance for each Conifg JSON and add it to the configs array.
 func _load_config(config_file_path: String) -> void:
 	var config_data := _ModLoaderFile.get_json_as_dict(config_file_path)
 	var mod_config = ModConfig.new(
-		manifest.get_mod_id(),
+		dir_name,
 		config_data,
-		config_file_path
+		config_file_path,
+		manifest.config_schema
 	)
 	# If the config is valid add it to the configs array
 	if mod_config.is_valid:
 		configs.push_back(mod_config)
+
+
+# Update the mod_list of the current user profile
+func _set_current_config(new_current_config: ModConfig) -> void:
+	ModLoaderUserProfile.set_mod_current_config(dir_name, new_current_config.name)
+	current_config = new_current_config
 
 
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]

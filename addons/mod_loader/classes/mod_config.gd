@@ -12,10 +12,10 @@ var save_path: String
 var is_valid := false
 
 
-func _init(_mod_id: String, _data: Dictionary, _save_path: String, _name := "") -> void:
-	name = _ModLoaderPath.get_file_name_from_path(_save_path, true, true) if _name == "" else _name
+func _init(_mod_id: String, _data: Dictionary, _save_path: String, _schema: Dictionary = ModLoaderStore.mod_data[mod_id].manifest.config_schema) -> void:
+	name = _ModLoaderPath.get_file_name_from_path(_save_path, true, true)
 	mod_id = _mod_id
-	schema = ModLoaderStore.mod_data[mod_id].manifest.config_schema
+	schema = _schema
 	data = _data
 	save_path = _save_path
 

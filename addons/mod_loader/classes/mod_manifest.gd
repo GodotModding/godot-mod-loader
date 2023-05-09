@@ -53,7 +53,6 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"compatible_mod_loader_version",
 	"compatible_game_version",
 	"incompatibilities",
-	"config_schema",
 ]
 
 
@@ -134,6 +133,9 @@ func _init(manifest: Dictionary) -> void:
 	):
 		return
 
+	if not config_schema.empty():
+		load_mod_config_defaults()
+
 
 # Mod ID used in the mod loader
 # Format: {namespace}-{name}
@@ -199,7 +201,8 @@ func load_mod_config_defaults() -> void:
 	var config := ModConfig.new(
 		get_mod_id(),
 		{},
-		_ModLoaderPath.get_path_to_configs().plus_file("%s.json" % get_mod_id())
+		_ModLoaderPath.get_path_to_configs().plus_file("%s/%s.json" % [get_mod_id(), "default"]),
+		config_schema
 	)
 
 	# Check if there is no default.json file in the mods config directory

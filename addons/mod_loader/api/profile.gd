@@ -27,6 +27,28 @@ static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_u
 	return _set_mod_state(mod_id, profile_name, false)
 
 
+# Sets the current config for a mod in a user profiles mod_list.
+static func set_mod_current_config(mod_id: String, config_name: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
+	# Verify whether the mod_id is present in the profile's mod_list.
+	if not _is_mod_id_in_mod_list(mod_id, profile_name):
+		return false
+
+	# Verify that the config_name exists
+	if not ModLoaderConfig.get_mod_config(mod_id, config_name):
+		return false
+
+	# Update the current config in the mod_list of the user profile
+	get_profile(profile_name).mod_list[mod_id].current_config = config_name
+
+	# Store the new profile in the json file
+	var is_save_success := _save()
+
+	if is_save_success:
+		ModLoaderLog.debug("Set the \"current_config\" of \"%s\" to \"%s\" in user profile \"%s\" " % [mod_id, config_name, profile_name], LOG_NAME)
+
+	return is_save_success
+
+
 # Creates a new user profile with the given name, using the currently loaded mods as the mod list.
 static func create_profile(profile_name: String) -> bool:
 	# Verify that the profile name is not already in use
@@ -207,14 +229,15 @@ static func _generate_mod_list() -> Dictionary:
 
 
 # Generates a mod list entry dictionary with the given mod ID and active status.
-# If the mod has a config schema, sets the 'current_config' key to 'default'.
+# If the mod has a config schema, sets the 'current_config' key.
 static func _generate_mod_list_entry(mod_id: String, is_active: bool) -> Dictionary:
 	var mod_list_entry := {}
 
 	mod_list_entry.is_active = is_active
-	# Set the current_config if the mod has a config schema
-	if not ModLoaderConfig.get_mod_config_schema(mod_id).empty():
-		mod_list_entry.current_config = "default"
+	# Set the current_config if the mod has a config schema and is active
+	if is_active and not ModLoaderConfig.get_mod_config_schema(mod_id).empty():
+		var current_config: ModConfig = ModLoaderStore.mod_data[mod_id].current_config
+		mod_list_entry.current_config = current_config.name if current_config else "default"
 
 	return mod_list_entry
 
@@ -329,7 +352,7 @@ static func _save() -> bool:
 
 		# Init the profile dict
 		save_dict.profiles[profile.name] = {}
-		# Store the mod_list dict
+		# Init the mod_list dict
 		save_dict.profiles[profile.name].mod_list = profile.mod_list
 
 	# Save the serialized user profiles data to the user profiles JSON file
