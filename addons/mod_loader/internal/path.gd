@@ -171,3 +171,14 @@ static func get_path_to_configs() -> String:
 			configs_path = ModLoaderStore.ml_options.override_path_to_configs
 	return configs_path
 
+
+# Get the path to a mods config folder, with any applicable overrides applied
+# Returns an empty string if there is no config dir for this mod_id
+static func get_path_to_mod_configs(mod_id: String) -> String:
+	var mod_config_dir := get_path_to_configs().plus_file(mod_id)
+
+	if not _ModLoaderFile.dir_exists(mod_config_dir):
+		ModLoaderLog.error("No directory at \"%s\" found." % mod_config_dir, LOG_NAME)
+		return ""
+
+	return mod_config_dir
