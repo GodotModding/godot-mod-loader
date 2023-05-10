@@ -38,7 +38,7 @@ var importance := 0
 # Contents of the manifest
 var manifest: ModManifest
 # Updated in load_mod_configs
-var configs := []
+var configs := {}
 var current_config: ModConfig setget _set_current_config
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
@@ -86,7 +86,7 @@ func load_configs() -> void:
 	current_config = ModLoaderConfig.get_current_config(dir_name)
 
 
-# Create a new ModConfig instance for each Conifg JSON and add it to the configs array.
+# Create a new ModConfig instance for each Conifg JSON and add it to the configs dictionary.
 func _load_config(config_file_path: String) -> void:
 	var config_data := _ModLoaderFile.get_json_as_dict(config_file_path)
 	var mod_config = ModConfig.new(
@@ -95,9 +95,9 @@ func _load_config(config_file_path: String) -> void:
 		config_file_path,
 		manifest.config_schema
 	)
-	# If the config is valid add it to the configs array
+	# If the config is valid add it to the configs dictionary
 	if mod_config.is_valid:
-		configs.push_back(mod_config)
+		configs[mod_config.name] = mod_config
 
 
 # Update the mod_list of the current user profile

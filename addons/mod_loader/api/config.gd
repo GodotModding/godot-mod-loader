@@ -16,8 +16,8 @@ const LOG_NAME := "ModLoader:Config"
 #
 # Returns:
 # - bool: True if the operation was successful, false otherwise.
-static func set_current_mod_config(mod_id: String, config_name: String) -> bool:
-	var config := get_mod_config(mod_id, config_name)
+static func set_current_config(mod_id: String, config_name: String) -> bool:
+	var config := get_config(mod_id, config_name)
 
 	# Check if config exists
 	if not config:
@@ -36,16 +36,16 @@ static func set_current_mod_config(mod_id: String, config_name: String) -> bool:
 #
 # Returns:
 # - A dictionary representing the schema for the mod's configuration file
-static func get_mod_config_schema(mod_id: String) -> Dictionary:
+static func get_config_schema(mod_id: String) -> Dictionary:
 	# Get all config files for the specified mod
-	var mod_configs := get_mod_configs(mod_id)
+	var mod_configs := get_configs(mod_id)
 
 	# If no config files were found, return an empty dictionary
 	if mod_configs.empty():
 		return {}
 
-	# The schema is the same for all config files, so we just return the schema of the first config file
-	return mod_configs[0].schema
+	# The schema is the same for all config files, so we just return the schema of the default config file
+	return mod_configs.default.schema
 
 
 # Retrieves the configuration data for a specific mod and configuration name.
@@ -57,18 +57,14 @@ static func get_mod_config_schema(mod_id: String) -> Dictionary:
 #
 # Returns:
 # The configuration data as a ModConfig object or null if not found.
-static func get_mod_config(mod_id: String, config_name: String) -> ModConfig:
-	var config_array := get_mod_configs(mod_id)
-	var config: ModConfig
+static func get_config(mod_id: String, config_name: String) -> ModConfig:
+	var configs = get_configs(mod_id)
 
-	for current_config in config_array:
-		if current_config.name == config_name:
-			config = current_config
-
-	if not config:
+	if not configs.has(config_name):
 		ModLoaderLog.error("No config with name \"%s\" found for mod_id \"%s\" " % [config_name, mod_id], LOG_NAME)
+		return null
 
-	return config
+	return configs[config_name]
 
 
 # Retrieves an array of configuration data for a specific mod.
@@ -77,31 +73,31 @@ static func get_mod_config(mod_id: String, config_name: String) -> ModConfig:
 # mod_id (String): The ID of the mod to retrieve configuration data for.
 #
 # Returns:
-# Array: An array of `ModConfig` objects containing the configuration data for the specified mod.
+# Dictionary: An Dictionary of `ModConfig` objects containing the configuration data for the specified mod.
 #
 # Raises:
 # ModLoaderFatalError: If the specified mod ID is invalid and no configuration data can be retrieved.
 #
 # Description:
-# This function retrieves an array of `ModConfig` objects containing configuration data for the specified mod ID.
+# This function retrieves a Dictionary of `ModConfig` objects containing configuration data for the specified mod ID.
 # If the mod ID is not valid or no configuration data is available for the specified mod, an empty array is returned.
 # The `ModConfig` object contains the name and schema of the configuration file, as well as the current configuration values.
 # Multiple `ModConfig` objects can exist for a single mod, each representing a different configuration file.
 # The returned array contains all of the `ModConfig` objects for the specified mod.
-static func get_mod_configs(mod_id: String) -> Array:
+static func get_configs(mod_id: String) -> Dictionary:
 	# Check if the mod ID is invalid
 	if not ModLoaderStore.mod_data.has(mod_id):
 		ModLoaderLog.fatal("Mod ID \"%s\" not found" % [mod_id], LOG_NAME)
-		return []
+		return {}
 
-	var config_array = ModLoaderStore.mod_data[mod_id].configs
+	var config_dictionary = ModLoaderStore.mod_data[mod_id].configs
 
 	# Check if there is no config file for the mod
-	if config_array.empty():
+	if config_dictionary.empty():
 		ModLoaderLog.debug("No config for mod id \"%s\"" % mod_id, LOG_NAME, true)
-		return []
+		return {}
 
-	return config_array
+	return config_dictionary
 
 
 # Retrieves the currently active configuration for a specific mod
@@ -112,7 +108,7 @@ static func get_mod_configs(mod_id: String) -> Array:
 # The configuration data as a ModConfig object or null if not found.
 static func get_current_config(mod_id: String) -> ModConfig:
 	var current_config_name := get_current_config_name(mod_id)
-	var current_config := get_mod_config(mod_id, current_config_name)
+	var current_config := get_config(mod_id, current_config_name)
 
 	return current_config
 

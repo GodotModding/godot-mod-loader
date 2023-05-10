@@ -34,7 +34,7 @@ static func set_mod_current_config(mod_id: String, config_name: String, profile_
 		return false
 
 	# Verify that the config_name exists
-	if not ModLoaderConfig.get_mod_config(mod_id, config_name):
+	if not ModLoaderConfig.get_config(mod_id, config_name):
 		return false
 
 	# Update the current config in the mod_list of the user profile
@@ -235,7 +235,7 @@ static func _generate_mod_list_entry(mod_id: String, is_active: bool) -> Diction
 
 	mod_list_entry.is_active = is_active
 	# Set the current_config if the mod has a config schema and is active
-	if is_active and not ModLoaderConfig.get_mod_config_schema(mod_id).empty():
+	if is_active and not ModLoaderConfig.get_config_schema(mod_id).empty():
 		var current_config: ModConfig = ModLoaderStore.mod_data[mod_id].current_config
 		mod_list_entry.current_config = current_config.name if current_config else "default"
 
