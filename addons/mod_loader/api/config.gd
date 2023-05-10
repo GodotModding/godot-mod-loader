@@ -7,6 +7,50 @@ extends Object
 const LOG_NAME := "ModLoader:Config"
 
 
+static func create_new_config(mod_id: String, config_name: String, config_data: Dictionary) -> bool:
+	# Check if Config Schema exists
+	# If this is the case, the "default" config is in the Mods ModData
+	var default_config: ModConfig = get_config(mod_id, "default")
+	if not default_config:
+		ModLoaderLog.fatal(
+			"Was not able to create config \"%s\" because no config schema for \"%s\" is provided."
+			% [config_name, mod_id], LOG_NAME
+		)
+		return false
+
+	# Make sure the config name is unique
+	if ModLoaderStore.mod_data[mod_id].configs.has(config_name):
+		ModLoaderLog.fatal(
+			"Was not able to create config \"%s\" because a config with the name \"%s\" already exists."
+			% [config_name, config_name], LOG_NAME
+		)
+		return false
+
+	# Create config save path based on the config_name
+	var config_file_path := _ModLoaderPath.get_path_to_mod_configs(mod_id).plus_file("%s.json" % config_name)
+
+	# Init a new ModConfig Object
+	var mod_config := ModConfig.new(
+		mod_id,
+		config_data,
+		config_file_path
+	)
+
+	if not mod_config.is_valid:
+		return false
+
+	# If config is valid
+	# Store it in the ModData
+	ModLoaderStore.mod_data[mod_id].configs[config_name] = mod_config
+	# Save it to a new config json file in the mods config directory
+	var is_save_success := mod_config.save_to_disc()
+
+	if is_save_success:
+		ModLoaderLog.debug("Created new config \"%s\" for mod \"%s\"" % [config_name, mod_id], LOG_NAME)
+
+	return is_save_success
+
+
 # Sets the current configuration of a mod to the specified configuration.
 # Returns true if the operation was successful, false otherwise.
 #
@@ -26,6 +70,10 @@ static func set_current_config(mod_id: String, config_name: String) -> bool:
 	ModLoaderStore.mod_data[mod_id].current_config = config
 
 	return true
+
+
+static func get_config_data(mod_id: String, config_name: String) -> Dictionary:
+	return get_config(mod_id, config_name).data
 
 
 # Returns the schema for the specified mod id.
@@ -139,8 +187,3 @@ static func get_current_config_name(mod_id: String) -> String:
 
 	# Return the name of the current configuration for the mod
 	return current_user_profile.mod_list[mod_id].current_config
-
-
-# Saves a full dictionary object to a mod's config file, as JSON.
-static func save_mod_config(config_data: ModConfig) -> bool:
-	return _ModLoaderFile.save_dictionary_to_json_file(config_data.data, config_data.save_path)
