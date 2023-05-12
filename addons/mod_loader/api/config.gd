@@ -18,21 +18,29 @@ static func get_mods_with_config() -> Array:
 	return mods_with_config
 
 
-static func create_new_config(mod_id: String, config_name: String, config_data: Dictionary) -> bool:
+static func create_config(mod_id: String, config_name: String, config_data: Dictionary) -> bool:
 	# Check if Config Schema exists
 	# If this is the case, the "default" config is in the Mods ModData
 	var default_config: ModConfig = get_config(mod_id, "default")
 	if not default_config:
-		ModLoaderLog.fatal(
-			"Was not able to create config \"%s\" because no config schema for \"%s\" is provided."
+		ModLoaderLog.error(
+			"Failed to create config \"%s\". No config schema found for \"%s\"."
 			% [config_name, mod_id], LOG_NAME
+		)
+		return false
+
+	# Make sure the config name is not empty
+	if config_name == "":
+		ModLoaderLog.error(
+			"Failed to create config \"%s\". The config name cannot be empty."
+			% config_name, LOG_NAME
 		)
 		return false
 
 	# Make sure the config name is unique
 	if ModLoaderStore.mod_data[mod_id].configs.has(config_name):
-		ModLoaderLog.fatal(
-			"Was not able to create config \"%s\" because a config with the name \"%s\" already exists."
+		ModLoaderLog.error(
+			"Failed to create config \"%s\". A config with the name \"%s\" already exists."
 			% [config_name, config_name], LOG_NAME
 		)
 		return false
