@@ -70,6 +70,27 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 	return is_save_success
 
 
+static func delete_config(config: ModConfig) -> bool:
+	# Check if default config
+	if config.name == "default":
+		ModLoaderLog.error("Can't delete the default config", LOG_NAME)
+		return false
+
+	# Change current config to "default"
+	set_current_config(get_config(config.mod_id, "default"))
+
+	# Remove config file from Mod Config dir
+	var is_remove_success := config.remove_from_disc()
+
+	if not is_remove_success:
+		return false
+
+	# Remove config from ModData
+	ModLoaderStore.mod_data[config.mod_id].configs.erase(config.name)
+
+	return true
+
+
 # Sets the current configuration of a mod to the specified configuration.
 # Returns true if the operation was successful, false otherwise.
 #
