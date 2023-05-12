@@ -56,3 +56,8 @@ func is_valid() -> bool:
 func save_to_disc() -> bool:
 	var is_success := _ModLoaderFile.save_dictionary_to_json_file(data, save_path)
 	return is_success
+
+
+func remove_from_disc() -> bool:
+	var is_success := _ModLoaderFile.remove_file(save_path)
+	return is_success
