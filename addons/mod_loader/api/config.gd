@@ -193,6 +193,10 @@ static func get_current_config(mod_id: String) -> ModConfig:
 	return current_config
 
 
+static func get_default_config(mod_id: String) -> ModConfig:
+	return get_config(mod_id, "default")
+
+
 # Retrieves the name of the current configuration for a specific mod
 # Returns an empty string if no configuration exists for the mod or the user profile has not been loaded
 #
