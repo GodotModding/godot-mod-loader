@@ -60,16 +60,8 @@ static func create_new_config(mod_id: String, config_name: String, config_data: 
 #
 # Returns:
 # - bool: True if the operation was successful, false otherwise.
-static func set_current_config(mod_id: String, config_name: String) -> bool:
-	var config := get_config(mod_id, config_name)
-
-	# Check if config exists
-	if not config:
-		return false
-
-	ModLoaderStore.mod_data[mod_id].current_config = config
-
-	return true
+static func set_current_config(config: ModConfig) -> void:
+	ModLoaderStore.mod_data[config.mod_id].current_config = config
 
 
 static func get_config_data(mod_id: String, config_name: String) -> Dictionary:
