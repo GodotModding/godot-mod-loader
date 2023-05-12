@@ -7,6 +7,17 @@ extends Object
 const LOG_NAME := "ModLoader:Config"
 
 
+static func get_mods_with_config() -> Array:
+	var mods_with_config := []
+
+	for mod_id in ModLoaderStore.mod_data:
+		var mod_data = ModLoaderStore.mod_data[mod_id]
+		if not mod_data.configs.empty():
+			mods_with_config.push_back(mod_data)
+
+	return mods_with_config
+
+
 static func create_new_config(mod_id: String, config_name: String, config_data: Dictionary) -> bool:
 	# Check if Config Schema exists
 	# If this is the case, the "default" config is in the Mods ModData
