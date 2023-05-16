@@ -128,6 +128,33 @@ static func get_config_schema(mod_id: String) -> Dictionary:
 	return mod_configs.default.schema
 
 
+static func get_schema_for_prop(config: ModConfig, prop: String) -> Dictionary:
+	var prop_array := prop.split(".")
+
+	if prop_array.empty():
+		return config.schema.properties[prop]
+
+	var schema_for_prop := _schema_drill(config.schema.properties, prop_array)
+	if schema_for_prop.empty():
+		ModLoaderLog.error("No Schema found for property \"%s\" in config \"%s\" for mod \"%s\"" % [prop, config.name, config.mod_id], LOG_NAME)
+		return {}
+
+	return schema_for_prop
+
+
+static func _schema_drill(schema_prop: Dictionary, prop_key_array: Array) -> Dictionary:
+	if not prop_key_array.empty():
+		var prop_key: String = prop_key_array.pop_front()
+		if not schema_prop.has(prop_key):
+			return {}
+		schema_prop = schema_prop[prop_key]
+		if schema_prop.has("type") and schema_prop.type == "object":
+			schema_prop = schema_prop.properties
+		schema_prop = _schema_drill(schema_prop, prop_key_array)
+
+	return schema_prop
+
+
 # Retrieves the configuration data for a specific mod and configuration name.
 # Returns the configuration data as a ModConfig object or null if not found.
 #
