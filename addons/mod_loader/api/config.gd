@@ -134,7 +134,7 @@ static func get_schema_for_prop(config: ModConfig, prop: String) -> Dictionary:
 	if prop_array.empty():
 		return config.schema.properties[prop]
 
-	var schema_for_prop := _schema_drill(config.schema.properties, prop_array)
+	var schema_for_prop := _traverse_schema(config.schema.properties, prop_array)
 	if schema_for_prop.empty():
 		ModLoaderLog.error("No Schema found for property \"%s\" in config \"%s\" for mod \"%s\"" % [prop, config.name, config.mod_id], LOG_NAME)
 		return {}
@@ -142,15 +142,26 @@ static func get_schema_for_prop(config: ModConfig, prop: String) -> Dictionary:
 	return schema_for_prop
 
 
-static func _schema_drill(schema_prop: Dictionary, prop_key_array: Array) -> Dictionary:
-	if not prop_key_array.empty():
-		var prop_key: String = prop_key_array.pop_front()
-		if not schema_prop.has(prop_key):
-			return {}
-		schema_prop = schema_prop[prop_key]
-		if schema_prop.has("type") and schema_prop.type == "object":
-			schema_prop = schema_prop.properties
-		schema_prop = _schema_drill(schema_prop, prop_key_array)
+# Traverses the schema dictionary based on the provided property_key_array and returns the corresponding schema.
+static func _traverse_schema(schema_prop: Dictionary, prop_key_array: Array) -> Dictionary:
+	# Return the current schema_prop if the prop_key_array is empty (reached the destination property)
+	if prop_key_array.empty():
+		return schema_prop
+
+	# Get and remove the first prop_key in the array
+	var prop_key: String = prop_key_array.pop_front()
+
+	# Check if the searched property exists
+	if not schema_prop.has(prop_key):
+		return {}
+
+	schema_prop = schema_prop[prop_key]
+	# If the schema_prop has a 'type' key, is of type 'object', and there are more property keys remaining
+	if schema_prop.has("type") and schema_prop.type == "object" and not prop_key_array.empty():
+		# Set the properties of the object as the current 'schema_prop'
+		schema_prop = schema_prop.properties
+
+	schema_prop = _traverse_schema(schema_prop, prop_key_array)
 
 	return schema_prop
 
