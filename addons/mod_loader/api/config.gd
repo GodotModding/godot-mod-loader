@@ -46,7 +46,7 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 		return false
 
 	# Create config save path based on the config_name
-	var config_file_path := _ModLoaderPath.get_path_to_mod_configs(mod_id).plus_file("%s.json" % config_name)
+	var config_file_path := _ModLoaderPath.get_path_to_mod_configs_dir(mod_id).plus_file("%s.json" % config_name)
 
 	# Init a new ModConfig Object
 	var mod_config := ModConfig.new(
