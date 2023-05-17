@@ -197,12 +197,7 @@ static func _update_mod_lists() -> bool:
 		# Merge the profiles mod_list with the previously created current_mod_list
 		profile.mod_list.merge(current_mod_list)
 
-		# Delete no longer installed mods
-		for mod_id in profile.mod_list:
-			# Check if the mod_dir for the mod-id exists
-			if not _ModLoaderFile.dir_exists(_ModLoaderPath.get_unpacked_mods_dir_path() + mod_id):
-				# if not the mod is no longer installed and can be removed
-				profile.mod_list.erase(mod_id)
+		profile.mod_list = _update_mod_list(profile.mod_list)
 
 	# Save the updated user profiles to the JSON file
 	var is_save_success := _save()
@@ -211,6 +206,34 @@ static func _update_mod_lists() -> bool:
 		ModLoaderLog.debug("Updated the mod lists of all user profiles", LOG_NAME)
 
 	return is_save_success
+
+
+static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mod_data) -> Dictionary:
+	var updated_mod_list := mod_list.duplicate()
+
+	for mod_id in updated_mod_list:
+		var mod_list_entry: Dictionary = updated_mod_list[mod_id]
+
+		# If mod data is accessible and the mod is loaded
+		if mod_data.empty() and mod_data.has(mod_id):
+			mod_list_entry = _generate_mod_list_entry(mod_id, true)
+
+		# If mod data is accessible and the mod is not loaded
+		if mod_data.empty() and not mod_data.has(mod_id):
+			# Check if the mod_dir for the mod-id exists
+			if not _ModLoaderFile.dir_exists(_ModLoaderPath.get_unpacked_mods_dir_path() + mod_id):
+				# If the mod directory doesn't exist,
+				# the mod is no longer installed and can be removed from the mod list
+				updated_mod_list.erase(mod_id)
+				continue
+
+		# Check if the current config doesn't exist
+		# This can happen if the config file was manually deleted
+		if mod_list_entry.has("current_config") and _ModLoaderPath.get_path_to_mod_config_file(mod_id, mod_list_entry.current_config).empty():
+			# If the current config doesn't exist, reset it to the default configuration
+			mod_list_entry.current_config = "default"
+
+	return updated_mod_list
 
 
 # Generates a dictionary containing a list of currently loaded and deactivated mods.
@@ -303,6 +326,9 @@ static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> P
 	if mod_list.keys().size() == 0:
 		ModLoaderLog.warning("No mod_ids inside \"mod_list\" for user profile \"%s\" " % profile_name, LOG_NAME)
 		return new_profile
+
+	# Update the mod_list
+	_update_mod_list(mod_list)
 
 	# Set the mod_list
 	new_profile.mod_list = mod_list
