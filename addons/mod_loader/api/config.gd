@@ -5,7 +5,7 @@ extends Object
 # The `ModLoaderConfig` class provides functionality for loading and saving per-mod JSON configuration files.
 
 const LOG_NAME := "ModLoader:Config"
-
+const DEFAULT_CONFIG_NAME  := "default"
 
 static func get_mods_with_config() -> Array:
 	var mods_with_config := []
@@ -21,7 +21,7 @@ static func get_mods_with_config() -> Array:
 static func create_config(mod_id: String, config_name: String, config_data: Dictionary) -> ModConfig:
 	# Check if Config Schema exists
 	# If this is the case, the "default" config is in the Mods ModData
-	var default_config: ModConfig = get_config(mod_id, "default")
+	var default_config: ModConfig = get_config(mod_id, DEFAULT_CONFIG_NAME)
 	if not default_config:
 		ModLoaderLog.error(
 			"Failed to create config \"%s\". No config schema found for \"%s\"."
@@ -75,7 +75,7 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 static func update_config(config: ModConfig) -> ModConfig:
 	var error_message := config.validate()
 
-	if config.name == "default":
+	if config.name == DEFAULT_CONFIG_NAME:
 		ModLoaderLog.error("The \"default\" config cannot be modified. Please create a new config instead.", LOG_NAME)
 		return null
 
@@ -94,12 +94,12 @@ static func update_config(config: ModConfig) -> ModConfig:
 
 static func delete_config(config: ModConfig) -> bool:
 	# Check if default config
-	if config.name == "default":
+	if config.name == DEFAULT_CONFIG_NAME:
 		ModLoaderLog.error("Can't delete the default config", LOG_NAME)
 		return false
 
 	# Change current config to "default"
-	set_current_config(get_config(config.mod_id, "default"))
+	set_current_config(get_config(config.mod_id, DEFAULT_CONFIG_NAME))
 
 	# Remove config file from Mod Config dir
 	var is_remove_success := config.remove_from_disc()
@@ -254,7 +254,7 @@ static func get_current_config(mod_id: String) -> ModConfig:
 
 
 static func get_default_config(mod_id: String) -> ModConfig:
-	return get_config(mod_id, "default")
+	return get_config(mod_id, DEFAULT_CONFIG_NAME)
 
 
 # Retrieves the name of the current configuration for a specific mod

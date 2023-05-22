@@ -109,7 +109,7 @@ static func delete_profile(profile_name: String) -> bool:
 		return false
 
 	# Deleting the default profile is not allowed
-	if profile_name == "default":
+	if profile_name == ModLoaderConfig.DEFAULT_CONFIG_NAME:
 		ModLoaderLog.error("You can't delete the default profile", LOG_NAME)
 		return false
 
@@ -233,7 +233,7 @@ static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mo
 		# This can happen if the config file was manually deleted
 		if mod_list_entry.has("current_config") and _ModLoaderPath.get_path_to_mod_config_file(mod_id, mod_list_entry.current_config).empty():
 			# If the current config doesn't exist, reset it to the default configuration
-			mod_list_entry.current_config = "default"
+			mod_list_entry.current_config = ModLoaderConfig.DEFAULT_CONFIG_NAME
 
 		updated_mod_list[mod_id] = mod_list_entry
 
@@ -269,7 +269,7 @@ static func _generate_mod_list_entry(mod_id: String, is_active: bool) -> Diction
 			mod_list_entry.current_config = current_config.name
 		else:
 			# If not valid revert to the default config
-			mod_list_entry.current_config = "default"
+			mod_list_entry.current_config = ModLoaderConfig.DEFAULT_CONFIG_NAME
 
 	return mod_list_entry
 

@@ -68,8 +68,8 @@ func _init() -> void:
 func _ready():
 	# Create the default user profile if it doesn't exist already
 	# This should always be present unless the JSON file was manually edited
-	if not ModLoaderStore.user_profiles.has("default"):
-		var _success_user_profile_create := ModLoaderUserProfile.create_profile("default")
+	if not ModLoaderStore.user_profiles.has(ModLoaderConfig.DEFAULT_CONFIG_NAME):
+		var _success_user_profile_create := ModLoaderUserProfile.create_profile(ModLoaderConfig.DEFAULT_CONFIG_NAME)
 
 	# Update the mod_list for each user profile
 	var _success_update_mod_lists := ModLoaderUserProfile._update_mod_lists()
@@ -441,7 +441,7 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> ModConfig:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_config", "6.0.0")
-	return ModLoaderConfig.get_config(mod_dir_name, "default")
+	return ModLoaderConfig.get_config(mod_dir_name, ModLoaderConfig.DEFAULT_CONFIG_NAME)
 
 
 func deprecated_direct_access_UNPACKED_DIR() -> String:

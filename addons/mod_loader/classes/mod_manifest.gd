@@ -201,7 +201,7 @@ func load_mod_config_defaults() -> void:
 	var config := ModConfig.new(
 		get_mod_id(),
 		{},
-		_ModLoaderPath.get_path_to_configs().plus_file("%s/%s.json" % [get_mod_id(), "default"]),
+		_ModLoaderPath.get_path_to_configs().plus_file("%s/%s.json" % [get_mod_id(), ModLoaderConfig.DEFAULT_CONFIG_NAME]),
 		config_schema
 	)
 
@@ -236,7 +236,7 @@ func _generate_default_config_from_schema(property: Dictionary, current_prop := 
 			return current_prop
 
 		# If this property contains a default value, add it to the global config_defaults dictionary
-		if "default" in prop:
+		if JSONSchema.JSKW_DEFAULT in prop:
 			# Initialize the current_key if it is missing in config_defaults
 			if not current_prop.has(property_key):
 				current_prop[property_key] = {}
