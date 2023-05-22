@@ -18,7 +18,7 @@ static func get_mods_with_config() -> Array:
 	return mods_with_config
 
 
-static func create_config(mod_id: String, config_name: String, config_data: Dictionary) -> bool:
+static func create_config(mod_id: String, config_name: String, config_data: Dictionary) -> ModConfig:
 	# Check if Config Schema exists
 	# If this is the case, the "default" config is in the Mods ModData
 	var default_config: ModConfig = get_config(mod_id, "default")
@@ -27,7 +27,7 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 			"Failed to create config \"%s\". No config schema found for \"%s\"."
 			% [config_name, mod_id], LOG_NAME
 		)
-		return false
+		return null
 
 	# Make sure the config name is not empty
 	if config_name == "":
@@ -35,7 +35,7 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 			"Failed to create config \"%s\". The config name cannot be empty."
 			% config_name, LOG_NAME
 		)
-		return false
+		return null
 
 	# Make sure the config name is unique
 	if ModLoaderStore.mod_data[mod_id].configs.has(config_name):
@@ -43,7 +43,7 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 			"Failed to create config \"%s\". A config with the name \"%s\" already exists."
 			% [config_name, config_name], LOG_NAME
 		)
-		return false
+		return null
 
 	# Create config save path based on the config_name
 	var config_file_path := _ModLoaderPath.get_path_to_mod_configs_dir(mod_id).plus_file("%s.json" % config_name)
@@ -56,7 +56,7 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 	)
 
 	if not mod_config.is_valid:
-		return false
+		return null
 
 	# If config is valid
 	# Store it in the ModData
@@ -64,10 +64,12 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 	# Save it to a new config json file in the mods config directory
 	var is_save_success := mod_config.save_to_disc()
 
-	if is_save_success:
+	if not is_save_success:
+		return null
+
 		ModLoaderLog.debug("Created new config \"%s\" for mod \"%s\"" % [config_name, mod_id], LOG_NAME)
 
-	return is_save_success
+	return mod_config
 
 
 static func delete_config(config: ModConfig) -> bool:
