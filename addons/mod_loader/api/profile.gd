@@ -197,7 +197,9 @@ static func _update_mod_lists() -> bool:
 		# Merge the profiles mod_list with the previously created current_mod_list
 		profile.mod_list.merge(current_mod_list)
 
-		profile.mod_list = _update_mod_list(profile.mod_list)
+		var update_mod_list := _update_mod_list(profile.mod_list)
+
+		profile.mod_list = update_mod_list
 
 	# Save the updated user profiles to the JSON file
 	var is_save_success := _save()
@@ -209,17 +211,17 @@ static func _update_mod_lists() -> bool:
 
 
 static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mod_data) -> Dictionary:
-	var updated_mod_list := mod_list.duplicate()
+	var updated_mod_list := mod_list.duplicate(true)
 
 	for mod_id in updated_mod_list:
 		var mod_list_entry: Dictionary = updated_mod_list[mod_id]
 
 		# If mod data is accessible and the mod is loaded
-		if mod_data.empty() and mod_data.has(mod_id):
+		if not mod_data.empty() and mod_data.has(mod_id):
 			mod_list_entry = _generate_mod_list_entry(mod_id, true)
 
 		# If mod data is accessible and the mod is not loaded
-		if mod_data.empty() and not mod_data.has(mod_id):
+		if not mod_data.empty() and not mod_data.has(mod_id):
 			# Check if the mod_dir for the mod-id exists
 			if not _ModLoaderFile.dir_exists(_ModLoaderPath.get_unpacked_mods_dir_path() + mod_id):
 				# If the mod directory doesn't exist,
@@ -232,6 +234,8 @@ static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mo
 		if mod_list_entry.has("current_config") and _ModLoaderPath.get_path_to_mod_config_file(mod_id, mod_list_entry.current_config).empty():
 			# If the current config doesn't exist, reset it to the default configuration
 			mod_list_entry.current_config = "default"
+
+		updated_mod_list[mod_id] = mod_list_entry
 
 	return updated_mod_list
 
@@ -260,7 +264,12 @@ static func _generate_mod_list_entry(mod_id: String, is_active: bool) -> Diction
 	# Set the current_config if the mod has a config schema and is active
 	if is_active and not ModLoaderConfig.get_config_schema(mod_id).empty():
 		var current_config: ModConfig = ModLoaderStore.mod_data[mod_id].current_config
-		mod_list_entry.current_config = current_config.name if current_config else "default"
+		if current_config and current_config.is_valid:
+			# Set to the current_config name if valid
+			mod_list_entry.current_config = current_config.name
+		else:
+			# If not valid revert to the default config
+			mod_list_entry.current_config = "default"
 
 	return mod_list_entry
 
@@ -327,11 +336,8 @@ static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> P
 		ModLoaderLog.warning("No mod_ids inside \"mod_list\" for user profile \"%s\" " % profile_name, LOG_NAME)
 		return new_profile
 
-	# Update the mod_list
-	_update_mod_list(mod_list)
-
 	# Set the mod_list
-	new_profile.mod_list = mod_list
+	new_profile.mod_list = _update_mod_list(mod_list)
 
 	return new_profile
 
