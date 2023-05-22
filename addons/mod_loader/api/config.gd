@@ -67,9 +67,21 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 	if not is_save_success:
 		return null
 
-		ModLoaderLog.debug("Created new config \"%s\" for mod \"%s\"" % [config_name, mod_id], LOG_NAME)
+	ModLoaderLog.debug("Created new config \"%s\" for mod \"%s\"" % [config_name, mod_id], LOG_NAME)
 
 	return mod_config
+
+
+static func update_config(config: ModConfig, new_data: Dictionary) -> ModConfig:
+	var new_config: ModConfig = config.duplicate()
+	new_config.data = new_data
+	var error_message := new_config.validate()
+
+	if not new_config.is_valid:
+		ModLoaderLog.error("Update for config \"%s\" failed validation with error message \"%s\"" % [config.name, error_message], LOG_NAME)
+		return null
+
+	return new_config
 
 
 static func delete_config(config: ModConfig) -> bool:
