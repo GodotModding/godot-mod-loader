@@ -41,6 +41,11 @@ func validate() -> String:
 	var json_schema := JSONSchema.new()
 	var error := json_schema.validate(get_data_as_string(), get_schema_as_string())
 
+	if error.empty():
+		is_valid = true
+	else:
+		is_valid = false
+
 	return error
 
 
