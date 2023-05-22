@@ -75,6 +75,10 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 static func update_config(config: ModConfig) -> ModConfig:
 	var error_message := config.validate()
 
+	if config.name == "default":
+		ModLoaderLog.error("The \"default\" config cannot be modified. Please create a new config instead.", LOG_NAME)
+		return null
+
 	if not config.is_valid:
 		ModLoaderLog.error("Update for config \"%s\" failed validation with error message \"%s\"" % [config.name, error_message], LOG_NAME)
 		return null
