@@ -21,7 +21,7 @@ static func get_mods_with_config() -> Array:
 static func create_config(mod_id: String, config_name: String, config_data: Dictionary) -> ModConfig:
 	# Check if Config Schema exists
 	# If this is the case, the "default" config is in the Mods ModData
-	var default_config: ModConfig = get_config(mod_id, DEFAULT_CONFIG_NAME)
+	var default_config: ModConfig = get_default_config(mod_id)
 	if not default_config:
 		ModLoaderLog.error(
 			"Failed to create config \"%s\". No config schema found for \"%s\"."
@@ -99,7 +99,7 @@ static func delete_config(config: ModConfig) -> bool:
 		return false
 
 	# Change current config to "default"
-	set_current_config(get_config(config.mod_id, DEFAULT_CONFIG_NAME))
+	set_current_config(get_default_config(config.mod_id))
 
 	# Remove config file from Mod Config dir
 	var is_remove_success := config.remove_from_disc()
