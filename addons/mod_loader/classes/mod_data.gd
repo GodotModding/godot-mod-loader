@@ -95,9 +95,9 @@ func _load_config(config_file_path: String) -> void:
 		config_file_path,
 		manifest.config_schema
 	)
-	# If the config is valid add it to the configs dictionary
-	if mod_config.is_valid:
-		configs[mod_config.name] = mod_config
+
+	# Add the config to the configs dictionary
+	configs[mod_config.name] = mod_config
 
 
 # Update the mod_list of the current user profile
