@@ -68,8 +68,8 @@ func _init() -> void:
 func _ready():
 	# Create the default user profile if it doesn't exist already
 	# This should always be present unless the JSON file was manually edited
-	if not ModLoaderStore.user_profiles.has(ModLoaderConfig.DEFAULT_CONFIG_NAME):
-		var _success_user_profile_create := ModLoaderUserProfile.create_profile(ModLoaderConfig.DEFAULT_CONFIG_NAME)
+	if not ModLoaderStore.user_profiles.has("default"):
+		var _success_user_profile_create := ModLoaderUserProfile.create_profile("default")
 
 	# Update the mod_list for each user profile
 	var _success_update_mod_lists := ModLoaderUserProfile._update_mod_lists()
