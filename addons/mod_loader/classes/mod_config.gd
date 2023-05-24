@@ -1,14 +1,22 @@
 class_name ModConfig
 extends Resource
 
+# This Class is used to represent a configuration for a mod.
+# The Class provides functionality to initialize, validate, save, and remove a mod's configuration.
 
 const LOG_NAME := "ModLoader:ModConfig"
 
+# Name of the config - must be unique
 var name: String
+# The mod_id this config belongs to
 var mod_id: String
+# The JSON-Schema this config uses for validation
 var schema: Dictionary
+# The data this config holds
 var data: Dictionary
+# The path where the JSON file for this config is stored
 var save_path: String
+# False if any data is invalid
 var is_valid := false
 
 
@@ -49,6 +57,7 @@ func validate() -> String:
 	return error
 
 
+# Runs the JSON-Schema validation and returns true if valid
 func is_valid() -> bool:
 	if not validate() == "":
 		is_valid = false
@@ -58,11 +67,13 @@ func is_valid() -> bool:
 	return true
 
 
+# Saves the config data to disc
 func save_to_disc() -> bool:
 	var is_success := _ModLoaderFile.save_dictionary_to_json_file(data, save_path)
 	return is_success
 
 
+# Removes the config data from disc
 func remove_from_disc() -> bool:
 	var is_success := _ModLoaderFile.remove_file(save_path)
 	return is_success
