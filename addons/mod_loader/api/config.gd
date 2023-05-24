@@ -2,13 +2,13 @@ class_name ModLoaderConfig
 extends Object
 
 
-# The `ModLoaderConfig` class provides functionality for loading and saving per-mod JSON configuration files.
+# This Class provides functionality for working with per-mod Configurations.
 
 const LOG_NAME := "ModLoader:Config"
 const DEFAULT_CONFIG_NAME  := "default"
 
 
-# Retrieves a list of mods that have configuration files.
+# Retrieves an Array of mods that have configuration files.
 #
 # Returns:
 # An Array containing the mod data of mods that have configuration files.
@@ -242,7 +242,7 @@ static func _traverse_schema(schema_prop: Dictionary, prop_key_array: Array) -> 
 	return schema_prop
 
 
-# Retrieves the configuration data for a specific mod and configuration name.
+# Retrieves the configuration for a specific mod and configuration name.
 # Returns the configuration as a ModConfig object or null if not found.
 #
 # Parameters:
