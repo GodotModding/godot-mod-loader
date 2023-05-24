@@ -210,9 +210,11 @@ static func _update_mod_lists() -> bool:
 	return is_save_success
 
 
+# Updates the mod list by checking the validity of each mod entry and making necessary modifications.
 static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mod_data) -> Dictionary:
 	var updated_mod_list := mod_list.duplicate(true)
 
+	# Iterate over each mod ID in the mod list
 	for mod_id in updated_mod_list:
 		var mod_list_entry: Dictionary = updated_mod_list[mod_id]
 
@@ -240,7 +242,7 @@ static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mo
 	return updated_mod_list
 
 
-# Generates a dictionary containing a list of currently loaded and deactivated mods.
+# Generates a dictionary with data to be stored for each mod.
 static func _generate_mod_list() -> Dictionary:
 	var mod_list := {}
 
@@ -256,7 +258,7 @@ static func _generate_mod_list() -> Dictionary:
 
 
 # Generates a mod list entry dictionary with the given mod ID and active status.
-# If the mod has a config schema, sets the 'current_config' key.
+# If the mod has a config schema, sets the 'current_config' key to the current_config stored in the Mods ModData.
 static func _generate_mod_list_entry(mod_id: String, is_active: bool) -> Dictionary:
 	var mod_list_entry := {}
 
