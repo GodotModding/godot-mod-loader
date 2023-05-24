@@ -86,7 +86,7 @@ func load_configs() -> void:
 	current_config = ModLoaderConfig.get_current_config(dir_name)
 
 
-# Create a new ModConfig instance for each Conifg JSON and add it to the configs dictionary.
+# Create a new ModConfig instance for each Config JSON and add it to the configs dictionary.
 func _load_config(config_file_path: String) -> void:
 	var config_data := _ModLoaderFile.get_json_as_dict(config_file_path)
 	var mod_config = ModConfig.new(
