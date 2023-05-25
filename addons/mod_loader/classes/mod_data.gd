@@ -74,7 +74,7 @@ func load_manifest() -> void:
 	manifest = mod_manifest
 
 
-# Load each mod config json from the mods config directiory.
+# Load each mod config json from the mods config directory.
 func load_configs() -> void:
 	var config_dir_path := _ModLoaderPath.get_path_to_configs().plus_file(dir_name)
 

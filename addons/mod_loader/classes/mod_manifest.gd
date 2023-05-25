@@ -197,6 +197,7 @@ func to_json() -> String:
 	}, "\t")
 
 
+# Loads the default configuration for a mod.
 func load_mod_config_defaults() -> void:
 	var config := ModConfig.new(
 		get_mod_id(),
