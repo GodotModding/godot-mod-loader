@@ -110,6 +110,22 @@ static func get_mod_data_from_mod_id(mod_id: String) -> ModData:
 	return ModLoaderStore.mod_data[mod_id]
 
 
+# Returns true if the mod with the given mod_id was successfully loaded.
+static func is_mod_loaded(mod_id: String) -> bool:
+	if ModLoaderStore.is_initializing:
+		ModLoaderLog.warning(
+			"The ModLoader is not fully initialized. " +
+			"Calling \"is_mod_loaded()\" in \"_init()\" may result in an unexpected return value as mods are still loading.",
+			 LOG_NAME
+		)
+
+	# If the mod is not present in the mod_data dictionary or the mod is flagged as not loadable.
+	if not ModLoaderStore.mod_data.has(mod_id) or not ModLoaderStore.mod_data[mod_id].is_loadable:
+		return false
+
+	return true
+
+
 static func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
 	var new_node: Node
 	if not instance_path == "":
