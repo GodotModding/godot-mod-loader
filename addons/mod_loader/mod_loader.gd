@@ -357,6 +357,10 @@ func _setup_mods() -> int:
 		if mod_dir_name == "." or mod_dir_name == "..":
 			continue
 
+		# Ignore hidden directories
+		if mod_dir_name.begins_with("."):
+			continue
+
 		if ModLoaderStore.ml_options.disabled_mods.has(mod_dir_name):
 			ModLoaderLog.info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
 			continue
