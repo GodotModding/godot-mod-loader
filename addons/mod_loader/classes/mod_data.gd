@@ -76,8 +76,11 @@ func load_manifest() -> void:
 
 # Load each mod config json from the mods config directory.
 func load_configs() -> void:
-	var config_dir_path := _ModLoaderPath.get_path_to_configs().plus_file(dir_name)
+	# If the default values in the config schema are invalid don't load configs
+	if not manifest.load_mod_config_defaults():
+		return
 
+	var config_dir_path := _ModLoaderPath.get_path_to_mod_configs_dir(dir_name)
 	var config_file_paths := _ModLoaderPath.get_file_paths_in_dir(config_dir_path)
 	for config_file_path in config_file_paths:
 		_load_config(config_file_path)

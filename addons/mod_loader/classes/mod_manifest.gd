@@ -133,9 +133,6 @@ func _init(manifest: Dictionary) -> void:
 	):
 		return
 
-	if not config_schema.empty():
-		load_mod_config_defaults()
-
 
 # Mod ID used in the mod loader
 # Format: {namespace}-{name}
@@ -198,11 +195,11 @@ func to_json() -> String:
 
 
 # Loads the default configuration for a mod.
-func load_mod_config_defaults() -> void:
+func load_mod_config_defaults() -> ModConfig:
 	var config := ModConfig.new(
 		get_mod_id(),
 		{},
-		_ModLoaderPath.get_path_to_configs().plus_file("%s/%s.json" % [get_mod_id(), ModLoaderConfig.DEFAULT_CONFIG_NAME]),
+		_ModLoaderPath.get_path_to_mod_config_file(get_mod_id(), ModLoaderConfig.DEFAULT_CONFIG_NAME),
 		config_schema
 	)
 
@@ -210,14 +207,23 @@ func load_mod_config_defaults() -> void:
 	if not _ModLoaderFile.file_exists(config.save_path):
 		# Generate config_default based on the default values in config_schema
 		config.data = _generate_default_config_from_schema(config.schema.properties)
-		# Create the default config file
-		_ModLoaderFile.save_dictionary_to_json_file(config.data, config.save_path)
 	else:
-		# If there is a default.json just load that
+		# If there is a default.json - load it
 		config.data = _ModLoaderFile.get_json_as_dict(config.save_path)
 
+		# If the default config is invalid, generate a new one
+		if not config.is_valid():
+			config.data = _generate_default_config_from_schema(config.schema.properties)
+
 	# Validate the config defaults
-	config.is_valid()
+	if config.is_valid():
+		# Create the default config file
+		config.save_to_file()
+		# Return the default ModConfig
+		return config
+
+	ModLoaderLog.fatal("The default config values for %s-%s are invalid. Configs will not be loaded." % [namespace, name], LOG_NAME)
+	return null
 
 
 # Recursively searches for default values
