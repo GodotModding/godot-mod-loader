@@ -105,30 +105,6 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 	return data
 
 
-# Returns an array of directory paths inside the src dir
-static func get_dir_paths_in_dir(src_dir_path: String) -> Array:
-	var dir_paths := []
-
-	var directory := Directory.new()
-	var error := directory.open(src_dir_path)
-
-	if not error  == OK:
-		return dir_paths
-		ModLoaderLog.error("Error opening directory", LOG_NAME)
-
-	directory.list_dir_begin()
-	var file_name := directory.get_next()
-	while (file_name != ""):
-		if file_name == "." or file_name == "..":
-			file_name = directory.get_next()
-			continue
-		if directory.current_is_dir():
-			dir_paths.push_back(src_dir_path.plus_file(file_name))
-		file_name = directory.get_next()
-
-	return dir_paths
-
-
 # Returns an array of file paths inside the src dir
 static func get_file_paths_in_dir(src_dir_path: String) -> Array:
 	var file_paths := []
