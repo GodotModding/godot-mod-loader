@@ -37,7 +37,7 @@ var is_locked := false
 var importance := 0
 # Contents of the manifest
 var manifest: ModManifest
-# Updated in load_mod_configs
+# Updated in load_configs
 var configs := {}
 var current_config: ModConfig setget _set_current_config
 
