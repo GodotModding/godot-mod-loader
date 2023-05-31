@@ -210,7 +210,7 @@ func load_mod_config_defaults() -> void:
 	if not _ModLoaderFile.file_exists(config.save_path):
 		# Generate config_default based on the default values in config_schema
 		config.data = _generate_default_config_from_schema(config.schema.properties)
-		# Save the default config to disk
+		# Create the default config file
 		_ModLoaderFile.save_dictionary_to_json_file(config.data, config.save_path)
 	else:
 		# If there is a default.json just load that

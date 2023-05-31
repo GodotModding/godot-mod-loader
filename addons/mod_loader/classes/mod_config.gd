@@ -67,13 +67,13 @@ func is_valid() -> bool:
 	return false
 
 
-# Saves the config data to disc
-func save_to_disc() -> bool:
+# Saves the config data to the config file
+func save_to_file() -> bool:
 	var is_success := _ModLoaderFile.save_dictionary_to_json_file(data, save_path)
 	return is_success
 
 
-# Removes the config data from disc
-func remove_from_disc() -> bool:
+# Removes the config file
+func remove_file() -> bool:
 	var is_success := _ModLoaderFile.remove_file(save_path)
 	return is_success

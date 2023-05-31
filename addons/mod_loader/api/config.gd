@@ -60,7 +60,7 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 	# Store the mod_config in the mod's ModData
 	ModLoaderStore.mod_data[mod_id].configs[config_name] = mod_config
 	# Save the mod_config to a new config JSON file in the mod's config directory
-	var is_save_success := mod_config.save_to_disc()
+	var is_save_success := mod_config.save_to_file()
 
 	if not is_save_success:
 		return null
@@ -70,7 +70,7 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 	return mod_config
 
 
-# Updates an existing ModConfig object with new data and saves it to disk.
+# Updates an existing ModConfig object with new data and save the config file.
 #
 # Parameters:
 # - config (ModConfig): The ModConfig object to be updated.
@@ -91,8 +91,8 @@ static func update_config(config: ModConfig) -> ModConfig:
 		ModLoaderLog.error("Update for config \"%s\" failed validation with error message \"%s\"" % [config.name, error_message], LOG_NAME)
 		return null
 
-	# Save the updated config to disk
-	var is_save_success := config.save_to_disc()
+	# Save the updated config to the config file
+	var is_save_success := config.save_to_file()
 
 	if not is_save_success:
 		ModLoaderLog.error("Failed to save config \"%s\" to \"%s\"." % [config.name, config.save_path], LOG_NAME)
@@ -119,7 +119,7 @@ static func delete_config(config: ModConfig) -> bool:
 	set_current_config(get_default_config(config.mod_id))
 
 	# Remove the config file from the Mod Config directory
-	var is_remove_success := config.remove_from_disc()
+	var is_remove_success := config.remove_file()
 
 	if not is_remove_success:
 		return false
