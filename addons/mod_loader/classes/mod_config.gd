@@ -59,12 +59,12 @@ func validate() -> String:
 
 # Runs the JSON-Schema validation and returns true if valid
 func is_valid() -> bool:
-	if not validate() == "":
-		is_valid = false
-		return false
+	if validate() == "":
+		is_valid = true
+		return true
 
-	is_valid = true
-	return true
+	is_valid = false
+	return false
 
 
 # Saves the config data to disc
