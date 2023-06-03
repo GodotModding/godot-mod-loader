@@ -75,6 +75,11 @@ func _ready():
 	var _success_update_mod_lists := ModLoaderUserProfile._update_mod_lists()
 
 
+func _exit_tree() -> void:
+	# Save the cache stored in ModLoaderStore to the cache file.
+	_ModLoaderCache.save_to_file()
+
+
 func _load_mods() -> void:
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)

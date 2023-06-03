@@ -207,18 +207,28 @@ func load_mod_config_defaults() -> ModConfig:
 	if not _ModLoaderFile.file_exists(config.save_path):
 		# Generate config_default based on the default values in config_schema
 		config.data = _generate_default_config_from_schema(config.schema.properties)
-	else:
-		# If there is a default.json - load it
-		config.data = _ModLoaderFile.get_json_as_dict(config.save_path)
 
-		# If the default config is invalid, generate a new one
-		if not config.is_valid():
+	# If the default.json file exists
+	else:
+		var current_schema_md5 := config.get_schema_as_string().md5_text()
+		var cache_schema_md5: String = _ModLoaderCache.get_data("config_schemas")[config.mod_id]
+
+		# Generate a new default config if the config schema has changed
+		if not current_schema_md5 == cache_schema_md5:
 			config.data = _generate_default_config_from_schema(config.schema.properties)
+
+		# If the config schema has not changed just load the json file
+		else:
+			config.data = _ModLoaderFile.get_json_as_dict(config.save_path)
 
 	# Validate the config defaults
 	if config.is_valid():
 		# Create the default config file
 		config.save_to_file()
+
+		# Store the md5 of the config schema in the cache
+		_ModLoaderCache.update_data("config_schemas", {config.mod_id: config.get_schema_as_string().md5_text()} )
+
 		# Return the default ModConfig
 		return config
 
