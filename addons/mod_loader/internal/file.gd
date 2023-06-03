@@ -43,23 +43,6 @@ static func _get_json_string_as_dict(string: String) -> Dictionary:
 	return parsed.result
 
 
-# Loop over "res://mods" and add any mod zips to the unpacked virtual directory
-# (UNPACKED_DIR)
-func load_mod_zips() -> int:
-	var zipped_mods_count := 0
-
-	if not ModLoaderStore.ml_options.steam_workshop_enabled:
-		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
-
-		# If we're not using Steam workshop, just loop over the mod ZIPs.
-		zipped_mods_count += load_zips_in_folder(mods_folder_path)
-	else:
-		# If we're using Steam workshop, loop over the workshop item directories
-		zipped_mods_count += _ModLoaderSteam.load_steam_workshop_zips()
-
-	return zipped_mods_count
-
-
 # Load the mod ZIP from the provided directory
 func load_zips_in_folder(folder_path: String) -> int:
 	var temp_zipped_mods_count := 0

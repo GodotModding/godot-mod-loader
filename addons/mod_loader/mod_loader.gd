@@ -83,7 +83,7 @@ func _exit_tree() -> void:
 func _load_mods() -> void:
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
-	var unzipped_mods := _ModLoaderFile.load_mod_zips()
+	var unzipped_mods := _load_mod_zips()
 	if unzipped_mods > 0:
 		ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % unzipped_mods, LOG_NAME)
 	else:
@@ -198,6 +198,23 @@ func _check_autoload_positions() -> void:
 
 	var _pos_ml_store := _ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
 	var _pos_ml_core := _ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
+
+
+# Loop over "res://mods" and add any mod zips to the unpacked virtual directory
+# (UNPACKED_DIR)
+func _load_mod_zips() -> int:
+	var zipped_mods_count := 0
+
+	if not ModLoaderStore.ml_options.steam_workshop_enabled:
+		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
+
+		# If we're not using Steam workshop, just loop over the mod ZIPs.
+		zipped_mods_count += _ModLoaderFile.load_zips_in_folder(mods_folder_path)
+	else:
+		# If we're using Steam workshop, loop over the workshop item directories
+		zipped_mods_count += _ModLoaderSteam.load_steam_workshop_zips()
+
+	return zipped_mods_count
 
 
 # Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
