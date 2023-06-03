@@ -105,6 +105,27 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 	return data
 
 
+# Returns an array of file paths inside the src dir
+static func get_file_paths_in_dir(src_dir_path: String) -> Array:
+	var file_paths := []
+
+	var directory := Directory.new()
+	var error := directory.open(src_dir_path)
+
+	if not error  == OK:
+		return file_paths
+		ModLoaderLog.error("Error opening directory", LOG_NAME)
+
+	directory.list_dir_begin()
+	var file_name := directory.get_next()
+	while (file_name != ""):
+		if not directory.current_is_dir():
+			file_paths.push_back(src_dir_path.plus_file(file_name))
+		file_name = directory.get_next()
+
+	return file_paths
+
+
 # Get the path to the mods folder, with any applicable overrides applied
 static func get_path_to_mods() -> String:
 	var mods_folder_path := get_local_folder_dir("mods")
@@ -117,6 +138,7 @@ static func get_path_to_mods() -> String:
 static func get_unpacked_mods_dir_path() -> String:
 	return ModLoaderStore.UNPACKED_DIR
 
+
 # Get the path to the configs folder, with any applicable overrides applied
 static func get_path_to_configs() -> String:
 	var configs_path := MOD_CONFIG_DIR_PATH
@@ -125,3 +147,29 @@ static func get_path_to_configs() -> String:
 			configs_path = ModLoaderStore.ml_options.override_path_to_configs
 	return configs_path
 
+
+# Get the path to a mods config folder
+# Returns an empty string if there is no config dir for this mod_id
+static func get_path_to_mod_configs_dir(mod_id: String) -> String:
+	var mod_config_dir := get_path_to_configs().plus_file(mod_id)
+
+	if not _ModLoaderFile.dir_exists(mod_config_dir):
+		return ""
+
+	return mod_config_dir
+
+
+# Get the path to a mods config file
+# Returns an empty string if the config file does not exist.
+static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> String:
+	var mod_config_dir := get_path_to_mod_configs_dir(mod_id)
+
+	if mod_config_dir.empty():
+		return ""
+
+	var mod_config_file_dir := mod_config_dir.plus_file( config_name + ".json")
+
+	if not _ModLoaderFile.file_exists(mod_config_file_dir):
+		return ""
+
+	return mod_config_file_dir

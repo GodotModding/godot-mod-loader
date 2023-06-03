@@ -37,8 +37,9 @@ var is_locked := false
 var importance := 0
 # Contents of the manifest
 var manifest: ModManifest
-# Updated in _load_mod_configs
-var config := {}
+# Updated in load_configs
+var configs := {}
+var current_config: ModConfig setget _set_current_config
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PoolStringArray = []
@@ -71,6 +72,42 @@ func load_manifest() -> void:
 	is_loadable = _is_mod_dir_name_same_as_id(mod_manifest)
 	if not is_loadable: return
 	manifest = mod_manifest
+
+
+# Load each mod config json from the mods config directory.
+func load_configs() -> void:
+	# If the default values in the config schema are invalid don't load configs
+	if not manifest.load_mod_config_defaults():
+		return
+
+	var config_dir_path := _ModLoaderPath.get_path_to_mod_configs_dir(dir_name)
+	var config_file_paths := _ModLoaderPath.get_file_paths_in_dir(config_dir_path)
+	for config_file_path in config_file_paths:
+		_load_config(config_file_path)
+
+	# Set the current_config based on the user profile
+	current_config = ModLoaderConfig.get_current_config(dir_name)
+
+
+# Create a new ModConfig instance for each Config JSON and add it to the configs dictionary.
+func _load_config(config_file_path: String) -> void:
+	var config_data := _ModLoaderFile.get_json_as_dict(config_file_path)
+	var mod_config = ModConfig.new(
+		dir_name,
+		config_data,
+		config_file_path,
+		manifest.config_schema
+	)
+
+	# Add the config to the configs dictionary
+	configs[mod_config.name] = mod_config
+
+
+# Update the mod_list of the current user profile
+func _set_current_config(new_current_config: ModConfig) -> void:
+	ModLoaderUserProfile.set_mod_current_config(dir_name, new_current_config.name)
+	current_config = new_current_config
+	ModLoader.emit_signal("current_config_changed", new_current_config)
 
 
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]

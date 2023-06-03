@@ -31,7 +31,7 @@ var compatible_mod_loader_version: PoolStringArray = []
 var incompatibilities: PoolStringArray = []
 var load_before: PoolStringArray = []
 var tags : PoolStringArray = []
-var config_defaults := {}
+var config_schema := {}
 var description_rich := ""
 var image: StreamTexture
 
@@ -53,7 +53,6 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"compatible_mod_loader_version",
 	"compatible_game_version",
 	"incompatibilities",
-	"config_defaults",
 ]
 
 
@@ -95,7 +94,7 @@ func _init(manifest: Dictionary) -> void:
 	compatible_mod_loader_version = _handle_compatible_mod_loader_version(mod_id, godot_details)
 	description_rich = ModLoaderUtils.get_string_from_dict(godot_details, "description_rich")
 	tags = ModLoaderUtils.get_array_from_dict(godot_details, "tags")
-	config_defaults = godot_details.config_defaults
+	config_schema = ModLoaderUtils.get_dict_from_dict(godot_details, "config_schema")
 
 	if (
 		not is_mod_id_array_valid(mod_id, dependencies, "dependency") or
@@ -163,7 +162,7 @@ func get_as_dict() -> Dictionary:
 		"incompatibilities": incompatibilities,
 		"load_before": load_before,
 		"tags": tags,
-		"config_defaults": config_defaults,
+		"config_schema": config_schema,
 		"description_rich": description_rich,
 		"image": image,
 	}
@@ -187,12 +186,83 @@ func to_json() -> String:
 				"incompatibilities": incompatibilities,
 				"load_before": load_before,
 				"tags": tags,
-				"config_defaults": config_defaults,
+				"config_schema": config_schema,
 				"description_rich": description_rich,
 				"image": image,
 			}
 		}
 	}, "\t")
+
+
+# Loads the default configuration for a mod.
+func load_mod_config_defaults() -> ModConfig:
+	var config := ModConfig.new(
+		get_mod_id(),
+		{},
+		_ModLoaderPath.get_path_to_mod_config_file(get_mod_id(), ModLoaderConfig.DEFAULT_CONFIG_NAME),
+		config_schema
+	)
+
+	# Check if there is no default.json file in the mods config directory
+	if not _ModLoaderFile.file_exists(config.save_path):
+		# Generate config_default based on the default values in config_schema
+		config.data = _generate_default_config_from_schema(config.schema.properties)
+
+	# If the default.json file exists
+	else:
+		var current_schema_md5 := config.get_schema_as_string().md5_text()
+		var cache_schema_md5s := _ModLoaderCache.get_data("config_schemas")
+		var cache_schema_md5: String = cache_schema_md5s[config.mod_id] if cache_schema_md5s.has(config.mod_id) else ''
+
+		# Generate a new default config if the config schema has changed or there is nothing cached
+		if not current_schema_md5 == cache_schema_md5 or not cache_schema_md5.empty():
+			config.data = _generate_default_config_from_schema(config.schema.properties)
+
+		# If the config schema has not changed just load the json file
+		else:
+			config.data = _ModLoaderFile.get_json_as_dict(config.save_path)
+
+	# Validate the config defaults
+	if config.is_valid():
+		# Create the default config file
+		config.save_to_file()
+
+		# Store the md5 of the config schema in the cache
+		_ModLoaderCache.update_data("config_schemas", {config.mod_id: config.get_schema_as_string().md5_text()} )
+
+		# Return the default ModConfig
+		return config
+
+	ModLoaderLog.fatal("The default config values for %s-%s are invalid. Configs will not be loaded." % [namespace, name], LOG_NAME)
+	return null
+
+
+# Recursively searches for default values
+func _generate_default_config_from_schema(property: Dictionary, current_prop := {}) -> Dictionary:
+	# Exit function if property is empty
+	if property.empty():
+		return current_prop
+
+	for property_key in property.keys():
+		var prop = property[property_key]
+
+		# If this property contains nested properties, we recursively call this function
+		if "properties" in prop:
+			current_prop[property_key] = {}
+			_generate_default_config_from_schema(prop.properties, current_prop[property_key])
+			# Return early here because a object will not have a "default" key
+			return current_prop
+
+		# If this property contains a default value, add it to the global config_defaults dictionary
+		if JSONSchema.JSKW_DEFAULT in prop:
+			# Initialize the current_key if it is missing in config_defaults
+			if not current_prop.has(property_key):
+				current_prop[property_key] = {}
+
+			# Add the default value to the config_defaults
+			current_prop[property_key] = prop.default
+
+	return current_prop
 
 
 # Handles deprecation of the single string value in the compatible_mod_loader_version.

@@ -21,6 +21,7 @@ extends Node
 
 
 signal logged(entry)
+signal current_config_changed(config)
 
 # Prefix for this file when using mod_log or dev_log
 const LOG_NAME := "ModLoader"
@@ -74,6 +75,11 @@ func _ready():
 	var _success_update_mod_lists := ModLoaderUserProfile._update_mod_lists()
 
 
+func _exit_tree() -> void:
+	# Save the cache stored in ModLoaderStore to the cache file.
+	_ModLoaderCache.save_to_file()
+
+
 func _load_mods() -> void:
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
@@ -91,10 +97,6 @@ func _load_mods() -> void:
 	else:
 		ModLoaderLog.info("No mods were setup", LOG_NAME)
 
-	# Set up mod configs. If a mod's JSON file is found, its data gets added
-	# to mod_data.{dir_name}.config
-	_load_mod_configs()
-
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
 	# (from their manifest.json file), and verify that the meta JSON has all
@@ -102,9 +104,10 @@ func _load_mods() -> void:
 	for dir_name in ModLoaderStore.mod_data:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		mod.load_manifest()
+		if mod.manifest.get("config_schema") and not mod.manifest.config_schema.empty():
+			mod.load_configs()
 
 	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
-
 
 	# Check for mods with load_before. If a mod is listed in load_before,
 	# add the current mod to the dependencies of the the mod specified
@@ -369,48 +372,6 @@ func _setup_mods() -> int:
 	return unpacked_mods_count
 
 
-# Load mod config JSONs from res://configs
-func _load_mod_configs() -> void:
-	var found_configs_count := 0
-	var configs_path := _ModLoaderPath.get_path_to_configs()
-
-	for dir_name in ModLoaderStore.mod_data:
-		var json_path := configs_path.plus_file(dir_name + ".json")
-		var mod_config := _ModLoaderFile.get_json_as_dict(json_path)
-
-		ModLoaderLog.debug("Config JSON: Looking for config at path: %s" % json_path, LOG_NAME)
-
-		if mod_config.size() > 0:
-			found_configs_count += 1
-
-			ModLoaderLog.info("Config JSON: Found a config file: '%s'" % json_path, LOG_NAME)
-			ModLoaderLog.debug_json_print("Config JSON: File data: ", mod_config, LOG_NAME)
-
-			# Check `load_from` option. This lets you specify the name of a
-			# different JSON file to load your config from. Must be in the same
-			# dir. Means you can have multiple config files for a single mod
-			# and switch between them quickly. Should include ".json" extension.
-			# Ignored if the filename matches the mod ID, or is empty
-			if mod_config.has("load_from"):
-				var new_path: String = mod_config.load_from
-				if not new_path == "" and not new_path == str(dir_name, ".json"):
-					ModLoaderLog.info("Config JSON: Following load_from path: %s" % new_path, LOG_NAME)
-					var new_config := _ModLoaderFile.get_json_as_dict(configs_path + new_path)
-					if new_config.size() > 0:
-						mod_config = new_config
-						ModLoaderLog.info("Config JSON: Loaded from custom json: %s" % new_path, LOG_NAME)
-						ModLoaderLog.debug_json_print("Config JSON: File data:", mod_config, LOG_NAME)
-					else:
-						ModLoaderLog.error("Config JSON: ERROR - Could not load data via `load_from` for %s, at path: %s" % [dir_name, new_path], LOG_NAME)
-
-			ModLoaderStore.mod_data[dir_name].config = mod_config
-
-	if found_configs_count > 0:
-		ModLoaderLog.success("Config JSON: Loaded %s config(s)" % found_configs_count, LOG_NAME)
-	else:
-		ModLoaderLog.info("Config JSON: No mod configs were found", LOG_NAME)
-
-
 # Add a mod's data to mod_data.
 # The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
@@ -516,9 +477,9 @@ func save_scene(modified_scene: Node, scene_path: String) -> void:
 	ModLoaderMod.save_scene(modified_scene, scene_path)
 
 
-func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_mod_config", "6.0.0")
-	return ModLoaderConfig.get_mod_config(mod_dir_name, key)
+func get_mod_config(mod_dir_name: String = "", key: String = "") -> ModConfig:
+	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_config", "6.0.0")
+	return ModLoaderConfig.get_config(mod_dir_name, ModLoaderConfig.DEFAULT_CONFIG_NAME)
 
 
 func deprecated_direct_access_UNPACKED_DIR() -> String:

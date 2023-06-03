@@ -86,6 +86,9 @@ var current_user_profile := ""
 # List of user profiles loaded from user://mods.json
 var user_profiles :=  {}
 
+# ModLoader cache is stored in user://ModLoaderCache.json
+var cache := {}
+
 # These variables handle various options, which can be changed either via
 # Godot's GUI (with the options.tres resource file), or via CLI args.
 # Usage: `ModLoaderStore.ml_options.KEY`
@@ -131,6 +134,8 @@ var ml_options := {
 func _init():
 	_update_ml_options_from_options_resource()
 	_update_ml_options_from_cli_args()
+	# ModLoaderStore is passed as argument so the cache data can be loaded on _init()
+	_ModLoaderCache.init_cache(self)
 
 
 # Update ModLoader's options, via the custom options resource

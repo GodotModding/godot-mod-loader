@@ -34,6 +34,17 @@ static func get_array_from_dict(dict: Dictionary, key: String) -> Array:
 	return dict[key]
 
 
+# Returns an empty Dictionary if the key does not exist or is not type of Dictionary
+static func get_dict_from_dict(dict: Dictionary, key: String) -> Dictionary:
+	if not dict.has(key):
+		return {}
+
+	if not dict[key] is Dictionary:
+		return {}
+
+	return dict[key]
+
+
 # Works like [method Dictionary.has_all],
 # but allows for more specific errors if a field is missing
 static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:

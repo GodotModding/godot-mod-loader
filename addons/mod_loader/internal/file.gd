@@ -20,7 +20,7 @@ static func get_json_as_dict(path: String) -> Dictionary:
 		file.close()
 		return {}
 
-	var error = file.open(path, File.READ)
+	var error := file.open(path, File.READ)
 	if not error == OK:
 		ModLoaderLog.error("Error opening file. Code: %s" % error, LOG_NAME)
 
@@ -58,15 +58,15 @@ static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 	))
 
 	if not dir.dir_exists(file_directory):
-		var makedir_error = dir.make_dir_recursive(file_directory)
+		var makedir_error := dir.make_dir_recursive(file_directory)
 		if not makedir_error == OK:
 			ModLoaderLog.fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
 			return false
 
-	var file = File.new()
+	var file := File.new()
 
 	# Save data to the file
-	var fileopen_error = file.open(filepath, File.WRITE)
+	var fileopen_error := file.open(filepath, File.WRITE)
 
 	if not fileopen_error == OK:
 		ModLoaderLog.fatal("Encountered an error (%s) when attempting to write to a file, with the path: %s" % [fileopen_error, filepath], LOG_NAME)
@@ -80,20 +80,44 @@ static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 
 # Saves a dictionary to a file, as a JSON string
 static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> bool:
-	var json_string = JSON.print(data, "\t")
+	var json_string := JSON.print(data, "\t")
 	return _save_string_to_file(json_string, filepath)
+
+
+# Remove Data
+# =============================================================================
+
+# Removes a file from the given path
+static func remove_file(file_path: String) -> bool:
+	var dir := Directory.new()
+
+	if not dir.file_exists(file_path):
+		ModLoaderLog.error("No file found at \"%s\"" % file_path, LOG_NAME)
+		return false
+
+	var error := dir.remove(file_path)
+
+	if error:
+		ModLoaderLog.error(
+			"Encountered an error (%s) when attempting to remove the file, with the path: %s"
+			% [error, file_path],
+			LOG_NAME
+		)
+		return false
+
+	return true
 
 
 # Checks
 # =============================================================================
 
 static func file_exists(path: String) -> bool:
-	var file = File.new()
+	var file := File.new()
 	return file.file_exists(path)
 
 
 static func dir_exists(path: String) -> bool:
-	var dir = Directory.new()
+	var dir := Directory.new()
 	return dir.dir_exists(path)
 
 

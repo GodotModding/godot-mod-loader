@@ -1,133 +1,341 @@
 class_name ModLoaderConfig
 extends Object
 
-# Handles loading and saving per-mod JSON configs
+
+# This Class provides functionality for working with per-mod Configurations.
 
 const LOG_NAME := "ModLoader:Config"
-
-enum MLConfigStatus {
-	OK,                  # 0 = No errors
-	NO_JSON_OK,          # 1 = No custom JSON (file probably does not exist). Uses defaults from manifest, if available
-	INVALID_MOD_ID,      # 2 = Invalid mod ID
-	NO_JSON_INVALID_KEY, # 3 = Invalid key, and no custom JSON was specified in the manifest defaults (`extra.godot.config_defaults`)
-	INVALID_KEY          # 4 = Invalid key, although config data does exists
-}
+const DEFAULT_CONFIG_NAME  := "default"
 
 
-# Get the config data for a specific mod. Always returns a dictionary with two
-# keys: `error` and `data`.
-# Data (`data`) is either the full config, or data from a specific key if one was specified.
-# Error (`error`) is 0 if there were no errors, or > 0 if the setting could not be retrieved:
-static func get_mod_config(mod_dir_name: String = "", key: String = "") -> Dictionary:
-	var status_code = MLConfigStatus.OK
-	var status_msg := ""
-	var data = {} # can be anything
-	var defaults := {}
+# Creates a new configuration for a mod.
+#
+# Parameters:
+# - mod_id (String): The ID of the mod for which the configuration is being created.
+# - config_name (String): The name of the configuration.
+# - config_data (Dictionary): The configuration data to be stored in the new configuration.
+#
+# Returns:
+# - ModConfig: The created ModConfig object if successful, or null otherwise.
+static func create_config(mod_id: String, config_name: String, config_data: Dictionary) -> ModConfig:
+	# Check if the config schema exists by retrieving the default config
+	var default_config: ModConfig = get_default_config(mod_id)
+	if not default_config:
+		ModLoaderLog.error(
+			"Failed to create config \"%s\". No config schema found for \"%s\"."
+			% [config_name, mod_id], LOG_NAME
+		)
+		return null
 
-	# Invalid mod ID
-	if not ModLoaderStore.mod_data.has(mod_dir_name):
-		status_code = MLConfigStatus.INVALID_MOD_ID
-		status_msg = "Mod ID was invalid: %s" % mod_dir_name
+	# Make sure the config name is not empty
+	if config_name == "":
+		ModLoaderLog.error(
+			"Failed to create config \"%s\". The config name cannot be empty."
+			% config_name, LOG_NAME
+		)
+		return null
 
-	# Mod ID is valid
-	if status_code == MLConfigStatus.OK:
-		var mod := ModLoaderStore.mod_data[mod_dir_name] as ModData
-		var config_data := mod.config
-		defaults = mod.manifest.config_defaults
+	# Make sure the config name is unique
+	if ModLoaderStore.mod_data[mod_id].configs.has(config_name):
+		ModLoaderLog.error(
+			"Failed to create config \"%s\". A config with the name \"%s\" already exists."
+			% [config_name, config_name], LOG_NAME
+		)
+		return null
 
-		# No custom JSON file
-		if config_data.size() == MLConfigStatus.OK:
-			status_code = MLConfigStatus.NO_JSON_OK
-			var noconfig_msg = "No config file for %s.json. " % mod_dir_name
-			if key == "":
-				data = defaults
-				status_msg += str(noconfig_msg, "Using defaults (extra.godot.config_defaults)")
-			else:
-				if defaults.has(key):
-					data = defaults[key]
-					status_msg += str(noconfig_msg, "Using defaults for key '%s' (extra.godot.config_defaults.%s)" % [key, key])
-				else:
-					status_code = MLConfigStatus.NO_JSON_INVALID_KEY
-					status_msg += str(
-						"Could not get the requested data for %s: " % mod_dir_name,
-						"Requested key '%s' is not present in the 'config_defaults' of the mod's manifest.json file (extra.godot.config_defaults.%s). " % [key, key]
-					)
+	# Create the config save path based on the config_name
+	var config_file_path := _ModLoaderPath.get_path_to_mod_configs_dir(mod_id).plus_file("%s.json" % config_name)
 
-		# JSON file exists
-		if status_code == MLConfigStatus.OK:
-			if key == "":
-				data = config_data
-			else:
-				if config_data.has(key):
-					data = config_data[key]
-				else:
-					status_code = MLConfigStatus.INVALID_KEY
-					status_msg = "Invalid key '%s' for mod ID: %s" % [key, mod_dir_name]
+	# Initialize a new ModConfig object with the provided parameters
+	var mod_config := ModConfig.new(
+		mod_id,
+		config_data,
+		config_file_path
+	)
 
-	# Log if any errors occured
-	if not status_code == MLConfigStatus.OK:
-		if status_code == MLConfigStatus.NO_JSON_OK:
-			# No user config file exists. Low importance as very likely to trigger
-			var full_msg = "Config JSON Notice: %s" % status_msg
-			# Only log this once, to avoid flooding the log
-			ModLoaderLog.debug(full_msg, mod_dir_name, true)
-		else:
-			# Code error (eg. invalid mod ID)
-			ModLoaderLog.fatal("Config JSON Error (%s): %s" % [status_code, status_msg], mod_dir_name)
+	# Check if the mod_config is valid
+	if not mod_config.is_valid:
+		return null
 
-	return {
-		"status_code": status_code,
-		"status_msg": status_msg,
-		"data": data,
-	}
+	# Store the mod_config in the mod's ModData
+	ModLoaderStore.mod_data[mod_id].configs[config_name] = mod_config
+	# Save the mod_config to a new config JSON file in the mod's config directory
+	var is_save_success := mod_config.save_to_file()
+
+	if not is_save_success:
+		return null
+
+	ModLoaderLog.debug("Created new config \"%s\" for mod \"%s\"" % [config_name, mod_id], LOG_NAME)
+
+	return mod_config
 
 
-# Returns a bool indicating if a retrieved mod config is valid.
-# Requires the full config object (ie. the dictionary that's returned by
-# `get_mod_config`)
-static func is_mod_config_data_valid(config_obj: Dictionary) -> bool:
-	return config_obj.status_code <= MLConfigStatus.NO_JSON_OK
+# Updates an existing ModConfig object with new data and save the config file.
+#
+# Parameters:
+# - config (ModConfig): The ModConfig object to be updated.
+#
+# Returns:
+# - ModConfig: The updated ModConfig object if successful, or null otherwise.
+static func update_config(config: ModConfig) -> ModConfig:
+	# Validate the config and check for any validation errors
+	var error_message := config.validate()
+
+	# Check if the config is the "default" config, which cannot be modified
+	if config.name == DEFAULT_CONFIG_NAME:
+		ModLoaderLog.error("The \"default\" config cannot be modified. Please create a new config instead.", LOG_NAME)
+		return null
+
+	# Check if the config passed validation
+	if not config.is_valid:
+		ModLoaderLog.error("Update for config \"%s\" failed validation with error message \"%s\"" % [config.name, error_message], LOG_NAME)
+		return null
+
+	# Save the updated config to the config file
+	var is_save_success := config.save_to_file()
+
+	if not is_save_success:
+		ModLoaderLog.error("Failed to save config \"%s\" to \"%s\"." % [config.name, config.save_path], LOG_NAME)
+		return null
+
+	# Return the updated config
+	return config
 
 
-# Saves a full dictionary object to a mod's custom config file, as JSON.
-# Overwrites any existing data in the file.
-# Optionally updates the config object that's stored in memory (true by default).
-# Returns a bool indicating success or failure.
-# WARNING: Provides no validation
-static func save_mod_config_dictionary(mod_id: String, data: Dictionary, update_config: bool = true) -> bool:
-	# Use `get_mod_config` to check if a custom JSON file already exists.
-	# This has the added benefit of logging a fatal error if mod_name is
-	# invalid (as it already happens in `get_mod_config`)
-	var config_obj := get_mod_config(mod_id)
-
-	if not is_mod_config_data_valid(config_obj):
-		ModLoaderLog.warning("Could not save the config JSON file because the config data was invalid", mod_id)
+# Deletes a ModConfig object and performs cleanup operations.
+#
+# Parameters:
+# - config (ModConfig): The ModConfig object to be deleted.
+#
+# Returns:
+# - bool: True if the deletion was successful, False otherwise.
+static func delete_config(config: ModConfig) -> bool:
+	# Check if the config is the "default" config, which cannot be deleted
+	if config.name == DEFAULT_CONFIG_NAME:
+		ModLoaderLog.error("Deletion of the default configuration is not allowed.", LOG_NAME)
 		return false
 
-	var data_original: Dictionary = config_obj.data
-	var data_new := {}
+	# Change the current config to the "default" config
+	set_current_config(get_default_config(config.mod_id))
 
-	# Merge
-	if update_config:
-		# Update the config held in memory
-		data_original.merge(data, true)
-		data_new = data_original
-	else:
-		# Don't update the config in memory
-		data_new = data_original.duplicate(true)
-		data_new.merge(data, true)
+	# Remove the config file from the Mod Config directory
+	var is_remove_success := config.remove_file()
 
-	var configs_path := _ModLoaderPath.get_path_to_configs()
-	var json_path := configs_path.plus_file(mod_id + ".json")
+	if not is_remove_success:
+		return false
 
-	return _ModLoaderFile.save_dictionary_to_json_file(data_new, json_path)
+	# Remove the config from ModData
+	ModLoaderStore.mod_data[config.mod_id].configs.erase(config.name)
+
+	return true
 
 
-# Saves a single settings to a mod's custom config file.
-# Returns a bool indicating success or failure.
-static func save_mod_config_setting(mod_id: String, key:String, value, update_config: bool = true) -> bool:
-	var new_data = {
-		key: value
-	}
+# Sets the current configuration of a mod to the specified configuration.
+#
+# Parameters:
+# - config (ModConfig): The ModConfig object to be set as current config.
+static func set_current_config(config: ModConfig) -> void:
+	ModLoaderStore.mod_data[config.mod_id].current_config = config
 
-	return save_mod_config_dictionary(mod_id, new_data, update_config)
+
+# Returns the schema for the specified mod id.
+# If no configuration file exists for the mod, an empty dictionary is returned.
+#
+# Parameters:
+# - mod_id (String): the ID of the mod to get the configuration schema for
+#
+# Returns:
+# - A dictionary representing the schema for the mod's configuration file
+static func get_config_schema(mod_id: String) -> Dictionary:
+	# Get all config files for the specified mod
+	var mod_configs := get_configs(mod_id)
+
+	# If no config files were found, return an empty dictionary
+	if mod_configs.empty():
+		return {}
+
+	# The schema is the same for all config files, so we just return the schema of the default config file
+	return mod_configs.default.schema
+
+
+# Retrieves the schema for a specific property key.
+#
+# Parameters:
+# - config (ModConfig): The ModConfig object from which to retrieve the schema.
+# - prop (String): The property key for which to retrieve the schema.
+#									 e.g. "parentProp.childProp.nthChildProp" || "propKey"
+#
+# Returns:
+# - Dictionary: The schema dictionary for the specified property.
+static func get_schema_for_prop(config: ModConfig, prop: String) -> Dictionary:
+	# Split the property string into an array of property keys
+	var prop_array := prop.split(".")
+
+	# If the property array is empty, return the schema for the root property
+	if prop_array.empty():
+		return config.schema.properties[prop]
+
+	# Traverse the schema dictionary to find the schema for the specified property
+	var schema_for_prop := _traverse_schema(config.schema.properties, prop_array)
+
+	# If the schema for the property is empty, log an error and return an empty dictionary
+	if schema_for_prop.empty():
+		ModLoaderLog.error("No Schema found for property \"%s\" in config \"%s\" for mod \"%s\"" % [prop, config.name, config.mod_id], LOG_NAME)
+		return {}
+
+	return schema_for_prop
+
+
+# Recursively traverses the schema dictionary based on the provided prop_key_array
+# and returns the corresponding schema for the target property.
+#
+# Parameters:
+# - schema_prop: The current schema dictionary to traverse.
+# - prop_key_array: An array containing the property keys representing the path to the target property.
+#
+# Returns:
+# The schema dictionary corresponding to the target property specified by the prop_key_array.
+# If the target property is not found, an empty dictionary is returned.
+static func _traverse_schema(schema_prop: Dictionary, prop_key_array: Array) -> Dictionary:
+	# Return the current schema_prop if the prop_key_array is empty (reached the destination property)
+	if prop_key_array.empty():
+		return schema_prop
+
+	# Get and remove the first prop_key in the array
+	var prop_key: String = prop_key_array.pop_front()
+
+	# Check if the searched property exists
+	if not schema_prop.has(prop_key):
+		return {}
+
+	schema_prop = schema_prop[prop_key]
+
+	# If the schema_prop has a 'type' key, is of type 'object', and there are more property keys remaining
+	if schema_prop.has("type") and schema_prop.type == "object" and not prop_key_array.empty():
+		# Set the properties of the object as the current 'schema_prop'
+		schema_prop = schema_prop.properties
+
+	schema_prop = _traverse_schema(schema_prop, prop_key_array)
+
+	return schema_prop
+
+
+# Retrieves an Array of mods that have configuration files.
+#
+# Returns:
+# An Array containing the mod data of mods that have configuration files.
+static func get_mods_with_config() -> Array:
+	# Create an empty array to store mods with configuration files
+	var mods_with_config := []
+
+	# Iterate over each mod in ModLoaderStore.mod_data
+	for mod_id in ModLoaderStore.mod_data:
+		# Retrieve the mod data for the current mod ID
+		# *The ModData type cannot be used because ModData is not fully loaded when this code is executed.*
+		var mod_data = ModLoaderStore.mod_data[mod_id]
+
+		# Check if the mod has any configuration files
+		if not mod_data.configs.empty():
+			mods_with_config.push_back(mod_data)
+
+	# Return the array of mods with configuration files
+	return mods_with_config
+
+
+# Retrieves the configurations dictionary for a given mod ID.
+#
+# Parameters:
+# - mod_id: The ID of the mod for which to retrieve the configurations.
+#
+# Returns:
+# A dictionary containing the configurations for the specified mod.
+# If the mod ID is invalid or no configurations are found, an empty dictionary is returned.
+static func get_configs(mod_id: String) -> Dictionary:
+	# Check if the mod ID is invalid
+	if not ModLoaderStore.mod_data.has(mod_id):
+		ModLoaderLog.fatal("Mod ID \"%s\" not found" % [mod_id], LOG_NAME)
+		return {}
+
+	var config_dictionary: Dictionary = ModLoaderStore.mod_data[mod_id].configs
+
+	# Check if there is no config file for the mod
+	if config_dictionary.empty():
+		ModLoaderLog.debug("No config for mod id \"%s\"" % mod_id, LOG_NAME, true)
+		return {}
+
+	return config_dictionary
+
+
+# Retrieves the configuration for a specific mod and configuration name.
+# Returns the configuration as a ModConfig object or null if not found.
+#
+# Parameters:
+# - mod_id (String): The ID of the mod to retrieve the configuration for.
+# - config_name (String): The name of the configuration to retrieve.
+#
+# Returns:
+# The configuration as a ModConfig object or null if not found.
+static func get_config(mod_id: String, config_name: String) -> ModConfig:
+	var configs := get_configs(mod_id)
+
+	if not configs.has(config_name):
+		ModLoaderLog.error("No config with name \"%s\" found for mod_id \"%s\" " % [config_name, mod_id], LOG_NAME)
+		return null
+
+	return configs[config_name]
+
+
+# Retrieves the default configuration for a specified mod ID.
+#
+# Parameters:
+# - mod_id: The ID of the mod for which to retrieve the default configuration.
+#
+# Returns:
+# The ModConfig object representing the default configuration for the specified mod.
+# If the mod ID is invalid or no configuration is found, returns null.
+#
+static func get_default_config(mod_id: String) -> ModConfig:
+	return get_config(mod_id, DEFAULT_CONFIG_NAME)
+
+
+# Retrieves the currently active configuration for a specific mod
+#
+# Parameters:
+# mod_id (String): The ID of the mod to retrieve the configuration for.
+#
+# Returns:
+# The configuration as a ModConfig object or null if not found.
+static func get_current_config(mod_id: String) -> ModConfig:
+	var current_config_name := get_current_config_name(mod_id)
+	var current_config := get_config(mod_id, current_config_name)
+
+	return current_config
+
+
+# Retrieves the name of the current configuration for a specific mod
+# Returns an empty string if no configuration exists for the mod or the user profile has not been loaded
+#
+# Parameters:
+# mod_id (String): The ID of the mod to retrieve the current configuration name for.
+#
+# Returns:
+# The currently active configuration name for the given mod id or an empty string if not found.
+static func get_current_config_name(mod_id: String) -> String:
+	# Check if user profile has been loaded
+	if not ModLoaderStore.user_profiles.has(ModLoaderStore.current_user_profile):
+		# Warn and return an empty string if the user profile has not been loaded
+		ModLoaderLog.warning("Can't get current mod config for \"%s\", because no current user profile is present." % mod_id, LOG_NAME)
+		return ""
+
+	# Retrieve the current user profile from ModLoaderStore
+	# *Can't use ModLoaderUserProfile because it causes a cyclic dependency*
+	var current_user_profile = ModLoaderStore.user_profiles[ModLoaderStore.current_user_profile]
+
+	# Check if the mod exists in the user profile's mod list and if it has a current config
+	if not current_user_profile.mod_list.has(mod_id) or not current_user_profile.mod_list[mod_id].has("current_config"):
+		# Log an error and return an empty string if the mod has no config file
+		ModLoaderLog.error("Mod \"%s\" has no config file." % mod_id, LOG_NAME)
+		return ""
+
+	# Return the name of the current configuration for the mod
+	return current_user_profile.mod_list[mod_id].current_config
