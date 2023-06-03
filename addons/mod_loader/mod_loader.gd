@@ -212,7 +212,7 @@ func _load_mod_zips() -> int:
 		zipped_mods_count += _load_zips_in_folder(mods_folder_path)
 	else:
 		# If we're using Steam workshop, loop over the workshop item directories
-		zipped_mods_count += _load_steam_workshop_zips()
+		zipped_mods_count += _ModLoaderSteam.load_steam_workshop_zips()
 
 	return zipped_mods_count
 
@@ -281,49 +281,6 @@ func _load_zips_in_folder(folder_path: String) -> int:
 		temp_zipped_mods_count += 1
 
 	mod_dir.list_dir_end()
-
-	return temp_zipped_mods_count
-
-
-# Load mod ZIPs from Steam workshop folders. Uses 2 loops: One for each
-# workshop item's folder, with another inside that which loops over the ZIPs
-# inside each workshop item's folder
-func _load_steam_workshop_zips() -> int:
-	var temp_zipped_mods_count := 0
-	var workshop_folder_path := _ModLoaderSteam.get_path_to_workshop()
-
-	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
-
-	var workshop_dir := Directory.new()
-	var workshop_dir_open_error := workshop_dir.open(workshop_folder_path)
-	if not workshop_dir_open_error == OK:
-		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_open_error], LOG_NAME)
-		return -1
-	var workshop_dir_listdir_error := workshop_dir.list_dir_begin()
-	if not workshop_dir_listdir_error == OK:
-		ModLoaderLog.error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
-		return -1
-
-	# Loop 1: Workshop folders
-	while true:
-		# Get the next workshop item folder
-		var item_dir := workshop_dir.get_next()
-		var item_path := workshop_dir.get_current_dir() + "/" + item_dir
-
-		ModLoaderLog.info("Checking workshop item path: \"%s\"" % item_path, LOG_NAME)
-
-		# Stop loading mods when there's no more folders
-		if item_dir == '':
-			break
-
-		# Only check directories
-		if not workshop_dir.current_is_dir():
-			continue
-
-		# Loop 2: ZIPs inside the workshop folders
-		temp_zipped_mods_count += _load_zips_in_folder(ProjectSettings.globalize_path(item_path))
-
-	workshop_dir.list_dir_end()
 
 	return temp_zipped_mods_count
 
