@@ -4,7 +4,7 @@ extends Reference
 
 # This Class provides methods for caching data.
 
-const CACHE_FILE_PATH = "user://ModLoaderCache.json"
+const CACHE_FILE_PATH = "user://mod_loader_cache.json"
 const LOG_NAME = "ModLoader:Cache"
 
 
