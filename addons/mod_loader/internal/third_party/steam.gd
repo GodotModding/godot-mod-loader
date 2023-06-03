@@ -95,7 +95,7 @@ func load_steam_workshop_zips() -> int:
 			continue
 
 		# Loop 2: ZIPs inside the workshop folders
-		temp_zipped_mods_count += _load_zips_in_folder(ProjectSettings.globalize_path(item_path))
+		temp_zipped_mods_count += _ModLoaderFile.load_zips_in_folder(ProjectSettings.globalize_path(item_path))
 
 	workshop_dir.list_dir_end()
 

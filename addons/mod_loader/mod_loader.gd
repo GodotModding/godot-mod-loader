@@ -83,7 +83,7 @@ func _exit_tree() -> void:
 func _load_mods() -> void:
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
-	var unzipped_mods := _load_mod_zips()
+	var unzipped_mods := _ModLoaderFile.load_mod_zips()
 	if unzipped_mods > 0:
 		ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % unzipped_mods, LOG_NAME)
 	else:
@@ -198,91 +198,6 @@ func _check_autoload_positions() -> void:
 
 	var _pos_ml_store := _ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
 	var _pos_ml_core := _ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
-
-
-# Loop over "res://mods" and add any mod zips to the unpacked virtual directory
-# (UNPACKED_DIR)
-func _load_mod_zips() -> int:
-	var zipped_mods_count := 0
-
-	if not ModLoaderStore.ml_options.steam_workshop_enabled:
-		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
-
-		# If we're not using Steam workshop, just loop over the mod ZIPs.
-		zipped_mods_count += _load_zips_in_folder(mods_folder_path)
-	else:
-		# If we're using Steam workshop, loop over the workshop item directories
-		zipped_mods_count += _ModLoaderSteam.load_steam_workshop_zips()
-
-	return zipped_mods_count
-
-
-# Load the mod ZIP from the provided directory
-func _load_zips_in_folder(folder_path: String) -> int:
-	var temp_zipped_mods_count := 0
-
-	var mod_dir := Directory.new()
-	var mod_dir_open_error := mod_dir.open(folder_path)
-	if not mod_dir_open_error == OK:
-		ModLoaderLog.error("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
-		return -1
-	var mod_dir_listdir_error := mod_dir.list_dir_begin()
-	if not mod_dir_listdir_error == OK:
-		ModLoaderLog.error("Can't read mod folder %s (Error: %s)" % [folder_path, mod_dir_listdir_error], LOG_NAME)
-		return -1
-
-	# Get all zip folders inside the game mod folder
-	while true:
-		# Get the next file in the directory
-		var mod_zip_file_name := mod_dir.get_next()
-
-		# If there is no more file
-		if mod_zip_file_name == "":
-			# Stop loading mod zip files
-			break
-
-		# Ignore files that aren't ZIP or PCK
-		if not mod_zip_file_name.get_extension() == "zip" and not mod_zip_file_name.get_extension() == "pck":
-			continue
-
-		# If the current file is a directory
-		if mod_dir.current_is_dir():
-			# Go to the next file
-			continue
-
-		var mod_folder_path := folder_path.plus_file(mod_zip_file_name)
-		var mod_folder_global_path := ProjectSettings.globalize_path(mod_folder_path)
-		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_folder_global_path, false)
-
-		# Notifies developer of an issue with Godot, where using `load_resource_pack`
-		# in the editor WIPES the entire virtual res:// directory the first time you
-		# use it. This means that unpacked mods are no longer accessible, because they
-		# no longer exist in the file system. So this warning basically says
-		# "don't use ZIPs with unpacked mods!"
-		# https://github.com/godotengine/godot/issues/19815
-		# https://github.com/godotengine/godot/issues/16798
-		if OS.has_feature("editor") and not ModLoaderStore.has_shown_editor_zips_warning:
-			ModLoaderLog.warning(str(
-				"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
-				"If you have any unpacked mods in ", _ModLoaderPath.get_unpacked_mods_dir_path(), ", they will not be loaded. ",
-				"Please unpack your mod ZIPs instead, and add them to ", _ModLoaderPath.get_unpacked_mods_dir_path()), LOG_NAME)
-			ModLoaderStore.has_shown_editor_zips_warning = true
-
-		ModLoaderLog.debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
-
-		# If there was an error loading the mod zip file
-		if not is_mod_loaded_successfully:
-			# Log the error and continue with the next file
-			ModLoaderLog.error("%s failed to load." % mod_zip_file_name, LOG_NAME)
-			continue
-
-		# Mod successfully loaded!
-		ModLoaderLog.success("%s loaded." % mod_zip_file_name, LOG_NAME)
-		temp_zipped_mods_count += 1
-
-	mod_dir.list_dir_end()
-
-	return temp_zipped_mods_count
 
 
 # Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
