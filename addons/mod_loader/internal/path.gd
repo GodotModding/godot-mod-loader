@@ -153,7 +153,8 @@ static func get_path_to_configs() -> String:
 static func get_path_to_mod_configs_dir(mod_id: String) -> String:
 	var mod_config_dir := get_path_to_configs().plus_file(mod_id)
 
-	if not _ModLoaderFile.dir_exists(mod_config_dir):
+	# Can't use _ModLoaderFile because of cyclic dependency.
+	if not Directory.new().dir_exists(mod_config_dir):
 		return ""
 
 	return mod_config_dir
@@ -169,7 +170,8 @@ static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> 
 
 	var mod_config_file_dir := mod_config_dir.plus_file( config_name + ".json")
 
-	if not _ModLoaderFile.file_exists(mod_config_file_dir):
+	# Can't use _ModLoaderFile because of cyclic dependency.
+	if not Directory.new().file_exists(mod_config_file_dir):
 		return ""
 
 	return mod_config_file_dir
