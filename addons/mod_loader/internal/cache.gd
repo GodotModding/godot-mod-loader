@@ -18,12 +18,14 @@ static func init_cache(_ModLoaderStore) -> void:
 
 
 # Adds data to the cache
-static func add_data(key: String, data: Dictionary) -> void:
+static func add_data(key: String, data: Dictionary) -> Dictionary:
 	if ModLoaderStore.cache.has(key):
 		ModLoaderLog.error("key: \"%s\" already exists in \"ModLoaderStore.cache\"" % key, LOG_NAME)
-		return
+		return {}
 
 	ModLoaderStore.cache[key] = data
+
+	return ModLoaderStore.cache[key]
 
 
 # Get data from a specific key
@@ -44,7 +46,7 @@ static func has_key(key: String) -> bool:
 	return ModLoaderStore.cache.has(key)
 
 
-# Update or add data to the cache
+# Updates or adds data to the cache
 static func update_data(key: String, data: Dictionary) -> Dictionary:
 	# If the key exists
 	if has_key(key):
