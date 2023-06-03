@@ -17,6 +17,7 @@ static func init_cache(_ModLoaderStore) -> void:
 	_load_file(_ModLoaderStore)
 
 
+# Adds data to the cache
 static func add_data(key: String, data: Dictionary) -> void:
 	if ModLoaderStore.cache.has(key):
 		ModLoaderLog.error("key: \"%s\" already exists in \"ModLoaderStore.cache\"" % key, LOG_NAME)
@@ -25,6 +26,7 @@ static func add_data(key: String, data: Dictionary) -> void:
 	ModLoaderStore.cache[key] = data
 
 
+# Get data from a specific key
 static func get_data(key: String) -> Dictionary:
 	if not ModLoaderStore.cache.has(key):
 		ModLoaderLog.error("key: \"%s\" not found in \"ModLoaderStore.cache\"" % key, LOG_NAME)
@@ -33,6 +35,7 @@ static func get_data(key: String) -> Dictionary:
 	return ModLoaderStore.cache[key]
 
 
+# Get the entire cache dictionary
 static func get_cache() -> Dictionary:
 	return ModLoaderStore.cache
 
@@ -41,6 +44,7 @@ static func has_key(key: String) -> bool:
 	return ModLoaderStore.cache.has(key)
 
 
+# Update or add data to the cache
 static func update_data(key: String, data: Dictionary) -> Dictionary:
 	# If the key exists
 	if has_key(key):
@@ -54,6 +58,7 @@ static func update_data(key: String, data: Dictionary) -> Dictionary:
 	return ModLoaderStore.cache[key]
 
 
+# Remove data from the cache
 static func remove_data(key: String) -> void:
 	if not ModLoaderStore.cache.has(key):
 		ModLoaderLog.error("key: \"%s\" not found in \"ModLoaderStore.cache\"" % key, LOG_NAME)
@@ -62,15 +67,17 @@ static func remove_data(key: String) -> void:
 	ModLoaderStore.cache.erase(key)
 
 
+# Save the cache to the cache file
 static func save_to_file() -> void:
 	_ModLoaderFile.save_dictionary_to_json_file(ModLoaderStore.cache, CACHE_FILE_PATH)
 
 
+# Load the cache file data and store it in ModLoaderStore
 # ModLoaderStore is passed as parameter so the cache data can be loaded on ModLoaderStore._init()
 static func _load_file(_ModLoaderStore = ModLoaderStore) -> void:
 	_ModLoaderStore.cache = _ModLoaderFile.get_json_as_dict(CACHE_FILE_PATH)
 
 
-# Create empty cache file
+# Create an empty cache file
 static func _init_cache_file() -> void:
 	_ModLoaderFile.save_dictionary_to_json_file({}, CACHE_FILE_PATH)
