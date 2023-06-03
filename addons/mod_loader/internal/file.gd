@@ -44,7 +44,7 @@ static func _get_json_string_as_dict(string: String) -> Dictionary:
 
 
 # Load the mod ZIP from the provided directory
-func load_zips_in_folder(folder_path: String) -> int:
+static func load_zips_in_folder(folder_path: String) -> int:
 	var temp_zipped_mods_count := 0
 
 	var mod_dir := Directory.new()
