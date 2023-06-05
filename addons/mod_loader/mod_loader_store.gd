@@ -82,7 +82,7 @@ var logged_messages := {
 }
 
 # Active user profile
-var current_user_profile := ""
+var current_user_profile: ModUserProfile
 # List of user profiles loaded from user://mods.json
 var user_profiles :=  {}
 

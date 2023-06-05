@@ -7,28 +7,22 @@ extends Object
 const LOG_NAME := "ModLoader:UserProfile"
 const FILE_PATH_USER_PROFILES = "user://mod_user_profiles.json"
 
-class Profile:
-	extends Reference
-
-	var name := ""
-	var mod_list := {}
-
 
 # API profile functions
 # =============================================================================
 
 # Enables a mod - it will be loaded on the next game start
-static func enable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
+static func enable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile.name) -> bool:
 	return _set_mod_state(mod_id, profile_name, true)
 
 
 # Disables a mod - it will not be loaded on the next game start
-static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
+static func disable_mod(mod_id: String, profile_name := ModLoaderStore.current_user_profile.name) -> bool:
 	return _set_mod_state(mod_id, profile_name, false)
 
 
 # Sets the current config for a mod in a user profiles mod_list.
-static func set_mod_current_config(mod_id: String, config_name: String, profile_name := ModLoaderStore.current_user_profile) -> bool:
+static func set_mod_current_config(mod_id: String, config_name: String, profile_name := ModLoaderStore.current_user_profile.name) -> bool:
 	# Verify whether the mod_id is present in the profile's mod_list.
 	if not _is_mod_id_in_mod_list(mod_id, profile_name):
 		return false
@@ -65,7 +59,7 @@ static func create_profile(profile_name: String) -> bool:
 		return false
 
 	# Set it as the current profile
-	ModLoaderStore.current_user_profile = profile_name
+	ModLoaderStore.current_user_profile = new_profile
 
 	# Store the new profile in the ModLoaderStore
 	ModLoaderStore.user_profiles[profile_name] = new_profile
@@ -79,7 +73,7 @@ static func create_profile(profile_name: String) -> bool:
 	return is_save_success
 
 
-# Sets the current user profile to the specified profile_name.
+# Sets the current user profile to the profile with the specified profile_name.
 static func set_profile(profile_name: String) -> bool:
 	# Check if there is a user profile with the specified name
 	if not ModLoaderStore.user_profiles.has(profile_name):
@@ -87,7 +81,7 @@ static func set_profile(profile_name: String) -> bool:
 		return false
 
 	# Update the current_user_profile in the ModLoaderStore
-	ModLoaderStore.current_user_profile = profile_name
+	ModLoaderStore.current_user_profile = get_profile(profile_name)
 
 	# Save changes in the json file
 	var is_save_success := _save()
@@ -100,8 +94,8 @@ static func set_profile(profile_name: String) -> bool:
 
 # Deletes a user profile with the given profile_name.
 static func delete_profile(profile_name: String) -> bool:
-	# If the current_profile is about to get deleted change it to default
-	if ModLoaderStore.current_user_profile == profile_name:
+	# If the current_profile is about to get deleted log an error
+	if ModLoaderStore.current_user_profile.name == profile_name:
 		ModLoaderLog.error(str(
 			"You cannot delete the currently selected user profile \"%s\" " +
 			"because it is currently in use. Please switch to a different profile before deleting this one.") % profile_name,
@@ -129,12 +123,12 @@ static func delete_profile(profile_name: String) -> bool:
 
 
 # Returns the current user profile
-static func get_current() -> Profile:
-	return ModLoaderStore.user_profiles[ModLoaderStore.current_user_profile]
+static func get_current() -> ModUserProfile:
+	return ModLoaderStore.current_user_profile
 
 
 # Return the user profile with the given name
-static func get_profile(profile_name: String) -> Profile:
+static func get_profile(profile_name: String) -> ModUserProfile:
 	if not ModLoaderStore.user_profiles.has(profile_name):
 		ModLoaderLog.error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
 		return null
@@ -161,10 +155,10 @@ static func get_all_as_array() -> Array:
 # If the user then enables the mod in the profile the entry in disabled_mods will be removed.
 static func _update_disabled_mods() -> void:
 	var user_profile_disabled_mods := []
-	var current_user_profile: Profile
+	var current_user_profile: ModUserProfile
 
 	# Check if a current user profile is set
-	if ModLoaderStore.current_user_profile == "":
+	if not ModLoaderStore.current_user_profile:
 		ModLoaderLog.info("There is no current user profile. The \"default\" profile will be created.", LOG_NAME)
 		return
 
@@ -192,7 +186,7 @@ static func _update_mod_lists() -> bool:
 
 	# Iterate over all user profiles
 	for profile_name in ModLoaderStore.user_profiles.keys():
-		var profile: Profile = ModLoaderStore.user_profiles[profile_name]
+		var profile: ModUserProfile = ModLoaderStore.user_profiles[profile_name]
 
 		# Merge the profiles mod_list with the previously created current_mod_list
 		profile.mod_list.merge(current_mod_list)
@@ -322,8 +316,8 @@ static func _is_mod_id_in_mod_list(mod_id: String, profile_name: String) -> bool
 
 # Creates a new Profile with the given name and mod list.
 # Returns the newly created Profile object.
-static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> Profile:
-	var new_profile := Profile.new()
+static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> ModUserProfile:
+	var new_profile := ModUserProfile.new()
 
 	# If no name is provided, log an error and return null
 	if profile_name == "":
@@ -355,7 +349,10 @@ static func _load() -> bool:
 		return false
 
 	# Set the current user profile to the one specified in the data
-	ModLoaderStore.current_user_profile = data.current_profile
+	var current_user_profile: ModUserProfile = ModUserProfile.new()
+	current_user_profile.name = data.current_profile
+	current_user_profile.mod_list = data.profiles[data.current_profile].mod_list
+	ModLoaderStore.current_user_profile = current_user_profile
 
 	# Loop through each profile in the data and add them to ModLoaderStore
 	for profile_name in data.profiles.keys():
@@ -378,11 +375,11 @@ static func _save() -> bool:
 	}
 
 	# Set the current profile name in the save_dict
-	save_dict.current_profile = ModLoaderStore.current_user_profile
+	save_dict.current_profile = ModLoaderStore.current_user_profile.name
 
 	# Serialize the mod_list data for each user profile and add it to the save_dict
 	for profile_name in ModLoaderStore.user_profiles.keys():
-		var profile: Profile = ModLoaderStore.user_profiles[profile_name]
+		var profile: ModUserProfile = ModLoaderStore.user_profiles[profile_name]
 
 		# Init the profile dict
 		save_dict.profiles[profile.name] = {}
