@@ -55,7 +55,7 @@ static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
 			missing_fields.erase(key)
 
 	if missing_fields.size() > 0:
-		ModLoaderLog.fatal("Mod manifest is missing required fields: %s" % missing_fields, LOG_NAME)
+		ModLoaderLog.fatal("Dictionary is missing required fields: %s" % missing_fields, LOG_NAME)
 		return false
 
 	return true
