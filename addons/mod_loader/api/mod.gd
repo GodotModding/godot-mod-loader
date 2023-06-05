@@ -15,7 +15,7 @@ const LOG_NAME := "ModLoader:Mod"
 static func install_script_extension(child_script_path: String) -> void:
 
 	var mod_id: String = ModLoaderUtils.get_string_in_between(child_script_path, "res://mods-unpacked/", "/")
-	var mod_data: ModData = get_mod_data_from_mod_id(mod_id)
+	var mod_data: ModData = get_mod_data(mod_id)
 	if not ModLoaderStore.saved_extension_paths.has(mod_data.manifest.get_mod_id()):
 		ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()] = []
 	ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()].append(child_script_path)
@@ -102,7 +102,7 @@ static func add_translation_from_resource(resource_path: String) -> void:
 
 
 # Gets the ModData from the provided namespace
-static func get_mod_data_from_mod_id(mod_id: String) -> ModData:
+static func get_mod_data(mod_id: String) -> ModData:
 	if not ModLoaderStore.mod_data.has(mod_id):
 		ModLoaderLog.error("%s is an invalid mod_id" % mod_id, LOG_NAME)
 		return null
@@ -116,7 +116,7 @@ static func is_mod_loaded(mod_id: String) -> bool:
 		ModLoaderLog.warning(
 			"The ModLoader is not fully initialized. " +
 			"Calling \"is_mod_loaded()\" in \"_init()\" may result in an unexpected return value as mods are still loading.",
-			 LOG_NAME
+			LOG_NAME
 		)
 
 	# If the mod is not present in the mod_data dictionary or the mod is flagged as not loadable.
