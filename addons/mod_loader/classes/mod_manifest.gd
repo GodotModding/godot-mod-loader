@@ -52,7 +52,6 @@ const REQUIRED_MANIFEST_KEYS_EXTRA = [
 	"authors",
 	"compatible_mod_loader_version",
 	"compatible_game_version",
-	"incompatibilities",
 ]
 
 
