@@ -104,6 +104,10 @@ var ml_options := {
 	# Array of disabled mods (contains mod IDs as strings)
 	disabled_mods = [],
 
+	# If this flag is set to true, the ModLoaderStore and ModLoader Autoloads don't have to be the first Autoloads.
+	# The ModLoaderStore Autoload still needs to be placed before the ModLoader Autoload.
+	allow_modloader_autoloads_anywhere = false,
+
 	# If true, ModLoader will load mod ZIPs from the Steam workshop directory,
 	# instead of the default location (res://mods)
 	steam_workshop_enabled = false,
