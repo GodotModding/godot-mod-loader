@@ -353,10 +353,8 @@ func _setup_mods() -> int:
 		if (
 			# Only check directories
 			not dir.current_is_dir()
-			# Ignore self and hidden directories
+			# Ignore self, parent and hidden directories
 			or mod_dir_name.begins_with(".")
-			# Ignore parent directory link
-			or mod_dir_name == ".."
 		):
 			continue
 
