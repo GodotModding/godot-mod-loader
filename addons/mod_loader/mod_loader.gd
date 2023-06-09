@@ -242,11 +242,12 @@ func _setup_mods() -> int:
 			# Stop loading mod zip files
 			break
 
-		# Only check directories
-		if not dir.current_is_dir():
-			continue
-
-		if mod_dir_name == "." or mod_dir_name == "..":
+		if (
+			# Only check directories
+			not dir.current_is_dir()
+			# Ignore self, parent and hidden directories
+			or mod_dir_name.begins_with(".")
+		):
 			continue
 
 		if ModLoaderStore.ml_options.disabled_mods.has(mod_dir_name):
