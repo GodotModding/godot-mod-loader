@@ -93,7 +93,7 @@ var cache := {}
 # Godot's GUI (with the options.tres resource file), or via CLI args.
 # Usage: `ModLoaderStore.ml_options.KEY`
 # See: res://addons/mod_loader/options/options.tres
-# See: res://addons/mod_loader/classes/options_profile.gd
+# See: res://addons/mod_loader/resources/options_profile.gd
 var ml_options := {
 	enable_mods = true,
 	log_level = ModLoaderLog.VERBOSITY_LEVEL.DEBUG,
@@ -141,7 +141,7 @@ func _init():
 # Update ModLoader's options, via the custom options resource
 func _update_ml_options_from_options_resource() -> void:
 	# Path to the options resource
-	# See: res://addons/mod_loader/classes/options_current.gd
+	# See: res://addons/mod_loader/resources/options_current.gd
 	var ml_options_path := "res://addons/mod_loader/options/options.tres"
 
 	# Get user options for ModLoader
