@@ -39,15 +39,15 @@ var mod_data := {} setget , deprecated_direct_access_mod_data
 # =============================================================================
 
 func _init() -> void:
+	# Ensure the ModLoaderStore and ModLoader autoloads are in the correct position.
+	_check_autoload_positions()
+
 	# if mods are not enabled - don't load mods
 	if ModLoaderStore.REQUIRE_CMD_LINE and not _ModLoaderCLI.is_running_with_command_line_arg("--enable-mods"):
 		return
 
 	# Rotate the log files once on startup. Can't be checked in utils, since it's static
 	ModLoaderLog._rotate_log_file()
-
-	# Ensure ModLoaderStore and ModLoader are the 1st and 2nd autoloads
-	_check_autoload_positions()
 
 	# Log the autoloads order. Helpful when providing support to players
 	ModLoaderLog.debug_json_print("Autoload order", _ModLoaderGodot.get_autoload_array(), LOG_NAME)
@@ -192,16 +192,23 @@ func _disable_mods() -> void:
 # Check autoload positions:
 # Ensure 1st autoload is `ModLoaderStore`, and 2nd is `ModLoader`.
 func _check_autoload_positions() -> void:
-	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
-	# In that case the ModLoader will be the last entry in the autoload array
+	var ml_options: Object = preload("res://addons/mod_loader/options/options.tres").current_options
 	var override_cfg_path := _ModLoaderPath.get_override_path()
 	var is_override_cfg_setup :=  _ModLoaderFile.file_exists(override_cfg_path)
+	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
+	# In that case the ModLoader will be the last entry in the autoload array
 	if is_override_cfg_setup:
 		ModLoaderLog.info("override.cfg setup detected, ModLoader will be the last autoload loaded.", LOG_NAME)
 		return
 
-	var _pos_ml_store := _ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
-	var _pos_ml_core := _ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
+	# If there are Autoloads that need to be before the ModLoader
+	# "allow_modloader_autoloads_anywhere" in the ModLoader Options can be enabled.
+	# With that only the correct order of, ModLoaderStore first and ModLoader second, is checked.
+	if ml_options.allow_modloader_autoloads_anywhere:
+		_ModLoaderGodot.check_autoload_order("ModLoaderStore", "ModLoader", true)
+	else:
+		var _pos_ml_store := _ModLoaderGodot.check_autoload_position("ModLoaderStore", 0, true)
+		var _pos_ml_core := _ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
 
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory

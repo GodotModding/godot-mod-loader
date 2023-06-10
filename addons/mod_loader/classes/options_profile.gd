@@ -9,6 +9,7 @@ export (bool) var enable_mods = true
 export (Array, String) var locked_mods = []
 export (ModLoaderLog.VERBOSITY_LEVEL) var log_level := ModLoaderLog.VERBOSITY_LEVEL.DEBUG
 export (Array, String) var disabled_mods = []
+export (bool) var allow_modloader_autoloads_anywhere = false
 export (bool) var steam_workshop_enabled = false
 export (String, DIR) var override_path_to_mods = ""
 export (String, DIR) var override_path_to_configs = ""
