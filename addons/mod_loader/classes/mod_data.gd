@@ -105,7 +105,7 @@ func _load_config(config_file_path: String) -> void:
 
 # Update the mod_list of the current user profile
 func _set_current_config(new_current_config: ModConfig) -> void:
-	ModLoaderUserProfile.set_mod_current_config(dir_name, new_current_config.name)
+	ModLoaderUserProfile.set_mod_current_config(dir_name, new_current_config)
 	current_config = new_current_config
 	ModLoader.emit_signal("current_config_changed", new_current_config)
 
