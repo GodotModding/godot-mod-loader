@@ -149,13 +149,11 @@ static func get_path_to_configs() -> String:
 
 
 # Get the path to a mods config folder
-# Returns an empty string if there is no config dir for this mod_id
 static func get_path_to_mod_configs_dir(mod_id: String) -> String:
 	return get_path_to_configs().plus_file(mod_id)
 
 
 # Get the path to a mods config file
-# Returns an empty string if the config file does not exist.
 static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> String:
 	var mod_config_dir := get_path_to_mod_configs_dir(mod_id)
 
