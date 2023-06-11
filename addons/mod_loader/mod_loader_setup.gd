@@ -14,7 +14,7 @@ const new_global_classes := [
 		"base": "Resource",
 		"class": "ModData",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/classes/mod_data.gd"
+		"path": "res://addons/mod_loader/resources/mod_data.gd"
 	}, {
 		"base": "Node",
 		"class": "ModLoaderUtils",
@@ -24,22 +24,22 @@ const new_global_classes := [
 		"base": "Resource",
 		"class": "ModManifest",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/classes/mod_manifest.gd"
+		"path": "res://addons/mod_loader/resources/mod_manifest.gd"
 	}, {
 		"base": "Resource",
 		"class": "ScriptExtensionData",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/classes/script_extension_data.gd"
+		"path": "res://addons/mod_loader/resources/script_extension_data.gd"
 	}, {
 		"base": "Resource",
 		"class": "ModLoaderCurrentOptions",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/classes/options_current.gd"
+		"path": "res://addons/mod_loader/resources/options_current.gd"
 	}, {
 		"base": "Resource",
 		"class": "ModLoaderOptionsProfile",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/classes/options_profile.gd"
+		"path": "res://addons/mod_loader/resources/options_profile.gd"
 	}, {
 		"base": "Object",
 		"class": "ModLoaderConfig",
