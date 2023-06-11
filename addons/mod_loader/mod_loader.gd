@@ -364,8 +364,8 @@ func register_global_classes_from_array(new_global_classes: Array) -> void:
 
 
 func add_translation_from_resource(resource_path: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.add_translation_from_resource", "ModLoaderMod.add_translation_from_resource", "6.0.0")
-	ModLoaderMod.add_translation_from_resource(resource_path)
+	ModLoaderDeprecated.deprecated_changed("ModLoader.add_translation_from_resource", "ModLoaderMod.add_translation", "6.0.0")
+	ModLoaderMod.add_translation(resource_path)
 
 
 func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
