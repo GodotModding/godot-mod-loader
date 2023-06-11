@@ -2,7 +2,6 @@ on:
   pull_request:
     branches-ignore:    
        - 'main'
-
 jobs:
   check_dependencies:
     runs-on: ubuntu-latest
