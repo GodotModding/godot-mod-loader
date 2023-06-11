@@ -149,29 +149,12 @@ static func get_path_to_configs() -> String:
 
 
 # Get the path to a mods config folder
-# Returns an empty string if there is no config dir for this mod_id
 static func get_path_to_mod_configs_dir(mod_id: String) -> String:
-	var mod_config_dir := get_path_to_configs().plus_file(mod_id)
-
-	# Can't use _ModLoaderFile because of cyclic dependency.
-	if not Directory.new().dir_exists(mod_config_dir):
-		return ""
-
-	return mod_config_dir
+	return get_path_to_configs().plus_file(mod_id)
 
 
 # Get the path to a mods config file
-# Returns an empty string if the config file does not exist.
 static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> String:
 	var mod_config_dir := get_path_to_mod_configs_dir(mod_id)
 
-	if mod_config_dir.empty():
-		return ""
-
-	var mod_config_file_dir := mod_config_dir.plus_file( config_name + ".json")
-
-	# Can't use _ModLoaderFile because of cyclic dependency.
-	if not Directory.new().file_exists(mod_config_file_dir):
-		return ""
-
-	return mod_config_file_dir
+	return mod_config_dir.plus_file( config_name + ".json")

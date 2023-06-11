@@ -195,10 +195,11 @@ func to_json() -> String:
 
 # Loads the default configuration for a mod.
 func load_mod_config_defaults() -> ModConfig:
+	var default_config_save_path := _ModLoaderPath.get_path_to_mod_config_file(get_mod_id(), ModLoaderConfig.DEFAULT_CONFIG_NAME)
 	var config := ModConfig.new(
 		get_mod_id(),
 		{},
-		_ModLoaderPath.get_path_to_mod_config_file(get_mod_id(), ModLoaderConfig.DEFAULT_CONFIG_NAME),
+		default_config_save_path,
 		config_schema
 	)
 
