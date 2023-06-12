@@ -110,6 +110,11 @@ static func get_mod_data(mod_id: String) -> ModData:
 	return ModLoaderStore.mod_data[mod_id]
 
 
+# Gets the ModData of all loaded Mods as Dictionary.
+static func get_mod_data_all() -> Dictionary:
+	return ModLoaderStore.mod_data
+
+
 # Returns true if the mod with the given mod_id was successfully loaded.
 static func is_mod_loaded(mod_id: String) -> bool:
 	if ModLoaderStore.is_initializing:
