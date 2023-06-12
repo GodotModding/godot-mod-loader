@@ -1,3 +1,0 @@
-	[submodule "addons/JSONConfigFile"]
-	path = addons/JSON_Schema_Validator
-	url = https://github.com/GodotModding/JSON-Shema-validator.git
