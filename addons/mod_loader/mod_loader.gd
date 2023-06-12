@@ -389,5 +389,5 @@ func deprecated_direct_access_UNPACKED_DIR() -> String:
 
 
 func deprecated_direct_access_mod_data() -> Dictionary:
-	ModLoaderDeprecated.deprecated_message("The var \"mod_data\" was removed, use \"ModLoaderMod.get_mod_data()\" instead", "6.0.0")
+	ModLoaderDeprecated.deprecated_message("The var \"mod_data\" was removed, use \"ModLoaderMod.get_mod_data_all()\" instead", "6.0.0")
 	return ModLoaderStore.mod_data
