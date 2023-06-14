@@ -1,8 +1,7 @@
+# This Class provides functionality for working with per-mod Configurations.
 class_name ModLoaderConfig
 extends Object
 
-
-# This Class provides functionality for working with per-mod Configurations.
 
 const LOG_NAME := "ModLoader:Config"
 const DEFAULT_CONFIG_NAME  := "default"
