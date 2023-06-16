@@ -162,7 +162,7 @@ static func get_config_schema(mod_id: String) -> Dictionary:
 # Parameters:
 # - config (ModConfig): The ModConfig object from which to retrieve the schema.
 # - prop (String): The property key for which to retrieve the schema.
-#									 e.g. "parentProp.childProp.nthChildProp" || "propKey"
+#									 e.g. `parentProp.childProp.nthChildProp` || `propKey`
 #
 # Returns:
 # - Dictionary: The schema dictionary for the specified property.
