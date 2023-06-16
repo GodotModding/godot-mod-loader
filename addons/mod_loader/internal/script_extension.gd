@@ -49,28 +49,33 @@ static func handle_script_extensions() -> void:
 
 # Inner class so the sort function can be called by handle_script_extensions()
 class InheritanceSorting:
-	# Go up extension_a's inheritance tree to find if any parent shares the same vanilla path as extension_b
-	static func _check_inheritances(extension_a: ScriptExtensionData, extension_b: ScriptExtensionData)->bool:
-		var a_child_script: Script
-
-		if ModLoaderStore.loaded_vanilla_parents_cache.keys().has(extension_a.parent_script_path):
-			a_child_script = ResourceLoader.load(extension_a.parent_script_path)
-		else:
-			a_child_script = ResourceLoader.load(extension_a.parent_script_path)
-			ModLoaderStore.loaded_vanilla_parents_cache[extension_a.parent_script_path] = a_child_script
-
-		var a_parent_script: Script = a_child_script.get_base_script()
-
-		if a_parent_script == null:
+	
+	static func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
+		var a_stack = []
+		var parent_script = load(extension_a.extension_path)
+		while parent_script:
+			a_stack.push_back(parent_script.resource_path)
+			parent_script = parent_script.get_base_script()
+		
+		var b_stack = []
+		parent_script = load(extension_b.extension_path)
+		while parent_script:
+			b_stack.push_back(parent_script.resource_path)
+			parent_script = parent_script.get_base_script()
+		
+		var last_index
+		for index in a_stack.size():
+			if index >= b_stack.size():
+				return false
+			if a_stack[index] != b_stack[index]:
+				return a_stack[index] < b_stack[index]
+			last_index = index
+			
+		if last_index < b_stack.size():
+			# 'a' has a shorter stack
 			return true
-
-		var a_parent_script_path = a_parent_script.resource_path
-		if a_parent_script_path == extension_b.parent_script_path:
-			return false
-
-		else:
-			return _check_inheritances(ScriptExtensionData.new(extension_a.extension_path, a_parent_script_path, extension_a.mod_id), extension_b)
-
+			
+		return extension_a.extension_path < extension_b.extension_path
 
 static func apply_extension(extension_path: String) -> Script:
 	# Check path to file exists
