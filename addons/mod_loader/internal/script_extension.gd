@@ -25,9 +25,6 @@ static func handle_script_extensions() -> void:
 		var parent_script: Script = child_script.get_base_script()
 		var parent_script_path: String = parent_script.resource_path
 
-		if not ModLoaderStore.loaded_vanilla_parents_cache.keys().has(parent_script_path):
-			ModLoaderStore.loaded_vanilla_parents_cache[parent_script_path] = parent_script
-
 		script_extension_data_array.push_back(
 			ScriptExtensionData.new(extension_path, parent_script_path, mod_id)
 		)
@@ -37,9 +34,6 @@ static func handle_script_extensions() -> void:
 
 	# Inheritance is more important so this called last
 	script_extension_data_array.sort_custom(InheritanceSorting, "_check_inheritances")
-
-	# This saved some bugs in the past.
-	ModLoaderStore.loaded_vanilla_parents_cache.clear()
 
 	# Load and install all extensions
 	for extension in script_extension_data_array:
@@ -51,19 +45,19 @@ static func handle_script_extensions() -> void:
 class InheritanceSorting:
 	
 	static func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
-		var a_stack = []
-		var parent_script = load(extension_a.extension_path)
+		var a_stack := []
+		var parent_script: Script = load(extension_a.extension_path)
 		while parent_script:
 			a_stack.push_front(parent_script.resource_path)
 			parent_script = parent_script.get_base_script()
 		
-		var b_stack = []
+		var b_stack := []
 		parent_script = load(extension_b.extension_path)
 		while parent_script:
 			b_stack.push_front(parent_script.resource_path)
 			parent_script = parent_script.get_base_script()
 		
-		var last_index
+		var last_index: int
 		for index in a_stack.size():
 			if index >= b_stack.size():
 				return false
