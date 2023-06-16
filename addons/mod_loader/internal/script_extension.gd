@@ -54,13 +54,13 @@ class InheritanceSorting:
 		var a_stack = []
 		var parent_script = load(extension_a.extension_path)
 		while parent_script:
-			a_stack.push_back(parent_script.resource_path)
+			a_stack.push_front(parent_script.resource_path)
 			parent_script = parent_script.get_base_script()
 		
 		var b_stack = []
 		parent_script = load(extension_b.extension_path)
 		while parent_script:
-			b_stack.push_back(parent_script.resource_path)
+			b_stack.push_front(parent_script.resource_path)
 			parent_script = parent_script.get_base_script()
 		
 		var last_index
