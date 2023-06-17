@@ -249,13 +249,15 @@ static func _get_verbosity() -> int:
 
 
 static func _store_log(log_entry: ModLoaderLogEntry) -> void:
+	var existing_entry: ModLoaderLogEntry
+
 	# Store in all
 	# If it's a new entry
 	if not ModLoaderStore.logged_messages.all.has(log_entry.get_md5()):
 		ModLoaderStore.logged_messages.all[log_entry.get_md5()] = log_entry
 	# If it's a existing entry
 	else:
-		var existing_entry: ModLoaderLogEntry = ModLoaderStore.logged_messages.all[log_entry.get_md5()]
+		existing_entry = ModLoaderStore.logged_messages.all[log_entry.get_md5()]
 		existing_entry.time = log_entry.time
 		existing_entry.stack.push_back(log_entry)
 
@@ -264,10 +266,10 @@ static func _store_log(log_entry: ModLoaderLogEntry) -> void:
 	if not ModLoaderStore.logged_messages.by_mod.has(log_entry.mod_name):
 		ModLoaderStore.logged_messages.by_mod[log_entry.mod_name] = {}
 
-	ModLoaderStore.logged_messages.by_mod[log_entry.mod_name][log_entry.get_md5()] = log_entry
+	ModLoaderStore.logged_messages.by_mod[log_entry.mod_name][log_entry.get_md5()] = log_entry if not existing_entry else existing_entry
 
 	# Store in by_type
-	ModLoaderStore.logged_messages.by_type[log_entry.type.to_lower()][log_entry.get_md5()] = log_entry
+	ModLoaderStore.logged_messages.by_type[log_entry.type.to_lower()][log_entry.get_md5()] = log_entry if not existing_entry else existing_entry
 
 
 static func _is_logged_before(entry: ModLoaderLogEntry) -> bool:
