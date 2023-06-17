@@ -1,10 +1,10 @@
+# This Class provides methods for logging, retrieving logged data, and internal methods for working with log files.
 class_name ModLoaderLog
 extends Node
 
-
-# This Class provides methods for logging, retrieving logged data, and internal methods for working with log files.
-
+# Path to the latest log file.
 const MOD_LOG_PATH := "user://logs/modloader.log"
+
 const LOG_NAME := "ModLoader:Log"
 
 enum VERBOSITY_LEVEL {
@@ -14,17 +14,41 @@ enum VERBOSITY_LEVEL {
 	DEBUG,
 }
 
+# This Sub-Class represents a log entry in ModLoader.
 class ModLoaderLogEntry:
 	extends Resource
 
+	# Name of the mod or ModLoader class this entry refers to.
 	var mod_name: String
+
+	# The message of the log entry.
 	var message: String
+
+	# The log type, which indicates the verbosity level of this entry.
 	var type: String
+
+	# The readable format of the time when this log entry was created.
+	# Used for printing in the log file and output.
 	var time: String
+
+	# The timestamp when this log entry was created.
+	# Used for comparing and sorting log entries by time.
 	var time_stamp: int
+
+	# An array of ModLoaderLogEntry objects.
+	# If the message has been logged before, it is added to the stack.
 	var stack := []
 
 
+	# Initialize a ModLoaderLogEntry object with provided values.
+	#
+	# Parameters:
+	# - _mod_name (String): Name of the mod or ModLoader class this entry refers to.
+	# - _message (String): The message of the log entry.
+	# - _type (String): The log type, which indicates the verbosity level of this entry.
+	# - _time (String): The readable format of the time when this log entry was created.
+	#
+	# Returns: void
 	func _init(_mod_name: String, _message: String, _type: String, _time: String) -> void:
 		mod_name = _mod_name
 		message = _message
@@ -33,18 +57,30 @@ class ModLoaderLogEntry:
 		time_stamp = Time.get_ticks_msec()
 
 
+	# Get the log entry as a formatted string.
+	#
+	# Returns: String
 	func get_entry() -> String:
 		return str(time, get_prefix(), message)
 
 
+	# Get the prefix string for the log entry, including the log type and mod name.
+	#
+	# Returns: String
 	func get_prefix() -> String:
 		return "%s %s: " % [type.to_upper(), mod_name]
 
 
+	# Generate an MD5 hash of the log entry (prefix + message).
+	#
+	# Returns: String
 	func get_md5() -> String:
 		return str(get_prefix(), message).md5_text()
 
 
+	# Get all log entries, including the current entry and entries in the stack.
+	#
+	# Returns: Array
 	func get_all_entries() -> Array:
 		var entries := [self]
 		entries.append_array(stack)
@@ -55,45 +91,102 @@ class ModLoaderLogEntry:
 # API log functions - logging
 # =============================================================================
 
-# Logs the error in red and a stack trace. Prefixed FATAL-ERROR
-# Stops the execution in editor
-# Always logged
+
+# Logs the error in red and a stack trace. Prefixed FATAL-ERROR.
+#
+# *Note: Stops the execution in editor*
+#
+# Parameters:
+# - message (String): The message to be logged as an error.
+# - mod_name (String): The name of the mod or ModLoader class associated with this log entry.
+# - only_once (bool): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.
+#
+# Returns: void
 static func fatal(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "fatal-error", only_once)
 
 
-# Logs the message and pushed an error. Prefixed ERROR
-# Always logged
+# Logs the message and pushes an error. Prefixed ERROR.
+#
+# *Note: Always logged*
+#
+# Parameters:
+# - message (String): The message to be logged as an error.
+# - mod_name (String): The name of the mod or ModLoader class associated with this log entry.
+# - only_once (bool): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.
+#
+# Returns: void
 static func error(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "error", only_once)
 
 
-# Logs the message and pushes a warning. Prefixed WARNING
-# Logged with verbosity level at or above warning (-v)
+# Logs the message and pushes a warning. Prefixed WARNING.
+#
+# *Note: Logged with verbosity level at or above warning (-v).*
+#
+# Parameters:
+# - message (String): The message to be logged as a warning.
+# - mod_name (String): The name of the mod or ModLoader class associated with this log entry.
+# - only_once (bool): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.
+#
+# Returns: void
 static func warning(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "warning", only_once)
 
 
-# Logs the message. Prefixed INFO
-# Logged with verbosity level at or above info (-vv)
+# Logs the message. Prefixed INFO.
+#
+# *Note: Logged with verbosity level at or above info (-vv).*
+#
+# Parameters:
+# - message (String): The message to be logged as an information.
+# - mod_name (String): The name of the mod or ModLoader class associated with this log entry.
+# - only_once (bool): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.
+#
+# Returns: void
 static func info(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "info", only_once)
 
 
-# Logs the message. Prefixed SUCCESS
-# Logged with verbosity level at or above info (-vv)
+# Logs the message. Prefixed SUCCESS.
+#
+# *Note: Logged with verbosity level at or above info (-vv).*
+#
+# Parameters:
+# - message (String): The message to be logged as a success.
+# - mod_name (String): The name of the mod or ModLoader class associated with this log entry.
+# - only_once (bool): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.
+#
+# Returns: void
 static func success(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "success", only_once)
 
 
-# Logs the message. Prefixed DEBUG
-# Logged with verbosity level at or above debug (-vvv)
+# Logs the message. Prefixed DEBUG.
+#
+# *Note: Logged with verbosity level at or above debug (-vvv).*
+#
+# Parameters:
+# - message (String): The message to be logged as a debug.
+# - mod_name (String): The name of the mod or ModLoader class associated with this log entry.
+# - only_once (bool): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.
+#
+# Returns: void
 static func debug(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "debug", only_once)
 
 
-# Logs the message formatted with [method JSON.print]. Prefixed DEBUG
-# Logged with verbosity level at or above debug (-vvv)
+# Logs the message formatted with [method JSON.print]. Prefixed DEBUG.
+#
+# *Note: Logged with verbosity level at or above debug (-vvv).*
+#
+# Parameters:
+# - message (String): The message to be logged as a debug.
+# - json_printable (Variant): The variable to be formatted and printed using [method JSON.print].
+# - mod_name (String): The name of the mod or ModLoader class associated with this log entry.
+# - only_once (bool): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.
+#
+# Returns: void
 static func debug_json_print(message: String, json_printable, mod_name: String, only_once := false) -> void:
 	message = "%s\n%s" % [message, JSON.print(json_printable, "  ")]
 	_log(message, mod_name, "debug", only_once)
@@ -102,39 +195,74 @@ static func debug_json_print(message: String, json_printable, mod_name: String, 
 # API log functions - stored logs
 # =============================================================================
 
-# Returns an array of log entries as resource
+
+# Returns an array of log entries as a resource.
+#
+# Returns:
+# - Array: An array of log entries represented as resource.
 static func get_all_as_resource() -> Array:
 	return get_all()
 
 
-# Returns an array of log entries as string
+# Returns an array of log entries as a string.
+#
+# Returns:
+# - Array: An array of log entries represented as strings.
 static func get_all_as_string() -> Array:
 	var log_entries := get_all()
 	return get_all_entries_as_string(log_entries)
 
 
-# Returns an array of log entries as resource for a specific mod_name
+# Returns an array of log entries as a resource for a specific mod_name.
+#
+# Parameters:
+# - mod_name (String): The name of the mod or ModLoader class associated with the log entries.
+#
+# Returns:
+# - Array: An array of log entries represented as resource for the specified mod_name.
 static func get_by_mod_as_resource(mod_name: String) -> Array:
 	return get_by_mod(mod_name)
 
 
-# Returns an array of log entries as string for a specific mod_name
+# Returns an array of log entries as a string for a specific mod_name.
+#
+# Parameters:
+# - mod_name (String): The name of the mod or ModLoader class associated with the log entries.
+#
+# Returns:
+# - Array: An array of log entries represented as strings for the specified mod_name.
 static func get_by_mod_as_string(mod_name: String) -> Array:
 	var log_entries := get_by_mod(mod_name)
 	return get_all_entries_as_string(log_entries)
 
 
-# Returns an array of log entries as resource for a specific mod_name
+# Returns an array of log entries as a resource for a specific type.
+#
+# Parameters:
+# - type (String): The log type associated with the log entries.
+#
+# Returns:
+# - Array: An array of log entries represented as resource for the specified type.
 static func get_by_type_as_resource(type: String) -> Array:
 	return get_by_type(type)
 
 
-# Returns an array of log entries as string for a specific mod_name
+# Returns an array of log entries as a string for a specific type.
+#
+# Parameters:
+# - type (String): The log type associated with the log entries.
+#
+# Returns:
+# - Array: An array of log entries represented as strings for the specified type.
 static func get_by_type_as_string(type: String) -> Array:
 	var log_entries := get_by_type(type)
 	return get_all_entries_as_string(log_entries)
 
 
+# Returns an array of all log entries.
+#
+# Returns:
+# - Array: An array of all log entries.
 static func get_all() -> Array:
 	var log_entries := []
 
@@ -149,6 +277,13 @@ static func get_all() -> Array:
 	return log_entries
 
 
+# Returns an array of log entries for a specific mod_name.
+#
+# Parameters:
+# - mod_name (String): The name of the mod or ModLoader class associated with the log entries.
+#
+# Returns:
+# - Array: An array of log entries for the specified mod_name.
 static func get_by_mod(mod_name: String) -> Array:
 	var log_entries := []
 
@@ -163,6 +298,13 @@ static func get_by_mod(mod_name: String) -> Array:
 	return log_entries
 
 
+# Returns an array of log entries for a specific type.
+#
+# Parameters:
+# - type (String): The log type associated with the log entries.
+#
+# Returns:
+# - Array: An array of log entries for the specified type.
 static func get_by_type(type: String) -> Array:
 	var log_entries := []
 
@@ -173,6 +315,13 @@ static func get_by_type(type: String) -> Array:
 	return log_entries
 
 
+# Returns an array of log entries represented as strings.
+#
+# Parameters:
+# - log_entries (Array): An array of ModLoaderLogEntry Objects.
+#
+# Returns:
+# - Array: An array of log entries represented as strings.
 static func get_all_entries_as_string(log_entries: Array) -> Array:
 	var log_entry_strings := []
 

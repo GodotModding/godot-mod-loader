@@ -1,17 +1,27 @@
+# This Class provides helper functions to build mods.
 class_name ModLoaderMod
 extends Object
 
-# Helper functions to build mods
 
 const LOG_NAME := "ModLoader:Mod"
 
 
-# Add a script that extends a vanilla script. `child_script_path` should point
-# to your mod's extender script, eg "MOD/extensions/singletons/utils.gd".
-# Inside that extender script, it should include "extends {target}", where
-# {target} is the vanilla path, eg: `extends "res://singletons/utils.gd"`.
-# Note that your extender script doesn't have to follow the same directory path
-# as the vanilla file, but it's good practice to do so.
+# Install a script extension that extends a vanilla script.
+# The child_script_path should point to your mod's extender script.
+#
+# Example: `"MOD/extensions/singletons/utils.gd"`
+#
+# Inside the extender script, include `extends {target}` where `{target}` is the vanilla path.
+#
+# Example: `extends "res://singletons/utils.gd"`.
+#
+# *Note: Your extender script doesn't have to follow the same directory path as the vanilla file,
+# but it's good practice to do so.*
+#
+# Parameters:
+# - child_script_path (String): The path to the mod's extender script.
+#
+# Returns: void
 static func install_script_extension(child_script_path: String) -> void:
 
 	var mod_id: String = ModLoaderUtils.get_string_in_between(child_script_path, "res://mods-unpacked/", "/")
@@ -30,20 +40,30 @@ static func install_script_extension(child_script_path: String) -> void:
 		_ModLoaderScriptExtension.apply_extension(child_script_path)
 
 
+# Uninstall a script extension.
+#
+# Parameters:
+# - extension_script_path (String): The path to the extension script to be uninstalled.
+#
+# Returns: void
 static func uninstall_script_extension(extension_script_path: String) -> void:
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
 	_ModLoaderScriptExtension.remove_specific_extension_from_script(extension_script_path)
 
 
-# This function should be called only when actually necessary
+# Reload all mods.
+#
+# *Note: This function should be called only when actually necessary
 # as it can break the game and require a restart for mods
 # that do not fully use the systems put in place by the mod loader,
 # so anything that just uses add_node, move_node ecc...
 # To not have your mod break on reload please use provided functions
 # like ModLoader::save_scene, ModLoader::append_node_in_scene and
 # all the functions that will be added in the next versions
-# Used to reload already present mods and load new ones
+# Used to reload already present mods and load new ones*
+#
+# Returns: void
 func reload_mods() -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
@@ -51,13 +71,17 @@ func reload_mods() -> void:
 	ModLoader._reload_mods()
 
 
-# This function should be called only when actually necessary
+# Disable all mods.
+#
+# *Note: This function should be called only when actually necessary
 # as it can break the game and require a restart for mods
 # that do not fully use the systems put in place by the mod loader,
 # so anything that just uses add_node, move_node ecc...
 # To not have your mod break on disable please use provided functions
 # and implement a _disable function in your mod_main.gd that will
-# handle removing all the changes that were not done through the Mod Loader
+# handle removing all the changes that were not done through the Mod Loader*
+#
+# Returns: void
 func disable_mods() -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
@@ -65,13 +89,20 @@ func disable_mods() -> void:
 	ModLoader._disable_mods()
 
 
-# This function should be called only when actually necessary
+# Disable a mod.
+#
+# *Note: This function should be called only when actually necessary
 # as it can break the game and require a restart for mods
 # that do not fully use the systems put in place by the mod loader,
 # so anything that just uses add_node, move_node ecc...
 # To not have your mod break on disable please use provided functions
 # and implement a _disable function in your mod_main.gd that will
-# handle removing all the changes that were not done through the Mod Loader
+# handle removing all the changes that were not done through the Mod Loader*
+#
+# Parameters:
+# - mod_data (ModData): The ModData object representing the mod to be disabled.
+#
+# Returns: void
 func disable_mod(mod_data: ModData) -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
@@ -79,18 +110,31 @@ func disable_mod(mod_data: ModData) -> void:
 	ModLoader._disable_mod(mod_data)
 
 
-# Register an array of classes to the global scope, since Godot only does that in the editor.
-# Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
-# You can find these easily in the project.godot file under "_global_script_classes"
-# (but you should only include classes belonging to your mod)
+# Register an array of classes to the global scope since Godot only does that in the editor.
+#
+# Format: `{ "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }`
+#
+# *Note: You can find these easily in the project.godot file under `_global_script_classes`
+# (but you should only include classes belonging to your mod)*
+#
+# Parameters:
+# - new_global_classes (Array): An array of class definitions to be registered.
+#
+# Returns: void
 static func register_global_classes_from_array(new_global_classes: Array) -> void:
 	ModLoaderUtils.register_global_classes_from_array(new_global_classes)
 	var _savecustom_error: int = ProjectSettings.save_custom(_ModLoaderPath.get_override_path())
 
 
-# Add a translation file, eg "mytranslation.en.translation". The translation
-# file should have been created in Godot already: When you import a CSV, such
-# a file will be created for you.
+# Add a translation file.
+#
+# *Note: The translation file should have been created in Godot already,
+# such as when importing a CSV file. The translation file should be in the format `mytranslation.en.translation`.*
+#
+# Parameters:
+# - resource_path (String): The path to the translation resource file.
+#
+# Returns: void
 static func add_translation(resource_path: String) -> void:
 	if not _ModLoaderFile.file_exists(resource_path):
 		ModLoaderLog.fatal("Tried to load a translation resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
@@ -102,6 +146,12 @@ static func add_translation(resource_path: String) -> void:
 
 
 # Gets the ModData from the provided namespace
+#
+# Parameters:
+# - mod_id (String): The ID of the mod.
+#
+# Returns:
+# - ModData: The ModData associated with the provided mod_id, or null if the mod_id is invalid.
 static func get_mod_data(mod_id: String) -> ModData:
 	if not ModLoaderStore.mod_data.has(mod_id):
 		ModLoaderLog.error("%s is an invalid mod_id" % mod_id, LOG_NAME)
@@ -111,11 +161,20 @@ static func get_mod_data(mod_id: String) -> ModData:
 
 
 # Gets the ModData of all loaded Mods as Dictionary.
+#
+# Returns:
+# - Dictionary: A dictionary containing the ModData of all loaded mods.
 static func get_mod_data_all() -> Dictionary:
 	return ModLoaderStore.mod_data
 
 
 # Returns true if the mod with the given mod_id was successfully loaded.
+#
+# Parameters:
+# - mod_id (String): The ID of the mod.
+#
+# Returns:
+# - bool: true if the mod is loaded, false otherwise.
 static func is_mod_loaded(mod_id: String) -> bool:
 	if ModLoaderStore.is_initializing:
 		ModLoaderLog.warning(
@@ -131,6 +190,17 @@ static func is_mod_loaded(mod_id: String) -> bool:
 	return true
 
 
+# Appends a new node to a modified scene.
+#
+# Parameters:
+# - modified_scene (Node): The modified scene where the node will be appended.
+# - node_name (String): (Optional) The name of the new node. Default is an empty string.
+# - node_parent (Node): (Optional) The parent node where the new node will be added. Default is null (direct child of modified_scene).
+# - instance_path (String): (Optional) The path to a scene resource that will be instantiated as the new node.
+#   Default is an empty string resulting in a `Node` instance.
+# - is_visible (bool): (Optional) If true, the new node will be visible. Default is true.
+#
+# Returns: void
 static func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
 	var new_node: Node
 	if not instance_path == "":
@@ -150,6 +220,13 @@ static func append_node_in_scene(modified_scene: Node, node_name: String = "", n
 		new_node.set_owner(modified_scene)
 
 
+# Saves a modified scene to a file.
+#
+# Parameters:
+# - modified_scene (Node): The modified scene instance to be saved.
+# - scene_path (String): The path to the scene file that will be replaced.
+#
+# Returns: void
 static func save_scene(modified_scene: Node, scene_path: String) -> void:
 	var packed_scene := PackedScene.new()
 	var _pack_error := packed_scene.pack(modified_scene)
@@ -159,5 +236,9 @@ static func save_scene(modified_scene: Node, scene_path: String) -> void:
 	ModLoaderStore.saved_objects.append(packed_scene)
 
 
+# Returns the path to the directory where unpacked mods are stored.
+#
+# Returns:
+# - String: The path to the unpacked mods directory.
 static func get_unpacked_dir() -> String:
 	return _ModLoaderPath.get_unpacked_mods_dir_path()
