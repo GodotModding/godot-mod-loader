@@ -40,76 +40,6 @@ static func install_script_extension(child_script_path: String) -> void:
 		_ModLoaderScriptExtension.apply_extension(child_script_path)
 
 
-# Uninstall a script extension.
-#
-# Parameters:
-# - extension_script_path (String): The path to the extension script to be uninstalled.
-#
-# Returns: void
-static func uninstall_script_extension(extension_script_path: String) -> void:
-	# Currently this is the only thing we do, but it is better to expose
-	# this function like this for further changes
-	_ModLoaderScriptExtension.remove_specific_extension_from_script(extension_script_path)
-
-
-# Reload all mods.
-#
-# *Note: This function should be called only when actually necessary
-# as it can break the game and require a restart for mods
-# that do not fully use the systems put in place by the mod loader,
-# so anything that just uses add_node, move_node ecc...
-# To not have your mod break on reload please use provided functions
-# like ModLoader::save_scene, ModLoader::append_node_in_scene and
-# all the functions that will be added in the next versions
-# Used to reload already present mods and load new ones*
-#
-# Returns: void
-func reload_mods() -> void:
-
-	# Currently this is the only thing we do, but it is better to expose
-	# this function like this for further changes
-	ModLoader._reload_mods()
-
-
-# Disable all mods.
-#
-# *Note: This function should be called only when actually necessary
-# as it can break the game and require a restart for mods
-# that do not fully use the systems put in place by the mod loader,
-# so anything that just uses add_node, move_node ecc...
-# To not have your mod break on disable please use provided functions
-# and implement a _disable function in your mod_main.gd that will
-# handle removing all the changes that were not done through the Mod Loader*
-#
-# Returns: void
-func disable_mods() -> void:
-
-	# Currently this is the only thing we do, but it is better to expose
-	# this function like this for further changes
-	ModLoader._disable_mods()
-
-
-# Disable a mod.
-#
-# *Note: This function should be called only when actually necessary
-# as it can break the game and require a restart for mods
-# that do not fully use the systems put in place by the mod loader,
-# so anything that just uses add_node, move_node ecc...
-# To not have your mod break on disable please use provided functions
-# and implement a _disable function in your mod_main.gd that will
-# handle removing all the changes that were not done through the Mod Loader*
-#
-# Parameters:
-# - mod_data (ModData): The ModData object representing the mod to be disabled.
-#
-# Returns: void
-func disable_mod(mod_data: ModData) -> void:
-
-	# Currently this is the only thing we do, but it is better to expose
-	# this function like this for further changes
-	ModLoader._disable_mod(mod_data)
-
-
 # Register an array of classes to the global scope since Godot only does that in the editor.
 #
 # Format: `{ "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }`
@@ -143,51 +73,6 @@ static func add_translation(resource_path: String) -> void:
 	var translation_object: Translation = load(resource_path)
 	TranslationServer.add_translation(translation_object)
 	ModLoaderLog.info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
-
-
-# Gets the ModData from the provided namespace
-#
-# Parameters:
-# - mod_id (String): The ID of the mod.
-#
-# Returns:
-# - ModData: The ModData associated with the provided mod_id, or null if the mod_id is invalid.
-static func get_mod_data(mod_id: String) -> ModData:
-	if not ModLoaderStore.mod_data.has(mod_id):
-		ModLoaderLog.error("%s is an invalid mod_id" % mod_id, LOG_NAME)
-		return null
-
-	return ModLoaderStore.mod_data[mod_id]
-
-
-# Gets the ModData of all loaded Mods as Dictionary.
-#
-# Returns:
-# - Dictionary: A dictionary containing the ModData of all loaded mods.
-static func get_mod_data_all() -> Dictionary:
-	return ModLoaderStore.mod_data
-
-
-# Returns true if the mod with the given mod_id was successfully loaded.
-#
-# Parameters:
-# - mod_id (String): The ID of the mod.
-#
-# Returns:
-# - bool: true if the mod is loaded, false otherwise.
-static func is_mod_loaded(mod_id: String) -> bool:
-	if ModLoaderStore.is_initializing:
-		ModLoaderLog.warning(
-			"The ModLoader is not fully initialized. " +
-			"Calling \"is_mod_loaded()\" in \"_init()\" may result in an unexpected return value as mods are still loading.",
-			LOG_NAME
-		)
-
-	# If the mod is not present in the mod_data dictionary or the mod is flagged as not loadable.
-	if not ModLoaderStore.mod_data.has(mod_id) or not ModLoaderStore.mod_data[mod_id].is_loadable:
-		return false
-
-	return true
 
 
 # Appends a new node to a modified scene.
@@ -236,9 +121,54 @@ static func save_scene(modified_scene: Node, scene_path: String) -> void:
 	ModLoaderStore.saved_objects.append(packed_scene)
 
 
+# Gets the ModData from the provided namespace
+#
+# Parameters:
+# - mod_id (String): The ID of the mod.
+#
+# Returns:
+# - ModData: The ModData associated with the provided mod_id, or null if the mod_id is invalid.
+static func get_mod_data(mod_id: String) -> ModData:
+	if not ModLoaderStore.mod_data.has(mod_id):
+		ModLoaderLog.error("%s is an invalid mod_id" % mod_id, LOG_NAME)
+		return null
+
+	return ModLoaderStore.mod_data[mod_id]
+
+
+# Gets the ModData of all loaded Mods as Dictionary.
+#
+# Returns:
+# - Dictionary: A dictionary containing the ModData of all loaded mods.
+static func get_mod_data_all() -> Dictionary:
+	return ModLoaderStore.mod_data
+
+
 # Returns the path to the directory where unpacked mods are stored.
 #
 # Returns:
 # - String: The path to the unpacked mods directory.
 static func get_unpacked_dir() -> String:
 	return _ModLoaderPath.get_unpacked_mods_dir_path()
+
+
+# Returns true if the mod with the given mod_id was successfully loaded.
+#
+# Parameters:
+# - mod_id (String): The ID of the mod.
+#
+# Returns:
+# - bool: true if the mod is loaded, false otherwise.
+static func is_mod_loaded(mod_id: String) -> bool:
+	if ModLoaderStore.is_initializing:
+		ModLoaderLog.warning(
+			"The ModLoader is not fully initialized. " +
+			"Calling \"is_mod_loaded()\" in \"_init()\" may result in an unexpected return value as mods are still loading.",
+			LOG_NAME
+		)
+
+	# If the mod is not present in the mod_data dictionary or the mod is flagged as not loadable.
+	if not ModLoaderStore.mod_data.has(mod_id) or not ModLoaderStore.mod_data[mod_id].is_loadable:
+		return false
+
+	return true

@@ -56,6 +56,11 @@ const new_global_classes := [
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/mod.gd"
 	}, {
+		"base": "Reference",
+		"class": "ModLoaderModManager",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/api/mod_manager.gd"
+	}, {
 		"base": "Object",
 		"class": "_ModLoaderGodot",
 		"language": "GDScript",
