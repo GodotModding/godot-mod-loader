@@ -1,5 +1,5 @@
-extends Resource
 class_name ModData
+extends Resource
 
 # Stores and validates all Data required to load a mod successfully
 # If some of the data is invalid, [member is_loadable] will be false
@@ -31,12 +31,15 @@ var dir_path := ""
 var is_loadable := true
 # True if overwrites.gd exists
 var is_overwrite := false
+# True if mod can't be disabled or enabled in a user profile
+var is_locked := false
 # Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
 # Contents of the manifest
 var manifest: ModManifest
-# Updated in _load_mod_configs
-var config := {}
+# Updated in load_configs
+var configs := {}
+var current_config: ModConfig setget _set_current_config
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PoolStringArray = []
@@ -48,55 +51,89 @@ func _init(_dir_path: String) -> void:
 
 # Load meta data from a mod's manifest.json file
 func load_manifest() -> void:
-	if not has_required_files():
+	if not _has_required_files():
 		return
 
-	ModLoaderUtils.log_info("Loading mod_manifest (manifest.json) for -> %s" % dir_name, LOG_NAME)
+	ModLoaderLog.info("Loading mod_manifest (manifest.json) for -> %s" % dir_name, LOG_NAME)
 
 	# Load meta data file
 	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
-	var manifest_dict := ModLoaderUtils.get_json_as_dict(manifest_path)
+	var manifest_dict := _ModLoaderFile.get_json_as_dict(manifest_path)
 
 	if USE_EXTENDED_DEBUGLOG:
-		ModLoaderUtils.log_debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
+		ModLoaderLog.debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
 	else:
-		ModLoaderUtils.log_debug(str("%s loaded manifest data -> " % dir_name, manifest_dict), LOG_NAME)
+		ModLoaderLog.debug(str("%s loaded manifest data -> " % dir_name, manifest_dict), LOG_NAME)
 
 	var mod_manifest := ModManifest.new(manifest_dict)
 
-	is_loadable = has_manifest(mod_manifest)
+	is_loadable = _has_manifest(mod_manifest)
 	if not is_loadable: return
-	is_loadable = is_mod_dir_name_same_as_id(mod_manifest)
+	is_loadable = _is_mod_dir_name_same_as_id(mod_manifest)
 	if not is_loadable: return
 	manifest = mod_manifest
 
 
+# Load each mod config json from the mods config directory.
+func load_configs() -> void:
+	# If the default values in the config schema are invalid don't load configs
+	if not manifest.load_mod_config_defaults():
+		return
+
+	var config_dir_path := _ModLoaderPath.get_path_to_mod_configs_dir(dir_name)
+	var config_file_paths := _ModLoaderPath.get_file_paths_in_dir(config_dir_path)
+	for config_file_path in config_file_paths:
+		_load_config(config_file_path)
+
+	# Set the current_config based on the user profile
+	current_config = ModLoaderConfig.get_current_config(dir_name)
+
+
+# Create a new ModConfig instance for each Config JSON and add it to the configs dictionary.
+func _load_config(config_file_path: String) -> void:
+	var config_data := _ModLoaderFile.get_json_as_dict(config_file_path)
+	var mod_config = ModConfig.new(
+		dir_name,
+		config_data,
+		config_file_path,
+		manifest.config_schema
+	)
+
+	# Add the config to the configs dictionary
+	configs[mod_config.name] = mod_config
+
+
+# Update the mod_list of the current user profile
+func _set_current_config(new_current_config: ModConfig) -> void:
+	ModLoaderUserProfile.set_mod_current_config(dir_name, new_current_config)
+	current_config = new_current_config
+	ModLoader.emit_signal("current_config_changed", new_current_config)
+
+
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]
-func is_mod_dir_name_same_as_id(mod_manifest: ModManifest) -> bool:
+func _is_mod_dir_name_same_as_id(mod_manifest: ModManifest) -> bool:
 	var manifest_id := mod_manifest.get_mod_id()
 	if not dir_name == manifest_id:
-		ModLoaderUtils.log_fatal('Mod directory name "%s" does not match the data in manifest.json. Expected "%s" (Format: {namespace}-{name})' % [ dir_name, manifest_id ], LOG_NAME)
+		ModLoaderLog.fatal('Mod directory name "%s" does not match the data in manifest.json. Expected "%s" (Format: {namespace}-{name})' % [ dir_name, manifest_id ], LOG_NAME)
 		return false
 	return true
 
 
 # Confirms that all files from [member required_mod_files] exist
-func has_required_files() -> bool:
-	var file_check := File.new()
-
+func _has_required_files() -> bool:
 	for required_file in required_mod_files:
 		var file_path := get_required_mod_file_path(required_mod_files[required_file])
 
-		if !file_check.file_exists(file_path):
-			ModLoaderUtils.log_fatal("ERROR - %s is missing a required file: %s" % [dir_name, file_path], LOG_NAME)
+		if !_ModLoaderFile.file_exists(file_path):
+			ModLoaderLog.fatal("ERROR - %s is missing a required file: %s" % [dir_name, file_path], LOG_NAME)
 			is_loadable = false
 	return is_loadable
 
 
 # Validates if manifest is set
-func has_manifest(mod_manifest: ModManifest) -> bool:
+func _has_manifest(mod_manifest: ModManifest) -> bool:
 	if mod_manifest == null:
-		ModLoaderUtils.log_fatal("Mod manifest could not be created correctly due to errors.", LOG_NAME)
+		ModLoaderLog.fatal("Mod manifest could not be created correctly due to errors.", LOG_NAME)
 		return false
 	return true
 
@@ -115,8 +152,3 @@ func get_optional_mod_file_path(optional_file: int) -> String:
 		optional_mod_files.OVERWRITES:
 			return dir_path.plus_file("overwrites.gd")
 	return ""
-
-#func _to_string() -> String:
-	# todo if we want it pretty printed
-
-
