@@ -12,9 +12,6 @@ A generalized Mod Loader for GDScript-based Godot games.
 The Mod Loader allows users to create mods for games and distribute them as zips.  
 Importantly, it provides methods to change existing scripts, scenes, and resources without modifying and distributing vanilla game files.
 
-## Godot Version
-The current version of the Mod Loader is developed for Godot 3.5. We have not yet ported it to Godot 4.0 due to lack of demand. If you require support for Godot 4.0, please let us know by opening an issue or joining our Discord.
-
 ## Getting Started
 
 You can find detailed documentation, for game and mod developers, on the [Wiki](https://github.com/GodotModding/godot-mod-loader/wiki/) page.
@@ -27,6 +24,9 @@ You can find detailed documentation, for game and mod developers, on the [Wiki](
    *Learn about the required files to create your first mod.*
 4. Use the [API Methods](https://github.com/GodotModding/godot-mod-loader/wiki/ModLoader-API)   
    *A list of all available API Methods.*
+
+## Godot Version
+The current version of the Mod Loader is developed for Godot 3.5. We have not yet ported it to Godot 4.0 due to lack of demand. If you require support for Godot 4.0, please let us know by opening an issue or joining our Discord.
 
 ## Development
 The latest work-in-progress build can be found on the [development branch](https://github.com/GodotModding/godot-mod-loader/tree/development).
