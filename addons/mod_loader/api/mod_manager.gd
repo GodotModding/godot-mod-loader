@@ -31,7 +31,7 @@ static func uninstall_script_extension(extension_script_path: String) -> void:
 # Used to reload already present mods and load new ones*
 #
 # Returns: void
-func reload_mods() -> void:
+static func reload_mods() -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
@@ -49,7 +49,7 @@ func reload_mods() -> void:
 # handle removing all the changes that were not done through the Mod Loader*
 #
 # Returns: void
-func disable_mods() -> void:
+static func disable_mods() -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
@@ -70,7 +70,7 @@ func disable_mods() -> void:
 # - mod_data (ModData): The ModData object representing the mod to be disabled.
 #
 # Returns: void
-func disable_mod(mod_data: ModData) -> void:
+static func disable_mod(mod_data: ModData) -> void:
 
 	# Currently this is the only thing we do, but it is better to expose
 	# this function like this for further changes
