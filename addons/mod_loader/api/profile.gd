@@ -80,11 +80,11 @@ static func create_profile(profile_name: String) -> bool:
 	if not new_profile:
 		return false
 
-	# Set it as the current profile
-	ModLoaderStore.current_user_profile = new_profile
-
 	# Store the new profile in the ModLoaderStore
 	ModLoaderStore.user_profiles[profile_name] = new_profile
+
+	# Set it as the current profile
+	ModLoaderStore.current_user_profile = ModLoaderStore.user_profiles[profile_name]
 
 	# Store the new profile in the json file
 	var is_save_success := _save()
@@ -108,7 +108,7 @@ static func set_profile(user_profile: ModUserProfile) -> bool:
 		return false
 
 	# Update the current_user_profile in the ModLoaderStore
-	ModLoaderStore.current_user_profile = user_profile
+	ModLoaderStore.current_user_profile = ModLoaderStore.user_profiles[user_profile.name]
 
 	# Save changes in the json file
 	var is_save_success := _save()
@@ -390,12 +390,6 @@ static func _load() -> bool:
 		ModLoaderLog.error("No profile file found at \"%s\"" % FILE_PATH_USER_PROFILES, LOG_NAME)
 		return false
 
-	# Set the current user profile to the one specified in the data
-	var current_user_profile: ModUserProfile = ModUserProfile.new()
-	current_user_profile.name = data.current_profile
-	current_user_profile.mod_list = data.profiles[data.current_profile].mod_list
-	ModLoaderStore.current_user_profile = current_user_profile
-
 	# Loop through each profile in the data and add them to ModLoaderStore
 	for profile_name in data.profiles.keys():
 		# Get the profile data from the JSON object
@@ -404,6 +398,9 @@ static func _load() -> bool:
 		# Create a new profile object and add it to ModLoaderStore.user_profiles
 		var new_profile := _create_new_profile(profile_name, profile_data.mod_list)
 		ModLoaderStore.user_profiles[profile_name] = new_profile
+
+	# Set the current user profile to the one specified in the data
+	ModLoaderStore.current_user_profile = ModLoaderStore.user_profiles[data.current_profile]
 
 	return true
 
