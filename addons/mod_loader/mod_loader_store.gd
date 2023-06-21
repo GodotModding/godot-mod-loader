@@ -80,10 +80,11 @@ var logged_messages := {
 
 # Active user profile
 var current_user_profile: ModUserProfile
-# List of user profiles loaded from user://mods.json
+
+# List of user profiles loaded from user://mod_user_profiles.json
 var user_profiles :=  {}
 
-# ModLoader cache is stored in user://ModLoaderCache.json
+# ModLoader cache is stored in user://mod_loader_cache.json
 var cache := {}
 
 # These variables handle various options, which can be changed either via
