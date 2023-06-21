@@ -44,7 +44,7 @@ static func handle_script_extensions() -> void:
 # Inner class so the sort function can be called by handle_script_extensions()
 class InheritanceSorting:
 
-	static func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
+	static func _check_inheritances(extension_a: ScriptExtensionData, extension_b: ScriptExtensionData) -> bool:
 		var a_stack := []
 		var parent_script: Script = load(extension_a.extension_path)
 		while parent_script:
