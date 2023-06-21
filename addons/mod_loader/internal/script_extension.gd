@@ -43,7 +43,7 @@ static func handle_script_extensions() -> void:
 
 # Inner class so the sort function can be called by handle_script_extensions()
 class InheritanceSorting:
-	
+
 	static func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
 		var a_stack := []
 		var parent_script: Script = load(extension_a.extension_path)
@@ -51,14 +51,14 @@ class InheritanceSorting:
 			a_stack.push_front(parent_script.resource_path)
 			parent_script = parent_script.get_base_script()
 		a_stack.pop_back()
-		
+
 		var b_stack := []
 		parent_script = load(extension_b.extension_path)
 		while parent_script:
 			b_stack.push_front(parent_script.resource_path)
 			parent_script = parent_script.get_base_script()
 		b_stack.pop_back()
-		
+
 		var last_index: int
 		for index in a_stack.size():
 			if index >= b_stack.size():
@@ -66,12 +66,13 @@ class InheritanceSorting:
 			if a_stack[index] != b_stack[index]:
 				return a_stack[index] < b_stack[index]
 			last_index = index
-			
+
 		if last_index < b_stack.size():
 			# 'a' has a shorter stack
 			return true
-			
+
 		return extension_a.extension_path < extension_b.extension_path
+
 
 static func apply_extension(extension_path: String) -> Script:
 	# Check path to file exists
