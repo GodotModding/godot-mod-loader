@@ -61,8 +61,6 @@ func _init() -> void:
 
 	# Load user profiles into ModLoaderStore
 	var _success_user_profile_load := ModLoaderUserProfile._load()
-	# Update the list of disabled mods in ModLoaderStore based on the current user profile
-	ModLoaderUserProfile._update_disabled_mods()
 
 	_load_mods()
 
@@ -100,6 +98,9 @@ func _load_mods() -> void:
 		ModLoaderLog.success("DONE: Setup %s mods" % setup_mods, LOG_NAME)
 	else:
 		ModLoaderLog.info("No mods were setup", LOG_NAME)
+
+	# Update active state of mods based on the current user profile
+	ModLoaderUserProfile._update_disabled_mods()
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
@@ -154,6 +155,11 @@ func _load_mods() -> void:
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in ModLoaderStore.mod_load_order:
 		mod = mod as ModData
+
+		# Continue if mod is disabled
+		if not mod.is_active:
+			continue
+
 		ModLoaderLog.info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
 
@@ -265,7 +271,7 @@ func _setup_mods() -> int:
 			ModLoaderLog.info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
 			continue
 
-		# Init the mod data
+		# Init the mod data for each mod
 		_init_mod_data(mod_dir_name)
 		unpacked_mods_count += 1
 

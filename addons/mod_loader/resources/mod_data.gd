@@ -33,6 +33,8 @@ var is_loadable := true
 var is_overwrite := false
 # True if mod can't be disabled or enabled in a user profile
 var is_locked := false
+# Flag indicating whether the mod should be loaded
+var is_active := true
 # Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
 # Contents of the manifest
