@@ -44,6 +44,9 @@ var mod_missing_dependencies := {}
 # Helps to decide whether a script extension should go through the _ModLoaderScriptExtension.handle_script_extensions() process
 var is_initializing := true
 
+# Used when loading mod zips to determine which mod zip corresponds to which mod directory in the UNPACKED_DIR.
+var previous_mod_dirs := []
+
 # Store all extenders paths
 var script_extensions := []
 
