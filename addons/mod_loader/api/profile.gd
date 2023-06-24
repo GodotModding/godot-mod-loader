@@ -273,6 +273,28 @@ static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mo
 			# If the current config doesn't exist, reset it to the default configuration
 			mod_list_entry.current_config = ModLoaderConfig.DEFAULT_CONFIG_NAME
 
+		# If the mod is not loaded
+		if not mod_data.has(mod_id):
+			if (
+				# Check if the entry has a zip_path key
+				mod_list_entry.has("zip_path") and
+				# Check if the entry has a zip_path
+				not mod_list_entry.zip_path.empty() and
+				# Check if the zip file for the mod exists
+				not _ModLoaderFile.file_exists(mod_list_entry.zip_path)
+			):
+				# If the mod directory doesn't exist,
+				# the mod is no longer installed and can be removed from the mod list
+				ModLoaderLog.debug(
+					"Mod \"%s\" has been deleted from all user profiles as the corresponding zip file no longer exists at path \"%s\"."
+					% [mod_id, mod_list_entry.zip_path],
+					LOG_NAME,
+					true
+				)
+
+				updated_mod_list.erase(mod_id)
+				continue
+
 		updated_mod_list[mod_id] = mod_list_entry
 
 	return updated_mod_list
@@ -298,7 +320,13 @@ static func _generate_mod_list() -> Dictionary:
 static func _generate_mod_list_entry(mod_id: String, is_active: bool) -> Dictionary:
 	var mod_list_entry := {}
 
+	# Set the mods active state
 	mod_list_entry.is_active = is_active
+
+	# Set the mods zip path if available
+	if ModLoaderStore.mod_data.has(mod_id):
+		mod_list_entry.zip_path = ModLoaderStore.mod_data[mod_id].zip_path
+
 	# Set the current_config if the mod has a config schema and is active
 	if is_active and not ModLoaderConfig.get_config_schema(mod_id).empty():
 		var current_config: ModConfig = ModLoaderStore.mod_data[mod_id].current_config
