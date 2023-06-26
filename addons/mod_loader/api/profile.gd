@@ -196,27 +196,23 @@ static func get_all_as_array() -> Array:
 # Example: If "Mod-TestMod" is set in disabled_mods via the editor, the mod will appear disabled in the user profile.
 # If the user then enables the mod in the profile the entry in disabled_mods will be removed.
 static func _update_disabled_mods() -> void:
-	var user_profile_disabled_mods := []
 	var current_user_profile: ModUserProfile
-
-	# Check if a current user profile is set
-	if not ModLoaderStore.current_user_profile:
-		ModLoaderLog.info("There is no current user profile. The \"default\" profile will be created.", LOG_NAME)
-		return
 
 	current_user_profile = get_current()
 
+	# Check if a current user profile is set
+	if not current_user_profile:
+		ModLoaderLog.info("There is no current user profile. The \"default\" profile will be created.", LOG_NAME)
+		return
+
 	# Iterate through the mod list in the current user profile to find disabled mods
 	for mod_id in current_user_profile.mod_list:
-		if not current_user_profile.mod_list[mod_id].is_active:
-			user_profile_disabled_mods.push_back(mod_id)
-
-	# Append the disabled mods to the global list of disabled mods
-	ModLoaderStore.ml_options.disabled_mods.append_array(user_profile_disabled_mods)
+		var mod_list_entry: Dictionary = current_user_profile.mod_list[mod_id]
+		ModLoaderStore.mod_data[mod_id].is_active = mod_list_entry.is_active
 
 	ModLoaderLog.debug(
-		"Updated the global list of disabled mods \"%s\", based on the current user profile \"%s\""
-		% [ModLoaderStore.ml_options.disabled_mods, current_user_profile.name],
+		"Updated the active state of all mods, based on the current user profile \"%s\""
+		% current_user_profile.name,
 	LOG_NAME)
 
 
@@ -224,6 +220,8 @@ static func _update_disabled_mods() -> void:
 # It does so by comparing the current set of loaded mods with the mod list of each user profile, and adding any missing mods.
 # Additionally, it checks for and deletes any mods from each profile's mod list that are no longer installed on the system.
 static func _update_mod_lists() -> bool:
+	# Generate a list of currently present mods by combining the mods
+	# in mod_data and ml_options.disabled_mods from ModLoaderStore.
 	var current_mod_list := _generate_mod_list()
 
 	# Iterate over all user profiles
@@ -246,17 +244,16 @@ static func _update_mod_lists() -> bool:
 	return is_save_success
 
 
-# Updates the mod list by checking the validity of each mod entry and making necessary modifications.
+# This function takes a mod_list dictionary and optional mod_data dictionary as input and returns
+# an updated mod_list dictionary. It iterates over each mod ID in the mod list, checks if the mod
+# is still installed and if the current_config is present. If the mod is not installed or the current
+# config is missing, the mod is removed or its current_config is reset to the default configuration.
 static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mod_data) -> Dictionary:
 	var updated_mod_list := mod_list.duplicate(true)
 
 	# Iterate over each mod ID in the mod list
 	for mod_id in updated_mod_list:
 		var mod_list_entry: Dictionary = updated_mod_list[mod_id]
-
-		# If mod data is accessible and the mod is loaded
-		if not mod_data.empty() and mod_data.has(mod_id):
-			mod_list_entry = _generate_mod_list_entry(mod_id, true)
 
 		# If mod data is accessible and the mod is not loaded
 		if not mod_data.empty() and not mod_data.has(mod_id):
@@ -327,7 +324,10 @@ static func _set_mod_state(mod_id: String, profile_name: String, activate: bool)
 		return false
 
 	# Handle mod state
+	# Set state for user profile
 	ModLoaderStore.user_profiles[profile_name].mod_list[mod_id].is_active = activate
+	# Set state in the ModData
+	ModLoaderStore.mod_data[mod_id].is_active = activate
 
 	# Save profiles to the user profiles JSON file
 	var is_save_success := _save()
