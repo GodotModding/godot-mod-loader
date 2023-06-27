@@ -26,7 +26,7 @@ You can find detailed documentation, for game and mod developers, on the [Wiki](
    *A list of all available API Methods.*
 
 ## Godot Version
-The current version of the Mod Loader is developed for Godot 3.5. We have not yet ported it to Godot 4.0 due to lack of demand. If you require support for Godot 4.0, please let us know by opening an issue or joining our Discord.
+The current version of the Mod Loader is developed for Godot 3.5. We have not yet ported it to Godot 4.0 due to lack of demand. If you require support for Godot 4.0, please let us know by opening an [issue](https://github.com/GodotModding/godot-mod-loader/issues) or joining [our Discord](https://discord.godotmodding.com).
 
 ## Development
 The latest work-in-progress build can be found on the [development branch](https://github.com/GodotModding/godot-mod-loader/tree/development).
