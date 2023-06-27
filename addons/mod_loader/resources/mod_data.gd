@@ -23,6 +23,10 @@ enum optional_mod_files {
 	OVERWRITES
 }
 
+# Name of the Mod's zip file
+var zip_name := ""
+# Path to the Mod's zip file
+var zip_path := ""
 # Directory of the mod. Has to be identical to [method ModManifest.get_mod_id]
 var dir_name := ""
 # Path to the Mod's Directory
@@ -45,10 +49,6 @@ var current_config: ModConfig setget _set_current_config
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PoolStringArray = []
-
-
-func _init(_dir_path: String) -> void:
-	dir_path = _dir_path
 
 
 # Load meta data from a mod's manifest.json file
