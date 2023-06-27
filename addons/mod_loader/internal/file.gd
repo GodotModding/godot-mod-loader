@@ -45,6 +45,7 @@ static func _get_json_string_as_dict(string: String) -> Dictionary:
 
 # Load the mod ZIP from the provided directory
 static func load_zips_in_folder(folder_path: String) -> Dictionary:
+	var URL_MOD_STRUCTURE_DOCS := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Structure"
 	var zip_data := {}
 
 	var mod_dir := Directory.new()
@@ -85,12 +86,22 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 		# Get the current directories inside UNPACKED_DIR
 		# This array is used to determine which directory is new
 		var current_mod_dirs := _ModLoaderPath.get_dir_paths_in_dir(_ModLoaderPath.get_unpacked_mods_dir_path())
+
 		# Create a backup to reference when the next mod is loaded
 		var current_mod_dirs_backup := current_mod_dirs.duplicate()
 
 		# Remove all directory paths that existed before, leaving only the one added last
 		for previous_mod_dir in ModLoaderStore.previous_mod_dirs:
 			current_mod_dirs.erase(previous_mod_dir)
+
+		# If the mod zip is not structured correctly, it may not be in the UNPACKED_DIR.
+		if current_mod_dirs.empty():
+			ModLoaderLog.fatal(
+				"The mod zip at path \"%s\" does not have the correct file structure. For more information, please visit \"%s\"."
+				% [mod_zip_global_path, URL_MOD_STRUCTURE_DOCS],
+				LOG_NAME
+			)
+			continue
 
 		# The key is the mod_id of the latest loaded mod, and the value is the path to the zip file
 		zip_data[current_mod_dirs[0].get_slice("/", 3)] = mod_zip_global_path
