@@ -113,7 +113,7 @@ static func get_file_paths_in_dir(src_dir_path: String) -> Array:
 	var error := directory.open(src_dir_path)
 
 	if not error  == OK:
-		ModLoaderLog.fatal("Encountered an error (%s) when attempting to open a directory, with the path: %s" % [error, src_dir_path], LOG_NAME)
+		ModLoaderLog.error("Encountered an error (%s) when attempting to open a directory, with the path: %s" % [error, src_dir_path], LOG_NAME)
 		return file_paths
 
 	directory.list_dir_begin()
@@ -134,7 +134,7 @@ static func get_dir_paths_in_dir(src_dir_path: String) -> Array:
 	var error := directory.open(src_dir_path)
 
 	if not error == OK:
-		ModLoaderLog.fatal("Encountered an error (%s) when attempting to open a directory, with the path: %s" % [error, src_dir_path], LOG_NAME)
+		ModLoaderLog.error("Encountered an error (%s) when attempting to open a directory, with the path: %s" % [error, src_dir_path], LOG_NAME)
 		return dir_paths
 
 	directory.list_dir_begin()
