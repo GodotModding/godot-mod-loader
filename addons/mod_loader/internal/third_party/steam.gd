@@ -9,8 +9,8 @@ const LOG_NAME := "ModLoader:ThirdParty:Steam"
 # Load mod ZIPs from Steam workshop folders. Uses 2 loops: One for each
 # workshop item's folder, with another inside that which loops over the ZIPs
 # inside each workshop item's folder
-static func load_steam_workshop_zips() -> int:
-	var temp_zipped_mods_count := 0
+static func load_steam_workshop_zips() -> Dictionary:
+	var zip_data := {}
 	var workshop_folder_path := _get_path_to_workshop()
 
 	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
@@ -19,11 +19,11 @@ static func load_steam_workshop_zips() -> int:
 	var workshop_dir_open_error := workshop_dir.open(workshop_folder_path)
 	if not workshop_dir_open_error == OK:
 		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_open_error], LOG_NAME)
-		return -1
+		return {}
 	var workshop_dir_listdir_error := workshop_dir.list_dir_begin()
 	if not workshop_dir_listdir_error == OK:
 		ModLoaderLog.error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
-		return -1
+		return {}
 
 	# Loop 1: Workshop folders
 	while true:
@@ -42,11 +42,11 @@ static func load_steam_workshop_zips() -> int:
 			continue
 
 		# Loop 2: ZIPs inside the workshop folders
-		temp_zipped_mods_count += _ModLoaderFile.load_zips_in_folder(ProjectSettings.globalize_path(item_path))
+		zip_data.merge(_ModLoaderFile.load_zips_in_folder(ProjectSettings.globalize_path(item_path)))
 
 	workshop_dir.list_dir_end()
 
-	return temp_zipped_mods_count
+	return zip_data
 
 
 # Get the path to the Steam workshop folder. Only works for Steam games, as it

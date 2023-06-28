@@ -113,8 +113,8 @@ static func get_file_paths_in_dir(src_dir_path: String) -> Array:
 	var error := directory.open(src_dir_path)
 
 	if not error  == OK:
+		ModLoaderLog.error("Encountered an error (%s) when attempting to open a directory, with the path: %s" % [error, src_dir_path], LOG_NAME)
 		return file_paths
-		ModLoaderLog.error("Error opening directory", LOG_NAME)
 
 	directory.list_dir_begin()
 	var file_name := directory.get_next()
@@ -124,6 +124,30 @@ static func get_file_paths_in_dir(src_dir_path: String) -> Array:
 		file_name = directory.get_next()
 
 	return file_paths
+
+
+# Returns an array of directory paths inside the src dir
+static func get_dir_paths_in_dir(src_dir_path: String) -> Array:
+	var dir_paths := []
+
+	var directory := Directory.new()
+	var error := directory.open(src_dir_path)
+
+	if not error == OK:
+		ModLoaderLog.error("Encountered an error (%s) when attempting to open a directory, with the path: %s" % [error, src_dir_path], LOG_NAME)
+		return dir_paths
+
+	directory.list_dir_begin()
+	var file_name := directory.get_next()
+	while (file_name != ""):
+		if file_name == "." or file_name == "..":
+			file_name = directory.get_next()
+			continue
+		if directory.current_is_dir():
+			dir_paths.push_back(src_dir_path.plus_file(file_name))
+		file_name = directory.get_next()
+
+	return dir_paths
 
 
 # Get the path to the mods folder, with any applicable overrides applied
