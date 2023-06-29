@@ -58,8 +58,6 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 		ModLoaderLog.error("Can't read mod folder %s (Error: %s)" % [folder_path, mod_dir_listdir_error], LOG_NAME)
 		return {}
 
-
-
 	# Get all zip folders inside the game mod folder
 	while true:
 		# Get the next file in the directory

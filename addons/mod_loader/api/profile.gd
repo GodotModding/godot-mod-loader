@@ -253,17 +253,8 @@ static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mo
 	var updated_mod_list := mod_list.duplicate(true)
 
 	# Iterate over each mod ID in the mod list
-	for mod_id in updated_mod_list:
+	for mod_id in updated_mod_list.keys():
 		var mod_list_entry: Dictionary = updated_mod_list[mod_id]
-
-		# If mod data is accessible and the mod is not loaded
-		if not mod_data.empty() and not mod_data.has(mod_id):
-			# Check if the mod_dir for the mod-id exists
-			if not _ModLoaderFile.dir_exists(_ModLoaderPath.get_unpacked_mods_dir_path() + mod_id):
-				# If the mod directory doesn't exist,
-				# the mod is no longer installed and can be removed from the mod list
-				updated_mod_list.erase(mod_id)
-				continue
 
 		# Check if the current config doesn't exist
 		# This can happen if the config file was manually deleted
@@ -271,27 +262,27 @@ static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mo
 			# If the current config doesn't exist, reset it to the default configuration
 			mod_list_entry.current_config = ModLoaderConfig.DEFAULT_CONFIG_NAME
 
-		# If the mod is not loaded
-		if not mod_data.has(mod_id):
-			if (
-				# Check if the entry has a zip_path key
-				mod_list_entry.has("zip_path") and
-				# Check if the entry has a zip_path
-				not mod_list_entry.zip_path.empty() and
-				# Check if the zip file for the mod exists
-				not _ModLoaderFile.file_exists(mod_list_entry.zip_path)
-			):
-				# If the mod directory doesn't exist,
-				# the mod is no longer installed and can be removed from the mod list
-				ModLoaderLog.debug(
-					"Mod \"%s\" has been deleted from all user profiles as the corresponding zip file no longer exists at path \"%s\"."
-					% [mod_id, mod_list_entry.zip_path],
-					LOG_NAME,
-					true
-				)
+		if (
+			# If the mod is not loaded
+			not mod_data.has(mod_id) and
+			# Check if the entry has a zip_path key
+			mod_list_entry.has("zip_path") and
+			# Check if the entry has a zip_path
+			not mod_list_entry.zip_path.empty() and
+			# Check if the zip file for the mod doesn't exist
+			not _ModLoaderFile.file_exists(mod_list_entry.zip_path)
+		):
+			# If the mod directory doesn't exist,
+			# the mod is no longer installed and can be removed from the mod list
+			ModLoaderLog.debug(
+				"Mod \"%s\" has been deleted from all user profiles as the corresponding zip file no longer exists at path \"%s\"."
+				% [mod_id, mod_list_entry.zip_path],
+				LOG_NAME,
+				true
+			)
 
-				updated_mod_list.erase(mod_id)
-				continue
+			updated_mod_list.erase(mod_id)
+			continue
 
 		updated_mod_list[mod_id] = mod_list_entry
 
