@@ -113,6 +113,12 @@ func _init(manifest: Dictionary) -> void:
 		not validate_distinct_mod_ids_in_arrays(
 			mod_id,
 			optional_dependencies,
+			dependencies,
+			["optional_dependencies", "dependencies"]
+		) or
+		not validate_distinct_mod_ids_in_arrays(
+			mod_id,
+			optional_dependencies,
 			incompatibilities,
 			["optional_dependencies", "incompatibilities"]
 		) or
