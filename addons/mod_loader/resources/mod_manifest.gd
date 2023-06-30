@@ -134,7 +134,13 @@ func _init(manifest: Dictionary) -> void:
 			load_before,
 			optional_dependencies,
 			["load_before", "optional_dependencies"],
-			"\"load_before\" can be viewed as optional dependency, please remove the duplicate mod-id.")
+			"\"load_before\" can be viewed as optional dependency, please remove the duplicate mod-id."
+		) or
+		not validate_distinct_mod_ids_in_arrays(
+			mod_id,
+			load_before,
+			incompatibilities,
+			["load_before", "incompatibilities"])
 	):
 		return
 
