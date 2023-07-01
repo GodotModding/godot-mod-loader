@@ -1,4 +1,4 @@
-class_name _ModLoaderScriptExtension
+ class_name _ModLoaderScriptExtension
 extends Reference
 
 
@@ -25,13 +25,17 @@ static func handle_script_extensions() -> void:
 		_reload_vanilla_child_classes_for(script)
 
 
-# Inner class so the sort function can be called by handle_script_extensions()
+# Sorts script paths by their ancestors.  Scripts are organized by their common
+# acnestors then sorted such that scripts extending script A will be before
+# a script extending script B if A is an ancestor of B.
 class InheritanceSorting:
-	var stack_cache = {}
+	var stack_cache := {}
 
+	# Comparator function.  return true if a should go before b.  This may
+	# enforce conditions beyond the stated inheritance relationship.
 	func _check_inheritances(extension_a: String, extension_b: String) -> bool:
-		var a_stack := cached_stack(extension_a)
-		var b_stack := cached_stack(extension_b)
+		var a_stack := cached_inheritances_stack(extension_a)
+		var b_stack := cached_inheritances_stack(extension_b)
 
 		var last_index: int
 		for index in a_stack.size():
@@ -42,12 +46,15 @@ class InheritanceSorting:
 			last_index = index
 
 		if last_index < b_stack.size():
-			# 'a' has a shorter stack
 			return true
 
 		return extension_a < extension_b
 	
-	func cached_stack(extension_path:String) -> Array:
+	# Returns a list of scripts representing all the ancestors of the extension
+	# script with the most recent ancestor last.
+	#
+	# Results are stored in a cache keyed by extension path
+	func cached_inheritances_stack(extension_path:String) -> Array:
 		if stack_cache.has(extension_path):
 			return stack_cache[extension_path]
 			
