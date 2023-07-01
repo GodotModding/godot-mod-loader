@@ -54,7 +54,7 @@ class InheritanceSorting:
 	# script with the most recent ancestor last.
 	#
 	# Results are stored in a cache keyed by extension path
-	func cached_inheritances_stack(extension_path:String) -> Array:
+	func cached_inheritances_stack(extension_path: String) -> Array:
 		if stack_cache.has(extension_path):
 			return stack_cache[extension_path]
 			
