@@ -110,19 +110,6 @@ static func apply_extension(extension_path: String) -> Script:
 
 	return child_script
 
-
-# TODO: this isn't being called
-static func _sort_extensions_from_load_order(extensions: Array) -> Array:
-	var extensions_sorted := []
-
-	for _mod_data in ModLoaderStore.mod_load_order:
-		for script in extensions:
-			if script.mod_id == _mod_data.dir_name:
-				extensions_sorted.push_front(script)
-
-	return extensions_sorted
-
-
 # Reload all children classes of the vanilla class we just extended
 # Calling reload() the children of an extended class seems to allow them to be extended
 # e.g if B is a child class of A, reloading B after apply an extender of A allows extenders of B to properly extend B, taking A's extender(s) into account
