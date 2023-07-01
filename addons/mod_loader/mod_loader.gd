@@ -282,8 +282,10 @@ func _setup_mods() -> int:
 			ModLoaderLog.info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
 			continue
 
-		# Init the mod data for each mod
-		_init_mod_data(mod_dir_name)
+		# Initialize the mod data for each mod if there is no existing mod data for that mod.
+		if not ModLoaderStore.mod_data.has(mod_dir_name):
+			_init_mod_data(mod_dir_name)
+
 		unpacked_mods_count += 1
 
 	dir.list_dir_end()
