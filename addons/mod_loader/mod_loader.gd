@@ -192,7 +192,7 @@ func _disable_mods() -> void:
 # Check autoload positions:
 # Ensure 1st autoload is `ModLoaderStore`, and 2nd is `ModLoader`.
 func _check_autoload_positions() -> void:
-	var ml_options: Object = preload("res://addons/mod_loader/options/options.tres").current_options
+	var ml_options: Object = load("res://addons/mod_loader/options/options.tres").current_options
 	var override_cfg_path := _ModLoaderPath.get_override_path()
 	var is_override_cfg_setup :=  _ModLoaderFile.file_exists(override_cfg_path)
 	# If the override file exists we assume the ModLoader was setup with the --setup-create-override-cfg cli arg
@@ -234,11 +234,11 @@ func _setup_mods() -> int:
 	# Path to the unpacked mods folder
 	var unpacked_mods_path := _ModLoaderPath.get_unpacked_mods_dir_path()
 
-	var dir := DirAccess.new()
-	if not dir.open(unpacked_mods_path) == OK:
+	var dir := DirAccess.open(unpacked_mods_path)
+	if dir == null:
 		ModLoaderLog.error("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return -1
-	if not dir.list_dir_begin()  == OK:# TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
+	if not dir.list_dir_begin() == OK:# TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 		ModLoaderLog.error("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return -1
 
@@ -281,7 +281,7 @@ func _init_mod_data(mod_folder_path: String) -> void:
 	var dir_name := _ModLoaderPath.get_file_name_from_path(mod_folder_path, false, true)
 
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
-	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().plus_file(dir_name)
+	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(dir_name)
 
 	var mod := ModData.new(local_mod_path)
 	mod.dir_name = dir_name
