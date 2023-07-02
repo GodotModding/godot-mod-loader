@@ -14,7 +14,7 @@ static func handle_script_extensions() -> void:
 	var script_extension_data_array := []
 	for extension_path in ModLoaderStore.script_extensions:
 
-		if not File.new().file_exists(extension_path):
+		if not FileAccess.file_exists(extension_path):
 			ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 			continue
 
@@ -43,7 +43,7 @@ static func handle_script_extensions() -> void:
 
 # Inner class so the sort function can be called by handle_script_extensions()
 class InheritanceSorting:
-	
+
 	static func _check_inheritances(extension_a:ScriptExtensionData, extension_b:ScriptExtensionData)->bool:
 		var a_stack := []
 		var parent_script: Script = load(extension_a.extension_path)
@@ -51,14 +51,14 @@ class InheritanceSorting:
 			a_stack.push_front(parent_script.resource_path)
 			parent_script = parent_script.get_base_script()
 		a_stack.pop_back()
-		
+
 		var b_stack := []
 		parent_script = load(extension_b.extension_path)
 		while parent_script:
 			b_stack.push_front(parent_script.resource_path)
 			parent_script = parent_script.get_base_script()
 		b_stack.pop_back()
-		
+
 		var last_index: int
 		for index in a_stack.size():
 			if index >= b_stack.size():
@@ -66,16 +66,16 @@ class InheritanceSorting:
 			if a_stack[index] != b_stack[index]:
 				return a_stack[index] < b_stack[index]
 			last_index = index
-			
+
 		if last_index < b_stack.size():
 			# 'a' has a shorter stack
 			return true
-			
+
 		return extension_a.extension_path < extension_b.extension_path
 
 static func apply_extension(extension_path: String) -> Script:
 	# Check path to file exists
-	if not File.new().file_exists(extension_path):
+	if not FileAccess.file_exists(extension_path):
 		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 		return null
 
@@ -144,7 +144,7 @@ static func _reload_vanilla_child_classes_for(script: Script) -> void:
 	for _class in current_child_classes:
 		for child_class in classes:
 
-			if child_class.base == _class.class:
+			if child_class.base == _class.get_class():
 				load(child_class.path).reload()
 
 
@@ -171,7 +171,7 @@ static func remove_specific_extension_from_script(extension_path: String) -> voi
 		return
 
 	var parent_script_extensions: Array = ModLoaderStore.saved_scripts[parent_script_path].duplicate()
-	parent_script_extensions.remove(0)
+	parent_script_extensions.remove_at(0)
 
 	# Searching for the extension that we want to remove
 	var found_script_extension: Script = null
