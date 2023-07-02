@@ -90,15 +90,16 @@ const ERR_FORMAT = "String '%s' does not match its corresponding format '%s'"
 # This is one and only function that need you to call outside
 # If all validation checks passes, this return empty String
 func validate(json_data : String, schema: String) -> String:
-	var error : String = ""
+	var error: String
 
+	var json = JSON.new()
 	# General validation input data as JSON file
-	error = validate_json(json_data)
+	error = str(json.parse(json_data))
 	if error: return ERR_INVALID_JSON_EXT % error
 
 	# General validation input schema as JSONSchema file
-	error = validate_json(schema)
-	if error: return ERR_WRONG_SCHEMA_GEN + error
+	error = str(json.parse(schema))
+	if not error == "OK" : return ERR_WRONG_SCHEMA_GEN + str(error)
 	var test_json_conv = JSON.new()
 	test_json_conv.parse(schema)
 	var parsed_schema = test_json_conv.get_data()
@@ -267,12 +268,12 @@ func _validate_array(input_data: Array, input_schema: Dictionary, property_name:
 				current_schema = additional_items_schema
 				key_substr = ".items"
 
-			var sub_error_message := _type_selection(JSON.stringify(item), current_schema, property_name + key_substr + "["+String(index)+"]")
+			var sub_error_message := _type_selection(JSON.stringify(item), current_schema, property_name + key_substr + "[" + str(index) + "]")
 			if not sub_error_message == "":
 				suberror.append(sub_error_message)
 
 		if suberror.size() > 0:
-			return ERR_INVALID_JSON_GEN % String(suberror)
+			return ERR_INVALID_JSON_GEN % str(suberror)
 
 		# Return inside this if block, because we don't want to validate the items key twice.
 		return error
@@ -288,12 +289,12 @@ func _validate_array(input_data: Array, input_schema: Dictionary, property_name:
 			index = index - 1
 
 			# Validate the array item with the schema defined by the 'items' key
-			var sub_error_message := _type_selection(JSON.stringify(input_data[index]), input_schema.items, property_name+"["+String(index)+"]")
+			var sub_error_message := _type_selection(JSON.stringify(input_data[index]), input_schema.items, property_name + "[" + str(index) + "]")
 			if not sub_error_message == "":
 				suberror.append(sub_error_message)
 
 			if suberror.size() > 0:
-				return ERR_INVALID_JSON_GEN % String(suberror)
+				return ERR_INVALID_JSON_GEN % str(suberror)
 
 	return error
 
