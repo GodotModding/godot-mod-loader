@@ -10,7 +10,7 @@ const LOG_NAME := "ModLoader:ModManifest"
 var name := ""
 # Mod namespace, most commonly the main author.
 # Validated by [method is_name_or_namespace_valid]
-var namespace := ""
+var mod_namespace := ""
 # Semantic version. Not a number, but required to be named like this by Thunderstore
 # Validated by [method is_semver_valid]
 var version_number := "0.0.0"
@@ -66,12 +66,12 @@ func _init(manifest: Dictionary) -> void:
 		return
 
 	name = manifest.name
-	namespace = manifest.namespace
+	mod_namespace = manifest.mod_namespace
 	version_number = manifest.version_number
 
 	if (
 		not is_name_or_namespace_valid(name) or
-		not is_name_or_namespace_valid(namespace)
+		not is_name_or_namespace_valid(mod_namespace)
 	):
 		return
 
@@ -136,20 +136,20 @@ func _init(manifest: Dictionary) -> void:
 # Mod ID used in the mod loader
 # Format: {namespace}-{name}
 func get_mod_id() -> String:
-	return "%s-%s" % [namespace, name]
+	return "%s-%s" % [mod_namespace, name]
 
 
 # Package ID used by Thunderstore
 # Format: {namespace}-{name}-{version_number}
 func get_package_id() -> String:
-	return "%s-%s-%s" % [namespace, name, version_number]
+	return "%s-%s-%s" % [mod_namespace, name, version_number]
 
 
 # Returns the Manifest values as a dictionary
 func get_as_dict() -> Dictionary:
 	return {
 		"name": name,
-		"namespace": namespace,
+		"namespace": mod_namespace,
 		"version_number": version_number,
 		"description": description,
 		"website_url": website_url,
@@ -168,10 +168,10 @@ func get_as_dict() -> Dictionary:
 
 
 # Returns the Manifest values as JSON, in the manifest.json format
-func JSON.new().stringify() -> String:
+func to_json() -> String:
 	return JSON.stringify({
 		"name": name,
-		"namespace": namespace,
+		"namespace": mod_namespace,
 		"version_number": version_number,
 		"description": description,
 		"website_url": website_url,
@@ -233,7 +233,7 @@ func load_mod_config_defaults() -> ModConfig:
 		# Return the default ModConfig
 		return config
 
-	ModLoaderLog.fatal("The default config values for %s-%s are invalid. Configs will not be loaded." % [namespace, name], LOG_NAME)
+	ModLoaderLog.fatal("The default config values for %s-%s are invalid. Configs will not be loaded." % [mod_namespace, name], LOG_NAME)
 	return null
 
 
@@ -378,9 +378,9 @@ static func validate_distinct_mod_ids_in_arrays(
 	var overlaps: PackedStringArray = []
 
 	# Loop through each incompatibility and check if it is also listed as a dependency.
-	for mod_id in array_one:
-		if array_two.has(mod_id):
-			overlaps.push_back(mod_id)
+	for loop_mod_id in array_one:
+		if array_two.has(loop_mod_id):
+			overlaps.push_back(loop_mod_id)
 
 	# If no overlaps were found
 	if overlaps.size() == 0:
