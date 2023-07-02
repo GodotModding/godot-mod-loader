@@ -114,7 +114,7 @@ func _init() -> void:
 func modded_start() -> void:
 	ModLoaderSetupLog.info("ModLoader is available, mods can be loaded!", LOG_NAME)
 
-	get_window().set_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
+	ModLoaderSetupUtils.get_window().set_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
 
 	var _error_change_scene_main := change_scene_to_file(ProjectSettings.get_setting("application/run/main_scene"))
 
@@ -201,14 +201,14 @@ func create_project_binary() -> void:
 # Add modified binary to the pck
 func inject_project_binary() -> void:
 	var output_add_project_binary := []
-	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], true, output_add_project_binary)
+	# It seems that we do not have a way to make it blocking in godot 4?
+	var _exit_code_add_project_binary := OS.execute(path.pck_tool, ["--pack", path.pck, "--action", "add", "--file", path.project_binary, "--remove-prefix", path.mod_loader_dir], output_add_project_binary)
 	ModLoaderSetupLog.debug_json_print("Adding custom project.binary to res://", output_add_project_binary, LOG_NAME)
 
 
 # Removes the project.binary file
 func clean_up_project_binary_file() -> void:
-	var dir = DirAccess.new()
-	dir.remove(path.project_binary)
+	var dir = DirAccess.remove_absolute(path.project_binary)
 
 
 # Initialize the path and file_name dictionary
