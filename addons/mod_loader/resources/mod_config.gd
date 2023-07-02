@@ -17,7 +17,7 @@ var data: Dictionary
 # The path where the JSON file for this config is stored
 var save_path: String
 # False if any data is invalid
-var is_valid := false
+var valid := false
 
 
 func _init(_mod_id: String, _data: Dictionary, _save_path: String, _schema: Dictionary = {}) -> void:
@@ -33,7 +33,7 @@ func _init(_mod_id: String, _data: Dictionary, _save_path: String, _schema: Dict
 		ModLoaderLog.error("Mod Config for mod \"%s\" failed JSON Schema Validation with error message: \"%s\"" % [mod_id, error_message], LOG_NAME)
 		return
 
-	is_valid = true
+	valid = true
 
 
 func get_data_as_string() -> String:
@@ -50,9 +50,9 @@ func validate() -> String:
 	var error := json_schema.validate(get_data_as_string(), get_schema_as_string())
 
 	if error.is_empty():
-		is_valid = true
+		valid = true
 	else:
-		is_valid = false
+		valid = false
 
 	return error
 
@@ -60,10 +60,10 @@ func validate() -> String:
 # Runs the JSON-Schema validation and returns true if valid
 func is_valid() -> bool:
 	if validate() == "":
-		is_valid = true
+		valid = true
 		return true
 
-	is_valid = false
+	valid = false
 	return false
 
 
