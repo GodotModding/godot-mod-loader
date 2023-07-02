@@ -70,15 +70,15 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 		if not _is_valid_global_class_dict(new_class):
 			continue
 		for old_class in registered_classes:
-			if old_class.class == new_class.class:
+			if old_class.get_class() == new_class.get_class():
 				if OS.has_feature("editor"):
-					ModLoaderLog.info('Class "%s" to be registered as global was already registered by the editor. Skipping.' % new_class.class, LOG_NAME)
+					ModLoaderLog.info('Class "%s" to be registered as global was already registered by the editor. Skipping.' % new_class.get_class(), LOG_NAME)
 				else:
-					ModLoaderLog.info('Class "%s" to be registered as global already exists. Skipping.' % new_class.class, LOG_NAME)
+					ModLoaderLog.info('Class "%s" to be registered as global already exists. Skipping.' % new_class.get_class(), LOG_NAME)
 				continue
 
 		registered_classes.append(new_class)
-		registered_class_icons[new_class.class] = "" # empty icon, does not matter
+		registered_class_icons[new_class.get_class()] = "" # empty icon, does not matter
 
 	ProjectSettings.set_setting("_global_script_classes", registered_classes)
 	ProjectSettings.set_setting("_global_script_class_icons", registered_class_icons)
@@ -94,7 +94,7 @@ static func _is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 
 	if not _ModLoaderFile.file_exists(global_class_dict.path):
 		ModLoaderLog.fatal('Class "%s" to be registered as global could not be found at given path "%s"' %
-		[global_class_dict.class, global_class_dict.path], LOG_NAME)
+		[global_class_dict.get_class, global_class_dict.path], LOG_NAME)
 		return false
 
 	return true
