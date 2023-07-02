@@ -27,6 +27,11 @@ const new_global_classes := [
 		"path": "res://addons/mod_loader/resources/mod_manifest.gd"
 	}, {
 		"base": "Resource",
+		"class": "ScriptExtensionData",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/resources/script_extension_data.gd"
+	}, {
+		"base": "Resource",
 		"class": "ModLoaderCurrentOptions",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/resources/options_current.gd"
@@ -51,7 +56,7 @@ const new_global_classes := [
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/mod.gd"
 	}, {
-		"base": "Reference",
+		"base": "RefCounted",
 		"class": "ModLoaderModManager",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/mod_manager.gd"
@@ -109,9 +114,9 @@ func _init() -> void:
 func modded_start() -> void:
 	ModLoaderSetupLog.info("ModLoader is available, mods can be loaded!", LOG_NAME)
 
-	OS.set_window_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
+	get_window().set_title("%s (Modded)" % ProjectSettings.get_setting("application/config/name"))
 
-	var _error_change_scene_main := change_scene(ProjectSettings.get_setting("application/run/main_scene"))
+	var _error_change_scene_main := change_scene_to_file(ProjectSettings.get_setting("application/run/main_scene"))
 
 
 # Set up the ModLoader as an autoload and register the other global classes.
@@ -202,7 +207,7 @@ func inject_project_binary() -> void:
 
 # Removes the project.binary file
 func clean_up_project_binary_file() -> void:
-	var dir = Directory.new()
+	var dir = DirAccess.new()
 	dir.remove(path.project_binary)
 
 

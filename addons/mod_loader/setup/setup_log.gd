@@ -84,7 +84,7 @@ static func debug(message: String, mod_name: String) -> void:
 # Logs the message formatted with [method JSON.print]. Prefixed DEBUG
 # Logged with verbosity level at or above debug (-vvv)
 static func debug_json_print(message: String, json_printable, mod_name: String) -> void:
-	message = "%s\n%s" % [message, JSON.print(json_printable, "  ")]
+	message = "%s\n%s" % [message, JSON.stringify(json_printable, "  ")]
 	_log(message, mod_name, "debug")
 
 
@@ -99,8 +99,8 @@ static func _log(message: String, mod_name: String, log_type: String = "info") -
 		"fatal-error":
 			push_error(message)
 			_write_to_log_file(log_entry.get_entry())
-			_write_to_log_file(JSON.print(get_stack(), "  "))
-			assert(false, message)
+			_write_to_log_file(JSON.stringify(get_stack(), "  "))
+			assert(false) #,message)
 		"error":
 			printerr(message)
 			push_error(message)
@@ -148,7 +148,7 @@ static func _write_to_log_file(string_to_write: String) -> void:
 
 	var error := log_file.open(MOD_LOG_PATH, File.READ_WRITE)
 	if not error == OK:
-		assert(false, "Could not open log file, error code: %s" % error)
+		assert(false) #,"Could not open log file, error code: %s" % error)
 		return
 
 	log_file.seek_end()
@@ -169,7 +169,7 @@ static func _rotate_log_file() -> void:
 			if MOD_LOG_PATH.get_extension().length() > 0:
 				backup_name += "." + MOD_LOG_PATH.get_extension()
 
-			var dir := Directory.new()
+			var dir := DirAccess.new()
 			if dir.dir_exists(MOD_LOG_PATH.get_base_dir()):
 				dir.copy(MOD_LOG_PATH, backup_name)
 			_clear_old_log_backups()
@@ -177,7 +177,7 @@ static func _rotate_log_file() -> void:
 	# only File.WRITE creates a new file, File.READ_WRITE throws an error
 	var error := log_file.open(MOD_LOG_PATH, File.WRITE)
 	if not error == OK:
-		assert(false, "Could not open log file, error code: %s" % error)
+		assert(false) #,"Could not open log file, error code: %s" % error)
 	log_file.store_string('%s Created log' % _get_date_string())
 	log_file.close()
 
@@ -188,13 +188,13 @@ static func _clear_old_log_backups() -> void:
 	var basename := MOD_LOG_PATH.get_file().get_basename() as String
 	var extension := MOD_LOG_PATH.get_extension() as String
 
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 	if not dir.dir_exists(MOD_LOG_PATH.get_base_dir()):
 		return
 	if not dir.open(MOD_LOG_PATH.get_base_dir()) == OK:
 		return
 
-	dir.list_dir_begin()
+	dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	var file := dir.get_next()
 	var backups := []
 	while file.length() > 0:

@@ -17,23 +17,23 @@ var version_number := "0.0.0"
 var description := ""
 var website_url := ""
 # Used to determine mod load order
-var dependencies: PoolStringArray = []
+var dependencies: PackedStringArray = []
 # Used to determine mod load order
-var optional_dependencies: PoolStringArray = []
+var optional_dependencies: PackedStringArray = []
 
-var authors: PoolStringArray = []
+var authors: PackedStringArray = []
 # only used for information
-var compatible_game_version: PoolStringArray = []
+var compatible_game_version: PackedStringArray = []
 # only used for information
 # Validated by [method _handle_compatible_mod_loader_version]
-var compatible_mod_loader_version: PoolStringArray = []
+var compatible_mod_loader_version: PackedStringArray = []
 # only used for information
-var incompatibilities: PoolStringArray = []
-var load_before: PoolStringArray = []
-var tags : PoolStringArray = []
+var incompatibilities: PackedStringArray = []
+var load_before: PackedStringArray = []
+var tags : PackedStringArray = []
 var config_schema := {}
 var description_rich := ""
-var image: StreamTexture
+var image: CompressedTexture2D
 
 
 # Required keys in a mod's manifest.json file
@@ -113,12 +113,6 @@ func _init(manifest: Dictionary) -> void:
 		not validate_distinct_mod_ids_in_arrays(
 			mod_id,
 			optional_dependencies,
-			dependencies,
-			["optional_dependencies", "dependencies"]
-		) or
-		not validate_distinct_mod_ids_in_arrays(
-			mod_id,
-			optional_dependencies,
 			incompatibilities,
 			["optional_dependencies", "incompatibilities"]
 		) or
@@ -134,13 +128,7 @@ func _init(manifest: Dictionary) -> void:
 			load_before,
 			optional_dependencies,
 			["load_before", "optional_dependencies"],
-			"\"load_before\" can be viewed as optional dependency, please remove the duplicate mod-id."
-		) or
-		not validate_distinct_mod_ids_in_arrays(
-			mod_id,
-			load_before,
-			incompatibilities,
-			["load_before", "incompatibilities"])
+			"\"load_before\" can be viewed as optional dependency, please remove the duplicate mod-id.")
 	):
 		return
 
@@ -180,8 +168,8 @@ func get_as_dict() -> Dictionary:
 
 
 # Returns the Manifest values as JSON, in the manifest.json format
-func to_json() -> String:
-	return JSON.print({
+func JSON.new().stringify() -> String:
+	return JSON.stringify({
 		"name": name,
 		"namespace": namespace,
 		"version_number": version_number,
@@ -227,7 +215,7 @@ func load_mod_config_defaults() -> ModConfig:
 		var cache_schema_md5: String = cache_schema_md5s[config.mod_id] if cache_schema_md5s.has(config.mod_id) else ''
 
 		# Generate a new default config if the config schema has changed or there is nothing cached
-		if not current_schema_md5 == cache_schema_md5 or not cache_schema_md5.empty():
+		if not current_schema_md5 == cache_schema_md5 or not cache_schema_md5.is_empty():
 			config.data = _generate_default_config_from_schema(config.schema.properties)
 
 		# If the config schema has not changed just load the json file
@@ -252,7 +240,7 @@ func load_mod_config_defaults() -> ModConfig:
 # Recursively searches for default values
 func _generate_default_config_from_schema(property: Dictionary, current_prop := {}) -> Dictionary:
 	# Exit function if property is empty
-	if property.empty():
+	if property.is_empty():
 		return current_prop
 
 	for property_key in property.keys():
@@ -334,7 +322,7 @@ static func is_name_or_namespace_valid(check_name: String, is_silent := false) -
 	return true
 
 
-static func is_semver_version_array_valid(mod_id: String, version_array: PoolStringArray, version_array_descripton: String, is_silent := false) -> bool:
+static func is_semver_version_array_valid(mod_id: String, version_array: PackedStringArray, version_array_descripton: String, is_silent := false) -> bool:
 	var is_valid := true
 
 	for version in version_array:
@@ -380,14 +368,14 @@ static func is_semver_valid(mod_id: String, check_version_number: String, field_
 
 static func validate_distinct_mod_ids_in_arrays(
 	mod_id: String,
-	array_one: PoolStringArray,
-	array_two: PoolStringArray,
-	array_description: PoolStringArray,
+	array_one: PackedStringArray,
+	array_two: PackedStringArray,
+	array_description: PackedStringArray,
 	additional_info := "",
 	is_silent := false
 ) -> bool:
 	# Initialize an empty array to hold any overlaps.
-	var overlaps: PoolStringArray = []
+	var overlaps: PackedStringArray = []
 
 	# Loop through each incompatibility and check if it is also listed as a dependency.
 	for mod_id in array_one:
@@ -413,7 +401,7 @@ static func validate_distinct_mod_ids_in_arrays(
 	return false
 
 
-static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PoolStringArray, mod_id_array_description: String, is_silent := false) -> bool:
+static func is_mod_id_array_valid(own_mod_id: String, mod_id_array: PackedStringArray, mod_id_array_description: String, is_silent := false) -> bool:
 	var is_valid := true
 
 	# If there are mod ids

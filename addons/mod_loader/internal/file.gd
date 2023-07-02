@@ -1,5 +1,5 @@
 class_name _ModLoaderFile
-extends Reference
+extends RefCounted
 
 
 # This Class provides util functions for working with files.
@@ -33,7 +33,9 @@ static func get_json_as_dict(path: String) -> Dictionary:
 static func _get_json_string_as_dict(string: String) -> Dictionary:
 	if string == "":
 		return {}
-	var parsed := JSON.parse(string)
+	var test_json_conv = JSON.new()
+	test_json_conv.parse(string)
+	var parsed := test_json_conv.get_data()
 	if parsed.error:
 		ModLoaderLog.error("Error parsing JSON", LOG_NAME)
 		return {}
@@ -44,19 +46,18 @@ static func _get_json_string_as_dict(string: String) -> Dictionary:
 
 
 # Load the mod ZIP from the provided directory
-static func load_zips_in_folder(folder_path: String) -> Dictionary:
-	var URL_MOD_STRUCTURE_DOCS := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Structure"
-	var zip_data := {}
+static func load_zips_in_folder(folder_path: String) -> int:
+	var temp_zipped_mods_count := 0
 
-	var mod_dir := Directory.new()
+	var mod_dir := DirAccess.new()
 	var mod_dir_open_error := mod_dir.open(folder_path)
 	if not mod_dir_open_error == OK:
 		ModLoaderLog.error("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
-		return {}
-	var mod_dir_listdir_error := mod_dir.list_dir_begin()
+		return -1
+	var mod_dir_listdir_error := mod_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not mod_dir_listdir_error == OK:
 		ModLoaderLog.error("Can't read mod folder %s (Error: %s)" % [folder_path, mod_dir_listdir_error], LOG_NAME)
-		return {}
+		return -1
 
 	# Get all zip folders inside the game mod folder
 	while true:
@@ -77,35 +78,9 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 			# Go to the next file
 			continue
 
-		var mod_zip_path := folder_path.plus_file(mod_zip_file_name)
-		var mod_zip_global_path := ProjectSettings.globalize_path(mod_zip_path)
-		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_zip_global_path, false)
-
-		# Get the current directories inside UNPACKED_DIR
-		# This array is used to determine which directory is new
-		var current_mod_dirs := _ModLoaderPath.get_dir_paths_in_dir(_ModLoaderPath.get_unpacked_mods_dir_path())
-
-		# Create a backup to reference when the next mod is loaded
-		var current_mod_dirs_backup := current_mod_dirs.duplicate()
-
-		# Remove all directory paths that existed before, leaving only the one added last
-		for previous_mod_dir in ModLoaderStore.previous_mod_dirs:
-			current_mod_dirs.erase(previous_mod_dir)
-
-		# If the mod zip is not structured correctly, it may not be in the UNPACKED_DIR.
-		if current_mod_dirs.empty():
-			ModLoaderLog.fatal(
-				"The mod zip at path \"%s\" does not have the correct file structure. For more information, please visit \"%s\"."
-				% [mod_zip_global_path, URL_MOD_STRUCTURE_DOCS],
-				LOG_NAME
-			)
-			continue
-
-		# The key is the mod_id of the latest loaded mod, and the value is the path to the zip file
-		zip_data[current_mod_dirs[0].get_slice("/", 3)] = mod_zip_global_path
-
-		# Update previous_mod_dirs in ModLoaderStore to use for the next mod
-		ModLoaderStore.previous_mod_dirs = current_mod_dirs_backup
+		var mod_folder_path := folder_path.plus_file(mod_zip_file_name)
+		var mod_folder_global_path := ProjectSettings.globalize_path(mod_folder_path)
+		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_folder_global_path, false)
 
 		# Notifies developer of an issue with Godot, where using `load_resource_pack`
 		# in the editor WIPES the entire virtual res:// directory the first time you
@@ -121,7 +96,7 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 				"Please unpack your mod ZIPs instead, and add them to ", _ModLoaderPath.get_unpacked_mods_dir_path()), LOG_NAME)
 			ModLoaderStore.has_shown_editor_zips_warning = true
 
-		ModLoaderLog.debug("Found mod ZIP: %s" % mod_zip_global_path, LOG_NAME)
+		ModLoaderLog.debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
 
 		# If there was an error loading the mod zip file
 		if not is_mod_loaded_successfully:
@@ -131,10 +106,11 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 
 		# Mod successfully loaded!
 		ModLoaderLog.success("%s loaded." % mod_zip_file_name, LOG_NAME)
+		temp_zipped_mods_count += 1
 
 	mod_dir.list_dir_end()
 
-	return zip_data
+	return temp_zipped_mods_count
 
 
 # Save Data
@@ -144,7 +120,7 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 	# Create directory if it doesn't exist yet
 	var file_directory := filepath.get_base_dir()
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 
 	_code_note(str(
 		"View error codes here:",
@@ -174,7 +150,7 @@ static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 
 # Saves a dictionary to a file, as a JSON string
 static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> bool:
-	var json_string := JSON.print(data, "\t")
+	var json_string := JSON.stringify(data, "\t")
 	return _save_string_to_file(json_string, filepath)
 
 
@@ -183,7 +159,7 @@ static func save_dictionary_to_json_file(data: Dictionary, filepath: String) -> 
 
 # Removes a file from the given path
 static func remove_file(file_path: String) -> bool:
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 
 	if not dir.file_exists(file_path):
 		ModLoaderLog.error("No file found at \"%s\"" % file_path, LOG_NAME)
@@ -211,7 +187,7 @@ static func file_exists(path: String) -> bool:
 
 
 static func dir_exists(path: String) -> bool:
-	var dir := Directory.new()
+	var dir := DirAccess.new()
 	return dir.dir_exists(path)
 
 

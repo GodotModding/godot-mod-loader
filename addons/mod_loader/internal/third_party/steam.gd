@@ -9,21 +9,21 @@ const LOG_NAME := "ModLoader:ThirdParty:Steam"
 # Load mod ZIPs from Steam workshop folders. Uses 2 loops: One for each
 # workshop item's folder, with another inside that which loops over the ZIPs
 # inside each workshop item's folder
-static func load_steam_workshop_zips() -> Dictionary:
-	var zip_data := {}
+static func load_steam_workshop_zips() -> int:
+	var temp_zipped_mods_count := 0
 	var workshop_folder_path := _get_path_to_workshop()
 
 	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 
-	var workshop_dir := Directory.new()
+	var workshop_dir := DirAccess.new()
 	var workshop_dir_open_error := workshop_dir.open(workshop_folder_path)
 	if not workshop_dir_open_error == OK:
 		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_open_error], LOG_NAME)
-		return {}
-	var workshop_dir_listdir_error := workshop_dir.list_dir_begin()
+		return -1
+	var workshop_dir_listdir_error := workshop_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not workshop_dir_listdir_error == OK:
 		ModLoaderLog.error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
-		return {}
+		return -1
 
 	# Loop 1: Workshop folders
 	while true:
@@ -42,11 +42,11 @@ static func load_steam_workshop_zips() -> Dictionary:
 			continue
 
 		# Loop 2: ZIPs inside the workshop folders
-		zip_data.merge(_ModLoaderFile.load_zips_in_folder(ProjectSettings.globalize_path(item_path)))
+		temp_zipped_mods_count += _ModLoaderFile.load_zips_in_folder(ProjectSettings.globalize_path(item_path))
 
 	workshop_dir.list_dir_end()
 
-	return zip_data
+	return temp_zipped_mods_count
 
 
 # Get the path to the Steam workshop folder. Only works for Steam games, as it
@@ -88,7 +88,9 @@ static func _get_steam_app_id() -> String:
 	var file := File.new()
 
 	if file.open(game_install_directory.plus_file("steam_data.json"), File.READ) == OK:
-		var file_content: Dictionary = parse_json(file.get_as_text())
+		var test_json_conv = JSON.new()
+		test_json_conv.parse(file.get_as_text())
+		var file_content: Dictionary = test_json_conv.get_data()
 		file.close()
 
 		if not file_content.has("app_id"):

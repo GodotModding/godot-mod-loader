@@ -67,7 +67,7 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 # Returns: void
 static func add_translation(resource_path: String) -> void:
 	if not _ModLoaderFile.file_exists(resource_path):
-		ModLoaderLog.fatal("Tried to load a translation resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
+		ModLoaderLog.fatal("Tried to load a position resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
 		return
 
 	var translation_object: Translation = load(resource_path)
@@ -89,9 +89,9 @@ static func add_translation(resource_path: String) -> void:
 static func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
 	var new_node: Node
 	if not instance_path == "":
-		new_node = load(instance_path).instance()
+		new_node = load(instance_path).instantiate()
 	else:
-		new_node = Node.instance()
+		new_node = Node.instantiate()
 	if not node_name == "":
 		new_node.name = node_name
 	if is_visible == false:

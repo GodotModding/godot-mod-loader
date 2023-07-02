@@ -1,5 +1,5 @@
 class_name _ModLoaderDependency
-extends Reference
+extends RefCounted
 
 
 # This Class provides methods for working with dependencies.
@@ -82,7 +82,7 @@ static func check_load_before(mod: ModData) -> void:
 			ModLoaderLog.debug("Load before - Skipping %s because it's missing" % load_before_id, LOG_NAME)
 			continue
 
-		var load_before_mod_dependencies := ModLoaderStore.mod_data[load_before_id].manifest.dependencies as PoolStringArray
+		var load_before_mod_dependencies := ModLoaderStore.mod_data[load_before_id].manifest.dependencies as PackedStringArray
 
 		# Check if it's already a dependency
 		if mod.dir_name in load_before_mod_dependencies:
@@ -105,7 +105,7 @@ static func get_load_order(mod_data_array: Array) -> Array:
 			ModLoaderStore.mod_load_order.append(mod)
 
 	# Sort mods by the importance value
-	ModLoaderStore.mod_load_order.sort_custom(CompareImportance, "_compare_importance")
+	ModLoaderStore.mod_load_order.sort_custom(Callable(CompareImportance, "_compare_importance"))
 	return  ModLoaderStore.mod_load_order
 
 

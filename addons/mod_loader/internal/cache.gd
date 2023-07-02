@@ -1,5 +1,5 @@
 class_name _ModLoaderCache
-extends Reference
+extends RefCounted
 
 
 # This Class provides methods for caching data.

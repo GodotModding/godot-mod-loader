@@ -23,7 +23,7 @@ var is_valid := false
 func _init(_mod_id: String, _data: Dictionary, _save_path: String, _schema: Dictionary = {}) -> void:
 	name = _ModLoaderPath.get_file_name_from_path(_save_path, true, true)
 	mod_id = _mod_id
-	schema = ModLoaderStore.mod_data[_mod_id].manifest.config_schema if _schema.empty() else _schema
+	schema = ModLoaderStore.mod_data[_mod_id].manifest.config_schema if _schema.is_empty() else _schema
 	data = _data
 	save_path = _save_path
 
@@ -37,11 +37,11 @@ func _init(_mod_id: String, _data: Dictionary, _save_path: String, _schema: Dict
 
 
 func get_data_as_string() -> String:
-	return JSON.print(data)
+	return JSON.stringify(data)
 
 
 func get_schema_as_string() -> String:
-	return JSON.print(schema)
+	return JSON.stringify(schema)
 
 
 # Empty string if validation was successful
@@ -49,7 +49,7 @@ func validate() -> String:
 	var json_schema := JSONSchema.new()
 	var error := json_schema.validate(get_data_as_string(), get_schema_as_string())
 
-	if error.empty():
+	if error.is_empty():
 		is_valid = true
 	else:
 		is_valid = false

@@ -150,7 +150,7 @@ static func get_config_schema(mod_id: String) -> Dictionary:
 	var mod_configs := get_configs(mod_id)
 
 	# If no config files were found, return an empty dictionary
-	if mod_configs.empty():
+	if mod_configs.is_empty():
 		return {}
 
 	# The schema is the same for all config files, so we just return the schema of the default config file
@@ -171,14 +171,14 @@ static func get_schema_for_prop(config: ModConfig, prop: String) -> Dictionary:
 	var prop_array := prop.split(".")
 
 	# If the property array is empty, return the schema for the root property
-	if prop_array.empty():
+	if prop_array.is_empty():
 		return config.schema.properties[prop]
 
 	# Traverse the schema dictionary to find the schema for the specified property
 	var schema_for_prop := _traverse_schema(config.schema.properties, prop_array)
 
 	# If the schema for the property is empty, log an error and return an empty dictionary
-	if schema_for_prop.empty():
+	if schema_for_prop.is_empty():
 		ModLoaderLog.error("No Schema found for property \"%s\" in config \"%s\" for mod \"%s\"" % [prop, config.name, config.mod_id], LOG_NAME)
 		return {}
 
@@ -197,7 +197,7 @@ static func get_schema_for_prop(config: ModConfig, prop: String) -> Dictionary:
 # If the target property is not found, an empty dictionary is returned.
 static func _traverse_schema(schema_prop: Dictionary, prop_key_array: Array) -> Dictionary:
 	# Return the current schema_prop if the prop_key_array is empty (reached the destination property)
-	if prop_key_array.empty():
+	if prop_key_array.is_empty():
 		return schema_prop
 
 	# Get and remove the first prop_key in the array
@@ -210,7 +210,7 @@ static func _traverse_schema(schema_prop: Dictionary, prop_key_array: Array) -> 
 	schema_prop = schema_prop[prop_key]
 
 	# If the schema_prop has a 'type' key, is of type 'object', and there are more property keys remaining
-	if schema_prop.has("type") and schema_prop.type == "object" and not prop_key_array.empty():
+	if schema_prop.has("type") and schema_prop.type == "object" and not prop_key_array.is_empty():
 		# Set the properties of the object as the current 'schema_prop'
 		schema_prop = schema_prop.properties
 
@@ -234,7 +234,7 @@ static func get_mods_with_config() -> Array:
 		var mod_data = ModLoaderStore.mod_data[mod_id]
 
 		# Check if the mod has any configuration files
-		if not mod_data.configs.empty():
+		if not mod_data.configs.is_empty():
 			mods_with_config.push_back(mod_data)
 
 	# Return the array of mods with configuration files
@@ -258,7 +258,7 @@ static func get_configs(mod_id: String) -> Dictionary:
 	var config_dictionary: Dictionary = ModLoaderStore.mod_data[mod_id].configs
 
 	# Check if there is no config file for the mod
-	if config_dictionary.empty():
+	if config_dictionary.is_empty():
 		ModLoaderLog.debug("No config for mod id \"%s\"" % mod_id, LOG_NAME, true)
 		return {}
 
