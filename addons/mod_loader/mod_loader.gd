@@ -336,7 +336,7 @@ func _init_mod(mod: ModData) -> void:
 	var mod_main_script := ResourceLoader.load(mod_main_path)
 	ModLoaderLog.debug("Loaded script -> %s" % mod_main_script, LOG_NAME)
 
-	var mod_main_instance: Node = mod_main_script.new(self)
+	var mod_main_instance: Node = mod_main_script.new()
 	mod_main_instance.name = mod.manifest.get_mod_id()
 
 	ModLoaderStore.saved_mod_mains[mod_main_path] = mod_main_instance
