@@ -12,7 +12,7 @@ extends Node
 # Most of these settings should never need to change, aside from the DEBUG_*
 # options (which should be `false` when distributing compiled PCKs)
 
-const MODLOADER_VERSION = "6.0.3"
+const MODLOADER_VERSION = "6.1.0"
 
 # If true, a complete array of filepaths is stored for each mod. This is
 # disabled by default because the operation can be very expensive, but may
