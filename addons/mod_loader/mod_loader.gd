@@ -333,10 +333,21 @@ func _init_mod(mod: ModData) -> void:
 		ModLoaderLog.debug("Initialized overwrite script -> %s" % mod_overwrites_path, LOG_NAME)
 
 	ModLoaderLog.debug("Loading script from -> %s" % mod_main_path, LOG_NAME)
-	var mod_main_script := ResourceLoader.load(mod_main_path)
+	var mod_main_script: GDScript = ResourceLoader.load(mod_main_path)
 	ModLoaderLog.debug("Loaded script -> %s" % mod_main_script, LOG_NAME)
 
-	var mod_main_instance: Node = mod_main_script.new(self)
+	var argument_found: bool = false
+	for method in mod_main_script.get_script_method_list():
+		if method.name == "_init":
+			if method.args.size() > 0:
+				argument_found = true
+	
+	var mod_main_instance: Node
+	if argument_found:
+		mod_main_instance = mod_main_script.new(self)
+		ModLoaderDeprecated.deprecated_message("The mod_main.gd _init argument (modLoader = ModLoader) is deprecated. Remove it from your _init to avoid crashes in the next major version.", "6.1.0")
+	else:
+		mod_main_instance = mod_main_script.new()
 	mod_main_instance.name = mod.manifest.get_mod_id()
 
 	ModLoaderStore.saved_mod_mains[mod_main_path] = mod_main_instance
