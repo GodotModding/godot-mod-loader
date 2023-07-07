@@ -345,7 +345,8 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 	if only_once and _is_logged_before(log_entry):
 		return
 
-	_store_log(log_entry)
+	if ModLoaderStore:
+		_store_log(log_entry)
 
 	# Check if the scene_tree is available
 	if Engine.get_main_loop():
@@ -385,6 +386,9 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 
 
 static func _is_mod_name_ignored(mod_name: String) -> bool:
+	if not ModLoaderStore:
+		return false
+
 	var ignored_mod_names := ModLoaderStore.ml_options.ignored_mod_names_in_log as Array
 
 	if not ignored_mod_names.size() == 0:

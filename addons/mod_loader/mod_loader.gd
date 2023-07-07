@@ -341,7 +341,7 @@ func _init_mod(mod: ModData) -> void:
 		if method.name == "_init":
 			if method.args.size() > 0:
 				argument_found = true
-	
+
 	var mod_main_instance: Node
 	if argument_found:
 		mod_main_instance = mod_main_script.new(self)
