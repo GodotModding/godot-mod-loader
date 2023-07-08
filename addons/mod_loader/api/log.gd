@@ -398,7 +398,9 @@ static func _is_mod_name_ignored(mod_name: String) -> bool:
 
 
 static func _get_verbosity() -> int:
-		return ModLoaderStore.ml_options.log_level
+	if not ModLoaderStore:
+		return VERBOSITY_LEVEL.DEBUG
+	return ModLoaderStore.ml_options.log_level
 
 
 static func _store_log(log_entry: ModLoaderLogEntry) -> void:

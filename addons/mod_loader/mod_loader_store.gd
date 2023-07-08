@@ -170,7 +170,6 @@ func _update_ml_options_from_options_resource() -> void:
 		for key in ml_options:
 			ml_options[key] = current_options[key]
 
-
 	# Get options overrides by feature tags
 	# An override is saved as Dictionary[String: ModLoaderOptionsProfile]
 	for feature_tag in options_resource.feature_override_options.keys():
@@ -182,20 +181,24 @@ func _update_ml_options_from_options_resource() -> void:
 				"https://docs.godotengine.org/en/3.5/tutorials/export/feature_tags.html"
 			), LOG_NAME)
 			continue
+
 		if not OS.has_feature(feature_tag):
-			var override_options = options_resource.feature_override_options[feature_tag]
-			if not override_options is ModLoaderOptionsProfile:
-				ModLoaderLog.error(str(
-					"Options override is not a valid Resource of type ModLoaderOptionsProfile. ",
-					"Options override key with invalid resource: \"%s\". " % feature_tag,
-					"Please edit your options at %s. " % ml_options_path
-				), LOG_NAME)
-				continue
-			# Update from the options in the resource
-			for key in ml_options:
-				ml_options[key] = override_options[key]
+			ModLoaderLog.info("Options override feature tag \"%s\". does not apply, skipping." % feature_tag, LOG_NAME)
+			continue
 
+		ModLoaderLog.info("Applying options override with feature tag \"%s\"." % feature_tag, LOG_NAME)
+		var override_options = options_resource.feature_override_options[feature_tag]
+		if not override_options is ModLoaderOptionsProfile:
+			ModLoaderLog.error(str(
+				"Options override is not a valid Resource of type ModLoaderOptionsProfile. ",
+				"Options override key with invalid resource: \"%s\". " % feature_tag,
+				"Please edit your options at %s. " % ml_options_path
+			), LOG_NAME)
+			continue
 
+		# Update from the options in the resource
+		for key in ml_options:
+			ml_options[key] = override_options[key]
 
 
 # Update ModLoader's options, via CLI args
