@@ -51,7 +51,7 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 	var mod_dir := Directory.new()
 	var mod_dir_open_error := mod_dir.open(folder_path)
 	if not mod_dir_open_error == OK:
-		ModLoaderLog.error("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
+		ModLoaderLog.info("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
 		return {}
 	var mod_dir_listdir_error := mod_dir.list_dir_begin()
 	if not mod_dir_listdir_error == OK:
