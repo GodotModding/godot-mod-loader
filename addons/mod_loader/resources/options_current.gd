@@ -1,4 +1,4 @@
 class_name ModLoaderCurrentOptions
 extends Resource
 
-@export (Resource) var current_options = null
+@export var current_options: Resource = null

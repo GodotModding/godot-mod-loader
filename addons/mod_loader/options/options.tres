@@ -1,8 +1,8 @@
-[gd_resource type="Resource" load_steps=3 format=2]
+[gd_resource type="Resource" script_class="ModLoaderCurrentOptions" load_steps=3 format=3 uid="uid://bpcdng3mul5uy"]
 
-[ext_resource path="res://addons/mod_loader/options/profiles/current.tres" type="Resource" id=1]
-[ext_resource path="res://addons/mod_loader/resources/options_current.gd" type="Script" id=2]
+[ext_resource type="Resource" uid="uid://bevs2mhkw1isv" path="res://addons/mod_loader/options/profiles/current.tres" id="1"]
+[ext_resource type="Script" path="res://addons/mod_loader/resources/options_current.gd" id="2"]
 
 [resource]
-script = ExtResource( 2 )
-current_options = ExtResource( 1 )
+script = ExtResource("2")
+current_options = ExtResource("1")
