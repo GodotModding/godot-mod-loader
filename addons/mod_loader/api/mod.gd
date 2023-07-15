@@ -91,7 +91,7 @@ static func append_node_in_scene(modified_scene: Node, node_name: String = "", n
 	if not instance_path == "":
 		new_node = load(instance_path).instantiate()
 	else:
-		new_node = Node.instantiate()
+		new_node = Node.new()
 	if not node_name == "":
 		new_node.name = node_name
 	if is_visible == false:
