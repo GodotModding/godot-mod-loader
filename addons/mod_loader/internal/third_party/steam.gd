@@ -15,10 +15,9 @@ static func load_steam_workshop_zips() -> int:
 
 	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 
-	var workshop_dir := DirAccess.new()
-	var workshop_dir_open_error := workshop_dir.open(workshop_folder_path)
-	if not workshop_dir_open_error == OK:
-		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_open_error], LOG_NAME)
+	var workshop_dir := DirAccess.open(workshop_folder_path)
+	if workshop_dir == null:
+		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir.get_open_error()], LOG_NAME)
 		return -1
 	var workshop_dir_listdir_error := workshop_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not workshop_dir_listdir_error == OK:
@@ -73,7 +72,7 @@ static func _get_path_to_workshop() -> String:
 	path = "/".join(path_array)
 
 	# Append the workgame's workshop path
-	path = path.plus_file("workshop/content/" + _get_steam_app_id())
+	path = path.path_join("workshop/content/" + _get_steam_app_id())
 
 	return path
 
@@ -85,9 +84,9 @@ static func _get_path_to_workshop() -> String:
 static func _get_steam_app_id() -> String:
 	var game_install_directory := _ModLoaderPath.get_local_folder_dir()
 	var steam_app_id := ""
-	var file := File.new()
+	var file := FileAccess.open(game_install_directory.path_join("steam_data.json"), FileAccess.READ)
 
-	if file.open(game_install_directory.plus_file("steam_data.json"), File.READ) == OK:
+	if not file == null:
 		var test_json_conv = JSON.new()
 		test_json_conv.parse(file.get_as_text())
 		var file_content: Dictionary = test_json_conv.get_data()
@@ -99,6 +98,6 @@ static func _get_steam_app_id() -> String:
 
 		steam_app_id = file_content.app_id
 	else :
-		ModLoaderLog.error("Can't open steam_data file, \"%s\". Please make sure the file exists and is valid." % game_install_directory.plus_file("steam_data.json"), LOG_NAME)
+		ModLoaderLog.error("Can't open steam_data file, \"%s\". Please make sure the file exists and is valid." % game_install_directory.path_join("steam_data.json"), LOG_NAME)
 
 	return steam_app_id
