@@ -142,13 +142,13 @@ func _has_manifest(mod_manifest: ModManifest) -> bool:
 func get_required_mod_file_path(required_file: int) -> String:
 	match required_file:
 		required_mod_files.MOD_MAIN:
-			return dir_path.plus_file("mod_main.gd")
+			return dir_path.path_join("mod_main.gd")
 		required_mod_files.MANIFEST:
-			return dir_path.plus_file("manifest.json")
+			return dir_path.path_join("manifest.json")
 	return ""
 
 func get_optional_mod_file_path(optional_file: int) -> String:
 	match optional_file:
 		optional_mod_files.OVERWRITES:
-			return dir_path.plus_file("overwrites.gd")
+			return dir_path.path_join("overwrites.gd")
 	return ""
