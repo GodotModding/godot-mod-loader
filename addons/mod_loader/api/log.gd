@@ -364,7 +364,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 			push_error(message)
 			_write_to_log_file(log_entry.get_entry())
 			_write_to_log_file(JSON.stringify(get_stack(), "  "))
-			assert(false) #,message)
+#			assert(false) #,message)
 		"error":
 			printerr(message)
 			push_error(message)
@@ -462,13 +462,12 @@ static func _get_date_time_string() -> String:
 # =============================================================================
 
 static func _write_to_log_file(string_to_write: String) -> void:
-	var log_file := File.new()
-
-	if not log_file.file_exists(MOD_LOG_PATH):
+	if not FileAccess.file_exists(MOD_LOG_PATH):
 		_rotate_log_file()
 
-	var error := log_file.open(MOD_LOG_PATH, File.READ_WRITE)
-	if not error == OK:
+	var log_file := FileAccess.open(MOD_LOG_PATH, FileAccess.READ_WRITE)
+
+	if log_file == null:
 		assert(false) #,"Could not open log file, error code: %s" % error)
 		return
 
@@ -480,39 +479,36 @@ static func _write_to_log_file(string_to_write: String) -> void:
 # Keeps log backups for every run, just like the Godot gdscript implementation of
 # https://github.com/godotengine/godot/blob/1d14c054a12dacdc193b589e4afb0ef319ee2aae/core/io/logger.cpp#L151
 static func _rotate_log_file() -> void:
-	var MAX_LOGS := int(ProjectSettings.get_setting("logging/file_logging/max_log_files"))
-	var log_file := File.new()
+	var MAX_LOGS: int = ProjectSettings.get_setting("debug/file_logging/max_log_files")
 
-	if log_file.file_exists(MOD_LOG_PATH):
+	if FileAccess.file_exists(MOD_LOG_PATH):
 		if MAX_LOGS > 1:
 			var datetime := _get_date_time_string().replace(":", ".")
 			var backup_name: String = MOD_LOG_PATH.get_basename() + "_" + datetime
 			if MOD_LOG_PATH.get_extension().length() > 0:
 				backup_name += "." + MOD_LOG_PATH.get_extension()
 
-			var dir := DirAccess.new()
-			if dir.dir_exists(MOD_LOG_PATH.get_base_dir()):
+			var dir := DirAccess.open(MOD_LOG_PATH.get_base_dir())
+			if not dir == null:
 				dir.copy(MOD_LOG_PATH, backup_name)
 			_clear_old_log_backups()
 
 	# only File.WRITE creates a new file, File.READ_WRITE throws an error
-	var error := log_file.open(MOD_LOG_PATH, File.WRITE)
-	if not error == OK:
+	var log_file := FileAccess.open(MOD_LOG_PATH, FileAccess.WRITE)
+	if log_file == null:
 		assert(false) #,"Could not open log file, error code: %s" % error)
 	log_file.store_string('%s Created log' % _get_date_string())
 	log_file.close()
 
 
 static func _clear_old_log_backups() -> void:
-	var MAX_LOGS := int(ProjectSettings.get_setting("logging/file_logging/max_log_files"))
+	var MAX_LOGS := int(ProjectSettings.get_setting("debug/file_logging/max_log_files"))
 	var MAX_BACKUPS := MAX_LOGS - 1 # -1 for the current new log (not a backup)
 	var basename := MOD_LOG_PATH.get_file().get_basename() as String
 	var extension := MOD_LOG_PATH.get_extension() as String
 
-	var dir := DirAccess.new()
-	if not dir.dir_exists(MOD_LOG_PATH.get_base_dir()):
-		return
-	if not dir.open(MOD_LOG_PATH.get_base_dir()) == OK:
+	var dir := DirAccess.open(MOD_LOG_PATH.get_base_dir())
+	if dir == null:
 		return
 
 	dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
