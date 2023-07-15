@@ -23,7 +23,7 @@ static func get_local_folder_dir(subfolder: String = "") -> String:
 	if OS.has_feature("editor"):
 		game_install_directory = "res://"
 
-	return game_install_directory.plus_file(subfolder)
+	return game_install_directory.path_join(subfolder)
 
 
 # Get the path where override.cfg will be stored.
@@ -37,7 +37,7 @@ static func get_override_path() -> String:
 		# executable dir anyway, so it is exactly what we need
 		base_path = OS.get_executable_path().get_base_dir()
 
-	return base_path.plus_file("override.cfg")
+	return base_path.path_join("override.cfg")
 
 
 # Provide a path, get the file name at the end of the path
@@ -69,11 +69,12 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 	var dirs := [p_dir]
 	var first := true
 	while not dirs.is_empty():
-		var dir := DirAccess.new()
 		var dir_name: String = dirs.back()
 		dirs.pop_back()
 
-		if dir.open(dir_name) == OK:
+		var dir := DirAccess.open(dir_name)
+
+		if not dir == null:
 			var _dirlist_error: int = dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 			var file_name := dir.get_next()
 			while file_name != "":
@@ -83,7 +84,7 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 				if not file_name.begins_with(".") and not file_name.get_extension() in ["tmp", "import"]:
 					# If a directory, then add to list of directories to visit
 					if dir.current_is_dir():
-						dirs.push_back(dir.get_current_dir().plus_file(file_name))
+						dirs.push_back(dir.get_current_dir().path_join(file_name))
 					# If a file, check if we already have a record for the same name
 					else:
 						var path := dir.get_current_dir() + ("/" if not first else "") + file_name
@@ -109,19 +110,18 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 static func get_file_paths_in_dir(src_dir_path: String) -> Array:
 	var file_paths := []
 
-	var directory := DirAccess.new()
-	var error := directory.open(src_dir_path)
+	var dir := DirAccess.open(src_dir_path)
 
-	if not error  == OK:
+	if dir == null:
 		return file_paths
 		ModLoaderLog.error("Error opening directory", LOG_NAME)
 
-	directory.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
-	var file_name := directory.get_next()
+	dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
+	var file_name := dir.get_next()
 	while (file_name != ""):
-		if not directory.current_is_dir():
-			file_paths.push_back(src_dir_path.plus_file(file_name))
-		file_name = directory.get_next()
+		if not dir.current_is_dir():
+			file_paths.push_back(src_dir_path.path_join(file_name))
+		file_name = dir.get_next()
 
 	return file_paths
 
@@ -150,11 +150,11 @@ static func get_path_to_configs() -> String:
 
 # Get the path to a mods config folder
 static func get_path_to_mod_configs_dir(mod_id: String) -> String:
-	return get_path_to_configs().plus_file(mod_id)
+	return get_path_to_configs().path_join(mod_id)
 
 
 # Get the path to a mods config file
 static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> String:
 	var mod_config_dir := get_path_to_mod_configs_dir(mod_id)
 
-	return mod_config_dir.plus_file( config_name + ".json")
+	return mod_config_dir.path_join(config_name + ".json")

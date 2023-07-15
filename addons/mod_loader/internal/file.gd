@@ -51,7 +51,7 @@ static func load_zips_in_folder(folder_path: String) -> int:
 
 	var mod_dir := DirAccess.open(folder_path)
 	if mod_dir == null:
-		ModLoaderLog.error("Can't open mod folder %s (Error: %s)" % [folder_path], LOG_NAME)
+		ModLoaderLog.error("Can't open mod folder %s" % [folder_path], LOG_NAME)
 		return -1
 
 	var mod_dir_open_error := mod_dir.get_open_error()
@@ -138,7 +138,7 @@ static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 			return false
 
 	if file_exists(filepath):
-		ModLoaderLog.fatal("Encountered an error (%s) when attempting to open a file, with the path: %s" % [filepath], LOG_NAME)
+		ModLoaderLog.fatal("Encountered an error when attempting to open a file, with the path: %s" % [filepath], LOG_NAME)
 		return false
 
 	# Save data to the file
