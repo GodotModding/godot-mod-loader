@@ -20,7 +20,7 @@ static func get_local_folder_dir(subfolder: String = "") -> String:
 	if OS.has_feature("editor"):
 		game_install_directory = "res://"
 
-	return game_install_directory.plus_file(subfolder)
+	return game_install_directory.path_join(subfolder)
 
 
 # Provide a path, get the file name at the end of the path
@@ -68,7 +68,7 @@ static func get_override_path() -> String:
 		# executable dir anyway, so it is exactly what we need
 		base_path = OS.get_executable_path().get_base_dir()
 
-	return base_path.plus_file("override.cfg")
+	return base_path.path_join("override.cfg")
 
 
 # Register an array of classes to the global scope, since Godot only does that in the editor.
@@ -104,8 +104,7 @@ static func _is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 		ModLoaderSetupLog.fatal("Global class to be registered is missing one of %s" % required_fields, LOG_NAME)
 		return false
 
-	var file = File.new()
-	if not file.file_exists(global_class_dict.path):
+	if not FileAccess.file_exists(global_class_dict.path):
 		ModLoaderSetupLog.fatal('Class "%s" to be registered as global could not be found at given path "%s"' %
 		[global_class_dict.class, global_class_dict.path], LOG_NAME)
 		return false
