@@ -66,7 +66,7 @@ func _init(manifest: Dictionary) -> void:
 		return
 
 	name = manifest.name
-	mod_namespace = manifest.mod_namespace
+	mod_namespace = manifest.namespace
 	version_number = manifest.version_number
 
 	if (

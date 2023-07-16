@@ -48,14 +48,14 @@ static func get_dict_from_dict(dict: Dictionary, key: String) -> Dictionary:
 # Works like [method Dictionary.has_all],
 # but allows for more specific errors if a field is missing
 static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
-	var missing_fields := required_fields
+	var missing_fields := required_fields.duplicate()
 
 	for key in dict.keys():
 		if(required_fields.has(key)):
 			missing_fields.erase(key)
 
 	if missing_fields.size() > 0:
-		ModLoaderLog.fatal("Dictionary is missing required fields: %s" % missing_fields, LOG_NAME)
+		ModLoaderLog.fatal("Dictionary is missing required fields: %s" % str(missing_fields), LOG_NAME)
 		return false
 
 	return true
