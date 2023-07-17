@@ -24,7 +24,7 @@ signal logged(entry)
 signal current_config_changed(config)
 
 # Prefix for this file when using mod_log or dev_log
-const LOG_NAME := "ModLoader"
+const LOG_NAME := "ModLoader:Loader"
 
 # --- DEPRECATED ---
 # UNPACKED_DIR was moved to ModLoaderStore.

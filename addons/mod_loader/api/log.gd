@@ -385,15 +385,27 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 				_write_to_log_file(log_entry.get_entry())
 
 
-static func _is_mod_name_ignored(mod_name: String) -> bool:
+static func _is_mod_name_ignored(mod_log_name: String) -> bool:
 	if not ModLoaderStore:
 		return false
 
-	var ignored_mod_names := ModLoaderStore.ml_options.ignored_mod_names_in_log as Array
+	var ignored_mod_log_names := ModLoaderStore.ml_options.ignored_mod_names_in_log as Array
 
-	if not ignored_mod_names.size() == 0:
-		if mod_name in ignored_mod_names:
-			return true
+	# No ignored mod names
+	if ignored_mod_names.size() == 0:
+		return false
+
+	# Directly match a full mod log name. ex: "ModLoader:Deprecated"
+	if mod_log_name in ignored_mod_names:
+		return true
+
+	# Match a mod log name with a wildcard. ex: "ModLoader:*"
+	for ignored_mod_name in ignored_mod_names:
+		if ignored_mod_name.ends_with("*"):
+			if mod_log_name.begins_with(ignored_mod_name.replace("*", "")):
+				return true
+
+	# No match
 	return false
 
 
