@@ -402,7 +402,7 @@ static func _is_mod_name_ignored(mod_log_name: String) -> bool:
 	# Match a mod log name with a wildcard. ex: "ModLoader:*"
 	for ignored_mod_name in ignored_mod_names:
 		if ignored_mod_name.ends_with("*"):
-			if mod_log_name.begins_with(ignored_mod_name.replace("*", "")):
+			if mod_log_name.begins_with(ignored_mod_name.trim_suffix("*")):
 				return true
 
 	# No match
