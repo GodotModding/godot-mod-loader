@@ -65,3 +65,4 @@ static func _deprecated_log(msg: String) -> void:
 		ModLoaderLog.warning(msg, LOG_NAME)
 	else:
 		ModLoaderLog.fatal(msg, LOG_NAME)
+	ModLoaderLog.debugLine()

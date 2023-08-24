@@ -540,6 +540,32 @@ static func _clear_old_log_backups() -> void:
 			dir.remove(file_to_delete)
 
 
+
+# Debugging function
+# =============================================================================
+
+# Logs the source location and code line
+# parameters:
+# - Optionaltext
+# - depth (stack item, -1 is default set to last item)
+static func debugLine(optionaltext:String = "Problem File", depth:int = -1) -> void:
+	var frame = get_stack()
+	
+	# Condition to -1 to take last stach element and prevent from
+	# inputing negative numbers
+	if depth<0: #Get the top stack
+		depth = frame.size()-1
+	
+	# To prevent function from crashing if depth to high
+	if depth > frame.size()-1:
+		depth = frame.size()-1
+	
+	var line = "Line:" + str(frame[depth]["line"])
+	var source = "Source:" + frame[depth]["source"]
+	var function = "Function:" + frame[depth]["function"]
+	print("%s - %s - %s - %s" % [optionaltext,source,function,line])
+
+
 # Internal util funcs
 # =============================================================================
 # This are duplicates of the functions in mod_loader_utils.gd to prevent
