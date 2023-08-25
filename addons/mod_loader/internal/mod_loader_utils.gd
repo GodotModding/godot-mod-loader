@@ -5,14 +5,14 @@ extends Node
 const LOG_NAME := "ModLoader:ModLoaderUtils"
 
 
-# This is a dummy func. It is exclusively used to show notes in the code that
-# stay visible after decompiling a PCK, as is primarily intended to assist new
-# modders in understanding and troubleshooting issues
+## This is a dummy func. It is exclusively used to show notes in the code that
+## stay visible after decompiling a PCK, as is primarily intended to assist new
+## modders in understanding and troubleshooting issues
 static func _code_note(_msg:String):
 	pass
 
 
-# Returns an empty String if the key does not exist or is not type of String
+## Returns an empty [String] if the key does not exist or is not type of [String]
 static func get_string_from_dict(dict: Dictionary, key: String) -> String:
 	if not dict.has(key):
 		return ""
@@ -23,7 +23,7 @@ static func get_string_from_dict(dict: Dictionary, key: String) -> String:
 	return dict[key]
 
 
-# Returns an empty Array if the key does not exist or is not type of Array
+## Returns an empty [Array] if the key does not exist or is not type of [Array]
 static func get_array_from_dict(dict: Dictionary, key: String) -> Array:
 	if not dict.has(key):
 		return []
@@ -34,7 +34,7 @@ static func get_array_from_dict(dict: Dictionary, key: String) -> Array:
 	return dict[key]
 
 
-# Returns an empty Dictionary if the key does not exist or is not type of Dictionary
+## Returns an empty [Dictionary] if the key does not exist or is not type of [Dictionary]
 static func get_dict_from_dict(dict: Dictionary, key: String) -> Dictionary:
 	if not dict.has(key):
 		return {}
@@ -45,8 +45,8 @@ static func get_dict_from_dict(dict: Dictionary, key: String) -> Dictionary:
 	return dict[key]
 
 
-# Works like [method Dictionary.has_all],
-# but allows for more specific errors if a field is missing
+## Works like [method Dictionary.has_all],
+## but allows for more specific errors if a field is missing
 static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
 	var missing_fields := required_fields.duplicate()
 
@@ -61,7 +61,7 @@ static func dict_has_fields(dict: Dictionary, required_fields: Array) -> bool:
 	return true
 
 
-# Register an array of classes to the global scope, since Godot only does that in the editor.
+## Register an array of classes to the global scope, since Godot only does that in the editor.
 static func register_global_classes_from_array(new_global_classes: Array) -> void:
 	var registered_classes: Array = ProjectSettings.get_setting("_global_script_classes")
 	var registered_class_icons: Dictionary = ProjectSettings.get_setting("_global_script_class_icons")
@@ -84,8 +84,8 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 	ProjectSettings.set_setting("_global_script_class_icons", registered_class_icons)
 
 
-# Checks if all required fields are in the given [Dictionary]
-# Format: { "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }
+## Checks if all required fields are in the given [Dictionary]
+## Format: [code]{ "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }[/code]
 static func _is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 	var required_fields := ["base", "class", "language", "path"]
 	if not global_class_dict.has_all(required_fields):
@@ -100,7 +100,7 @@ static func _is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 	return true
 
 
-# Returns the string in between two strings in a provided string
+## Returns the [String] in between two strings in a provided [String]
 static func get_string_in_between(string: String, initial: String, ending: String) -> String:
 	var start_index: int = string.find(initial)
 	if start_index == -1:
@@ -119,54 +119,53 @@ static func get_string_in_between(string: String, initial: String, ending: Strin
 	return found_string
 
 
-# Deprecated
-# =============================================================================
-
-# Logs the error in red and a stack trace. Prefixed FATAL-ERROR
-# Stops the execution in editor
-# Always logged
+## Deprecated[br]
+## =============================================================================[br][br]
+## Logs the error in red and a stack trace. Prefixed FATAL-ERROR
+## Stops the execution in editor
+## Always logged
 static func log_fatal(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_fatal", "ModLoaderLog.fatal", "6.0.0")
+	ModLoaderDeprecated.deprecated_changed("ModLoaderUtils.log_fatal", "ModLoaderLog.fatal", "6.0.0")
 	ModLoaderLog.fatal(message, mod_name)
 
 
-# Logs the message and pushed an error. Prefixed ERROR
-# Always logged
+## Logs the message and pushed an error. Prefixed ERROR
+## Always logged
 static func log_error(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_error", "ModLoaderLog.error", "6.0.0")
+	ModLoaderDeprecated.deprecated_changed("ModLoaderUtils.log_error", "ModLoaderLog.error", "6.0.0")
 	ModLoaderLog.error(message, mod_name)
 
 
-# Logs the message and pushes a warning. Prefixed WARNING
-# Logged with verbosity level at or above warning (-v)
+## Logs the message and pushes a warning. Prefixed WARNING
+## Logged with verbosity level at or above warning (-v)
 static func log_warning(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_warning", "ModLoaderLog.warning", "6.0.0")
+	ModLoaderDeprecated.deprecated_changed("ModLoaderUtils.log_warning", "ModLoaderLog.warning", "6.0.0")
 	ModLoaderLog.warning(message, mod_name)
 
 
-# Logs the message. Prefixed INFO
-# Logged with verbosity level at or above info (-vv)
+## Logs the message. Prefixed INFO
+## Logged with verbosity level at or above info (-vv)
 static func log_info(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_info", "ModLoaderLog.info", "6.0.0")
+	ModLoaderDeprecated.deprecated_changed("ModLoaderUtils.log_info", "ModLoaderLog.info", "6.0.0")
 	ModLoaderLog.info(message, mod_name)
 
 
-# Logs the message. Prefixed SUCCESS
-# Logged with verbosity level at or above info (-vv)
+## Logs the message. Prefixed SUCCESS
+## Logged with verbosity level at or above info (-vv)
 static func log_success(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_success", "ModLoaderLog.success", "6.0.0")
+	ModLoaderDeprecated.deprecated_changed("ModLoaderUtils.log_success", "ModLoaderLog.success", "6.0.0")
 	ModLoaderLog.success(message, mod_name)
 
 
-# Logs the message. Prefixed DEBUG
-# Logged with verbosity level at or above debug (-vvv)
+## Logs the message. Prefixed DEBUG
+## Logged with verbosity level at or above debug (-vvv)
 static func log_debug(message: String, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_debug", "ModLoaderLog.debug", "6.0.0")
+	ModLoaderDeprecated.deprecated_changed("ModLoaderUtils.log_debug", "ModLoaderLog.debug", "6.0.0")
 	ModLoaderLog.debug(message, mod_name)
 
 
-# Logs the message formatted with [method JSON.print]. Prefixed DEBUG
-# Logged with verbosity level at or above debug (-vvv)
+## Logs the message formatted with [method JSON.print]. Prefixed DEBUG
+## Logged with verbosity level at or above debug (-vvv)
 static func log_debug_json_print(message: String, json_printable, mod_name: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.log_debug_json_print", "ModLoaderLog.debug_json_print", "6.0.0")
+	ModLoaderDeprecated.deprecated_changed("ModLoaderUtils.log_debug_json_print", "ModLoaderLog.debug_json_print", "6.0.0")
 	ModLoaderLog.debug_json_print(message, json_printable, mod_name)
