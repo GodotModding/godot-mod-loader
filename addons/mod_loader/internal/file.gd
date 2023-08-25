@@ -167,7 +167,7 @@ static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 	var file := FileAccess.open(filepath, FileAccess.WRITE)
 
 	if not file:
-		ModLoaderLog.fatal("Encountered an error when attempting to open a file, with the path: %s" % [filepath], LOG_NAME)
+		ModLoaderLog.fatal("Encountered an error (%s) when attempting to write to a file, with the path: %s" % [FileAccess.get_open_error(), filepath], LOG_NAME)
 		return false
 
 	file.store_string(save_string)
