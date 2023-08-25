@@ -163,12 +163,12 @@ static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 			ModLoaderLog.fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
 			return false
 
-	if file_exists(filepath):
-		ModLoaderLog.fatal("Encountered an error when attempting to open a file, with the path: %s" % [filepath], LOG_NAME)
-		return false
-
 	# Save data to the file
 	var file := FileAccess.open(filepath, FileAccess.WRITE)
+
+	if not file:
+		ModLoaderLog.fatal("Encountered an error when attempting to open a file, with the path: %s" % [filepath], LOG_NAME)
+		return false
 
 	file.store_string(save_string)
 	file.close()
