@@ -158,7 +158,7 @@ static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 	))
 
 	if not dir:
-		var makedir_error := DirAccess.make_dir_recursive_absolute(file_directory)
+		var makedir_error := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(file_directory))
 		if not makedir_error == OK:
 			ModLoaderLog.fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
 			return false
@@ -227,3 +227,4 @@ static func dir_exists(path: String) -> bool:
 # modders in understanding and troubleshooting issues.
 static func _code_note(_msg:String):
 	pass
+
