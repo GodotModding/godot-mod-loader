@@ -110,7 +110,9 @@ func _load_config(config_file_path: String) -> void:
 func _set_current_config(new_current_config: ModConfig) -> void:
 	ModLoaderUserProfile.set_mod_current_config(dir_name, new_current_config)
 	current_config = new_current_config
-	ModLoader.emit_signal("current_config_changed", new_current_config)
+	# We can't emit the signal if the ModLoader is not initialized yet
+	if ModLoader:
+		ModLoader.current_config_changed.emit(new_current_config)
 
 
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]
