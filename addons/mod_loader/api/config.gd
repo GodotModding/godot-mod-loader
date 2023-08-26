@@ -306,7 +306,14 @@ static func get_default_config(mod_id: String) -> ModConfig:
 # The configuration as a ModConfig object or null if not found.
 static func get_current_config(mod_id: String) -> ModConfig:
 	var current_config_name := get_current_config_name(mod_id)
-	var current_config := get_config(mod_id, current_config_name)
+	var current_config: ModConfig
+
+	# Load the default configuration if there is no configuration set as current yet
+	# Otherwise load the corresponding configuration
+	if current_config_name.is_empty():
+		current_config = get_default_config(mod_id)
+	else:
+		current_config = get_config(mod_id, current_config_name)
 
 	return current_config
 
