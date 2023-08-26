@@ -266,7 +266,7 @@ static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mo
 			# Check if the entry has a zip_path key
 			mod_list_entry.has("zip_path") and
 			# Check if the entry has a zip_path
-			not mod_list_entry.zip_path.empty() and
+			not mod_list_entry.zip_path.is_empty() and
 			# Check if the zip file for the mod doesn't exist
 			not _ModLoaderFile.file_exists(mod_list_entry.zip_path)
 		):
