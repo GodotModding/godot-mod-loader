@@ -61,8 +61,6 @@ func _init() -> void:
 
 	# Load user profiles into ModLoaderStore
 	var _success_user_profile_load := ModLoaderUserProfile._load()
-	# Update the list of disabled mods in ModLoaderStore based on the current user profile
-	ModLoaderUserProfile._update_disabled_mods()
 
 	_load_mods()
 
@@ -87,11 +85,19 @@ func _exit_tree() -> void:
 func _load_mods() -> void:
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
-	var unzipped_mods := _load_mod_zips()
-	if unzipped_mods > 0:
-		ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % unzipped_mods, LOG_NAME)
-	else:
+	var zip_data := _load_mod_zips()
+
+	if zip_data.is_empty():
 		ModLoaderLog.info("No zipped mods found", LOG_NAME)
+	else:
+		ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % zip_data.size(), LOG_NAME)
+
+	# Initializes the mod_data dictionary if zipped mods are loaded.
+	# If mods are unpacked in the "mods-unpacked" directory,
+	# mod_data is initialized in the _setup_mods() function.
+	for mod_id in zip_data.keys():
+		var zip_path: String = zip_data[mod_id]
+		_init_mod_data(mod_id, zip_path)
 
 	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
 	# directory, which adds their data to mod_data.
@@ -100,6 +106,9 @@ func _load_mods() -> void:
 		ModLoaderLog.success("DONE: Setup %s mods" % setup_mods, LOG_NAME)
 	else:
 		ModLoaderLog.info("No mods were setup", LOG_NAME)
+
+	# Update active state of mods based on the current user profile
+	ModLoaderUserProfile._update_disabled_mods()
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
@@ -154,6 +163,11 @@ func _load_mods() -> void:
 	# Instance every mod and add it as a node to the Mod Loader
 	for mod in ModLoaderStore.mod_load_order:
 		mod = mod as ModData
+
+		# Continue if mod is disabled
+		if not mod.is_active:
+			continue
+
 		ModLoaderLog.info("Initializing -> %s" % mod.manifest.get_mod_id(), LOG_NAME)
 		_init_mod(mod)
 
@@ -213,19 +227,21 @@ func _check_autoload_positions() -> void:
 
 # Loop over "res://mods" and add any mod zips to the unpacked virtual directory
 # (UNPACKED_DIR)
-func _load_mod_zips() -> int:
-	var zipped_mods_count := 0
+func _load_mod_zips() -> Dictionary:
+	var zip_data := {}
 
 	if not ModLoaderStore.ml_options.steam_workshop_enabled:
 		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
 
 		# If we're not using Steam workshop, just loop over the mod ZIPs.
-		zipped_mods_count += _ModLoaderFile.load_zips_in_folder(mods_folder_path)
+		var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
+		zip_data.merge(loaded_zip_data)
 	else:
 		# If we're using Steam workshop, loop over the workshop item directories
-		zipped_mods_count += _ModLoaderSteam.load_steam_workshop_zips()
+		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
+		zip_data.merge(loaded_workshop_zip_data)
 
-	return zipped_mods_count
+	return zip_data
 
 
 # Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
@@ -265,8 +281,10 @@ func _setup_mods() -> int:
 			ModLoaderLog.info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
 			continue
 
-		# Init the mod data
-		_init_mod_data(mod_dir_name)
+		# Initialize the mod data for each mod if there is no existing mod data for that mod.
+		if not ModLoaderStore.mod_data.has(mod_dir_name):
+			_init_mod_data(mod_dir_name)
+
 		unpacked_mods_count += 1
 
 	dir.list_dir_end()
@@ -276,19 +294,20 @@ func _setup_mods() -> int:
 # Add a mod's data to mod_data.
 # The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
-func _init_mod_data(mod_folder_path: String) -> void:
-	# The file name should be a valid mod id
-	var dir_name := _ModLoaderPath.get_file_name_from_path(mod_folder_path, false, true)
+func _init_mod_data(mod_id: String, zip_path := "") -> void:
+		# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
+	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(mod_id)
 
-	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
-	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(dir_name)
-
-	var mod := ModData.new(local_mod_path)
-	mod.dir_name = dir_name
+	var mod := ModData.new()
+	if not zip_path.is_empty():
+		mod.zip_name = _ModLoaderPath.get_file_name_from_path(zip_path)
+		mod.zip_path = zip_path
+	mod.dir_path = local_mod_path
+	mod.dir_name = mod_id
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
-	mod.is_locked = true if dir_name in ModLoaderStore.ml_options.locked_mods else false
-	ModLoaderStore.mod_data[dir_name] = mod
+	mod.is_locked = true if mod_id in ModLoaderStore.ml_options.locked_mods else false
+	ModLoaderStore.mod_data[mod_id] = mod
 
 	# Get the mod file paths
 	# Note: This was needed in the original version of this script, but it's

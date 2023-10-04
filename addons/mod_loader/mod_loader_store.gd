@@ -12,7 +12,7 @@ extends Node
 # Most of these settings should never need to change, aside from the DEBUG_*
 # options (which should be `false` when distributing compiled PCKs)
 
-const MODLOADER_VERSION = "6.0.0"
+const MODLOADER_VERSION = "6.0.2"
 
 # If true, a complete array of filepaths is stored for each mod. This is
 # disabled by default because the operation can be very expensive, but may
@@ -43,6 +43,9 @@ var mod_missing_dependencies := {}
 # Set to false after ModLoader._init()
 # Helps to decide whether a script extension should go through the _ModLoaderScriptExtension.handle_script_extensions() process
 var is_initializing := true
+
+# Used when loading mod zips to determine which mod zip corresponds to which mod directory in the UNPACKED_DIR.
+var previous_mod_dirs := []
 
 # Store all extenders paths
 var script_extensions := []
@@ -80,10 +83,11 @@ var logged_messages := {
 
 # Active user profile
 var current_user_profile: ModUserProfile
-# List of user profiles loaded from user://mods.json
+
+# List of user profiles loaded from user://mod_user_profiles.json
 var user_profiles :=  {}
 
-# ModLoader cache is stored in user://ModLoaderCache.json
+# ModLoader cache is stored in user://mod_loader_cache.json
 var cache := {}
 
 # These variables handle various options, which can be changed either via

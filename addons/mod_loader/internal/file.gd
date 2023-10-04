@@ -46,22 +46,23 @@ static func _get_json_string_as_dict(string: String) -> Dictionary:
 
 
 # Load the mod ZIP from the provided directory
-static func load_zips_in_folder(folder_path: String) -> int:
-	var temp_zipped_mods_count := 0
+static func load_zips_in_folder(folder_path: String) -> Dictionary:
+	var URL_MOD_STRUCTURE_DOCS := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Structure"
+	var zip_data := {}
 
 	var mod_dir := DirAccess.open(folder_path)
 	if mod_dir == null:
 		ModLoaderLog.error("Can't open mod folder %s" % [folder_path], LOG_NAME)
-		return -1
+		return {}
 
 	var mod_dir_open_error := mod_dir.get_open_error()
 	if not mod_dir_open_error == OK:
 		ModLoaderLog.error("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
-		return -1
+		return {}
 	var mod_dir_listdir_error := mod_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not mod_dir_listdir_error == OK:
 		ModLoaderLog.error("Can't read mod folder %s (Error: %s)" % [folder_path, mod_dir_listdir_error], LOG_NAME)
-		return -1
+		return {}
 
 	# Get all zip folders inside the game mod folder
 	while true:
@@ -82,9 +83,35 @@ static func load_zips_in_folder(folder_path: String) -> int:
 			# Go to the next file
 			continue
 
-		var mod_folder_path := folder_path.path_join(mod_zip_file_name)
-		var mod_folder_global_path := ProjectSettings.globalize_path(mod_folder_path)
-		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_folder_global_path, false)
+		var mod_zip_path := folder_path.path_join(mod_zip_file_name)
+		var mod_zip_global_path := ProjectSettings.globalize_path(mod_zip_path)
+		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_zip_global_path, false)
+
+		# Get the current directories inside UNPACKED_DIR
+		# This array is used to determine which directory is new
+		var current_mod_dirs := _ModLoaderPath.get_dir_paths_in_dir(_ModLoaderPath.get_unpacked_mods_dir_path())
+
+		# Create a backup to reference when the next mod is loaded
+		var current_mod_dirs_backup := current_mod_dirs.duplicate()
+
+		# Remove all directory paths that existed before, leaving only the one added last
+		for previous_mod_dir in ModLoaderStore.previous_mod_dirs:
+			current_mod_dirs.erase(previous_mod_dir)
+
+		# If the mod zip is not structured correctly, it may not be in the UNPACKED_DIR.
+		if current_mod_dirs.is_empty():
+			ModLoaderLog.fatal(
+				"The mod zip at path \"%s\" does not have the correct file structure. For more information, please visit \"%s\"."
+				% [mod_zip_global_path, URL_MOD_STRUCTURE_DOCS],
+				LOG_NAME
+			)
+			continue
+
+		# The key is the mod_id of the latest loaded mod, and the value is the path to the zip file
+		zip_data[current_mod_dirs[0].get_slice("/", 3)] = mod_zip_global_path
+
+		# Update previous_mod_dirs in ModLoaderStore to use for the next mod
+		ModLoaderStore.previous_mod_dirs = current_mod_dirs_backup
 
 		# Notifies developer of an issue with Godot, where using `load_resource_pack`
 		# in the editor WIPES the entire virtual res:// directory the first time you
@@ -100,7 +127,7 @@ static func load_zips_in_folder(folder_path: String) -> int:
 				"Please unpack your mod ZIPs instead, and add them to ", _ModLoaderPath.get_unpacked_mods_dir_path()), LOG_NAME)
 			ModLoaderStore.has_shown_editor_zips_warning = true
 
-		ModLoaderLog.debug("Found mod ZIP: %s" % mod_folder_global_path, LOG_NAME)
+		ModLoaderLog.debug("Found mod ZIP: %s" % mod_zip_global_path, LOG_NAME)
 
 		# If there was an error loading the mod zip file
 		if not is_mod_loaded_successfully:
@@ -110,11 +137,10 @@ static func load_zips_in_folder(folder_path: String) -> int:
 
 		# Mod successfully loaded!
 		ModLoaderLog.success("%s loaded." % mod_zip_file_name, LOG_NAME)
-		temp_zipped_mods_count += 1
 
 	mod_dir.list_dir_end()
 
-	return temp_zipped_mods_count
+	return zip_data
 
 
 # Save Data
@@ -131,18 +157,18 @@ static func _save_string_to_file(save_string: String, filepath: String) -> bool:
 		"https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#enum-globalscope-error"
 	))
 
-	if not dir.dir_exists(file_directory):
-		var makedir_error := dir.make_dir_recursive(file_directory)
+	if not dir:
+		var makedir_error := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(file_directory))
 		if not makedir_error == OK:
 			ModLoaderLog.fatal("Encountered an error (%s) when attempting to create a directory, with the path: %s" % [makedir_error, file_directory], LOG_NAME)
 			return false
 
-	if file_exists(filepath):
-		ModLoaderLog.fatal("Encountered an error when attempting to open a file, with the path: %s" % [filepath], LOG_NAME)
-		return false
-
 	# Save data to the file
 	var file := FileAccess.open(filepath, FileAccess.WRITE)
+
+	if not file:
+		ModLoaderLog.fatal("Encountered an error (%s) when attempting to write to a file, with the path: %s" % [FileAccess.get_open_error(), filepath], LOG_NAME)
+		return false
 
 	file.store_string(save_string)
 	file.close()
@@ -201,3 +227,4 @@ static func dir_exists(path: String) -> bool:
 # modders in understanding and troubleshooting issues.
 static func _code_note(_msg:String):
 	pass
+

@@ -23,6 +23,11 @@ enum optional_mod_files {
 	OVERWRITES
 }
 
+# Name of the Mod's zip file
+var zip_name := ""
+# Path to the Mod's zip file
+var zip_path := ""
+
 # Directory of the mod. Has to be identical to [method ModManifest.get_mod_id]
 var dir_name := ""
 # Path to the Mod's Directory
@@ -33,6 +38,8 @@ var is_loadable := true
 var is_overwrite := false
 # True if mod can't be disabled or enabled in a user profile
 var is_locked := false
+# Flag indicating whether the mod should be loaded
+var is_active := true
 # Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
 # Contents of the manifest
@@ -43,10 +50,6 @@ var current_config: ModConfig: set = _set_current_config
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PackedStringArray = []
-
-
-func _init(_dir_path: String) -> void:
-	dir_path = _dir_path
 
 
 # Load meta data from a mod's manifest.json file
@@ -107,7 +110,9 @@ func _load_config(config_file_path: String) -> void:
 func _set_current_config(new_current_config: ModConfig) -> void:
 	ModLoaderUserProfile.set_mod_current_config(dir_name, new_current_config)
 	current_config = new_current_config
-	ModLoader.emit_signal("current_config_changed", new_current_config)
+	# We can't emit the signal if the ModLoader is not initialized yet
+	if ModLoader:
+		ModLoader.current_config_changed.emit(new_current_config)
 
 
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]

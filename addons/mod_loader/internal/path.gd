@@ -113,8 +113,8 @@ static func get_file_paths_in_dir(src_dir_path: String) -> Array:
 	var dir := DirAccess.open(src_dir_path)
 
 	if dir == null:
+		ModLoaderLog.error("Encountered an error (%s) when attempting to open a directory, with the path: %s" % [DirAccess.get_open_error(), src_dir_path], LOG_NAME)
 		return file_paths
-		ModLoaderLog.error("Error opening directory", LOG_NAME)
 
 	dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	var file_name := dir.get_next()
@@ -124,6 +124,29 @@ static func get_file_paths_in_dir(src_dir_path: String) -> Array:
 		file_name = dir.get_next()
 
 	return file_paths
+
+
+# Returns an array of directory paths inside the src dir
+static func get_dir_paths_in_dir(src_dir_path: String) -> Array:
+	var dir_paths := []
+
+	var dir := DirAccess.open(src_dir_path)
+
+	if dir == null:
+		ModLoaderLog.error("Encountered an error (%s) when attempting to open a directory, with the path: %s" % [DirAccess.get_open_error(), src_dir_path], LOG_NAME)
+		return dir_paths
+
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while (file_name != ""):
+		if file_name == "." or file_name == "..":
+			file_name = dir.get_next()
+			continue
+		if dir.current_is_dir():
+			dir_paths.push_back(src_dir_path.path_join(file_name))
+		file_name = dir.get_next()
+
+	return dir_paths
 
 
 # Get the path to the mods folder, with any applicable overrides applied

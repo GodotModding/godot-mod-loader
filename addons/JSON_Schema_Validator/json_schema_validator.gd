@@ -88,18 +88,18 @@ const ERR_WRONG_PATTERN = "String '%s' does not match its corresponding pattern"
 const ERR_FORMAT = "String '%s' does not match its corresponding format '%s'"
 
 # This is one and only function that need you to call outside
-# If all validation checks passes, this return empty String
+# If all validation checks passes, this OK
 func validate(json_data : String, schema: String) -> String:
-	var error: String
+	var error: int
 
 	var json = JSON.new()
 	# General validation input data as JSON file
-	error = str(json.parse(json_data))
-	if error: return ERR_INVALID_JSON_EXT % error
+	error = json.parse(json_data)
+	if error: return ERR_INVALID_JSON_EXT % error_string(error)
 
 	# General validation input schema as JSONSchema file
-	error = str(json.parse(schema))
-	if not error == "OK" : return ERR_WRONG_SCHEMA_GEN + str(error)
+	error = json.parse(schema)
+	if not error == OK : return ERR_WRONG_SCHEMA_GEN + error_string(error)
 	var test_json_conv = JSON.new()
 	test_json_conv.parse(schema)
 	var parsed_schema = test_json_conv.get_data()
@@ -117,10 +117,8 @@ func validate(json_data : String, schema: String) -> String:
 		_: return ERR_WRONG_SCHEMA_TYPE
 
 	# All inputs seems valid. Begin type validation
-	error = _type_selection(json_data, parsed_schema)
-
 	# Normal return empty string, meaning OK
-	return error
+	return _type_selection(json_data, parsed_schema)
 
 func _to_string():
 	return "[JSONSchema:%d]" % get_instance_id()
