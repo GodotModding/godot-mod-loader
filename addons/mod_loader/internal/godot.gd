@@ -29,7 +29,7 @@ static func check_autoload_order(autoload_name_before: String, autoload_name_aft
 			push_error(final_message)
 			ModLoaderLog._write_to_log_file(final_message)
 			ModLoaderLog._write_to_log_file(JSON.stringify(get_stack(), "  "))
-			assert(false) #,final_message)
+			assert(false, final_message)
 
 		return false
 
@@ -55,7 +55,7 @@ static func check_autoload_position(autoload_name: String, position_index: int, 
 		push_error(final_message)
 		ModLoaderLog._write_to_log_file(final_message)
 		ModLoaderLog._write_to_log_file(JSON.stringify(get_stack(), "  "))
-		assert(false) #,final_message)
+		assert(false, final_message)
 
 	return position_matches
 

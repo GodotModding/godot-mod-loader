@@ -364,7 +364,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 			push_error(message)
 			_write_to_log_file(log_entry.get_entry())
 			_write_to_log_file(JSON.stringify(get_stack(), "  "))
-#			assert(false) #,message)
+			assert(false, message)
 		"error":
 			printerr(message)
 			push_error(message)
@@ -468,7 +468,7 @@ static func _write_to_log_file(string_to_write: String) -> void:
 	var log_file := FileAccess.open(MOD_LOG_PATH, FileAccess.READ_WRITE)
 
 	if log_file == null:
-		assert(false) #,"Could not open log file, error code: %s" % error)
+		assert(false, "Could not open log file, error code: %s" % error)
 		return
 
 	log_file.seek_end()
@@ -496,7 +496,7 @@ static func _rotate_log_file() -> void:
 	# only File.WRITE creates a new file, File.READ_WRITE throws an error
 	var log_file := FileAccess.open(MOD_LOG_PATH, FileAccess.WRITE)
 	if log_file == null:
-		assert(false) #,"Could not open log file, error code: %s" % error)
+		assert(false, "Could not open log file, error code: %s" % error)
 	log_file.store_string('%s Created log' % _get_date_string())
 	log_file.close()
 
