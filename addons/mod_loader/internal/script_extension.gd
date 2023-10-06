@@ -1,63 +1,43 @@
 class_name _ModLoaderScriptExtension
 extends RefCounted
 
-
 # This Class provides methods for working with script extensions.
 # Currently all of the included methods are internal and should only be used by the mod loader itself.
 
 const LOG_NAME := "ModLoader:ScriptExtension"
 
 
-# Couple the extension paths with the parent paths and the extension's mod id
-# in a ScriptExtensionData resource
+# Sort script extensions by inheritance and apply them in order
 static func handle_script_extensions() -> void:
-	var script_extension_data_array := []
+	var extension_paths := []
 	for extension_path in ModLoaderStore.script_extensions:
+		if FileAccess.file_exists(extension_path):
+			extension_paths.push_back(extension_path)
+		else:
+			ModLoaderLog.error(
+				"The child script path '%s' does not exist" % [extension_path], LOG_NAME
+			)
 
-		if not FileAccess.file_exists(extension_path):
-			ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
-			continue
+		# Sort by inheritance
+		extension_paths.sort_custom(Callable(InheritanceSorting, "_check_inheritances"))
 
-		var child_script = ResourceLoader.load(extension_path)
-
-		var mod_id: String = extension_path.trim_prefix(_ModLoaderPath.get_unpacked_mods_dir_path()).get_slice("/", 0)
-
-		var parent_script: Script = child_script.get_base_script()
-		var parent_script_path: String = parent_script.resource_path
-
-		script_extension_data_array.push_back(
-			ScriptExtensionData.new(extension_path, parent_script_path, mod_id)
-		)
-
-	# Sort the extensions based on dependencies
-	script_extension_data_array = _sort_extensions_from_load_order(script_extension_data_array)
-
-	# Inheritance is more important so this called last
-	script_extension_data_array.sort_custom(Callable(InheritanceSorting, "_check_inheritances"))
-
-	# Load and install all extensions
-	for extension in script_extension_data_array:
-		var script: Script = apply_extension(extension.extension_path)
-		_reload_vanilla_child_classes_for(script)
+		# Load and install all extensions
+		for extension in extension_paths:
+			var script: Script = apply_extension(extension)
+			_reload_vanilla_child_classes_for(script)
 
 
-# Inner class so the sort function can be called by handle_script_extensions()
+# Sorts script paths by their ancestors.  Scripts are organized by their common
+# ancestors then sorted such that scripts extending script A will be before
+# a script extending script B if A is an ancestor of B.
 class InheritanceSorting:
+	var stack_cache := {}
 
-	static func _check_inheritances(extension_a: ScriptExtensionData, extension_b: ScriptExtensionData) -> bool:
-		var a_stack := []
-		var parent_script: Script = load(extension_a.extension_path)
-		while parent_script:
-			a_stack.push_front(parent_script.resource_path)
-			parent_script = parent_script.get_base_script()
-		a_stack.pop_back()
-
-		var b_stack := []
-		parent_script = load(extension_b.extension_path)
-		while parent_script:
-			b_stack.push_front(parent_script.resource_path)
-			parent_script = parent_script.get_base_script()
-		b_stack.pop_back()
+	# Comparator function.  return true if a should go before b.  This may
+	# enforce conditions beyond the stated inheritance relationship.
+	func _check_inheritances(extension_a: String, extension_b: String) -> bool:
+		var a_stack := cached_inheritances_stack(extension_a)
+		var b_stack := cached_inheritances_stack(extension_b)
 
 		var last_index: int
 		for index in a_stack.size():
@@ -68,10 +48,29 @@ class InheritanceSorting:
 			last_index = index
 
 		if last_index < b_stack.size():
-			# 'a' has a shorter stack
 			return true
 
-		return extension_a.extension_path < extension_b.extension_path
+		return extension_a < extension_b
+
+	# Returns a list of scripts representing all the ancestors of the extension
+	# script with the most recent ancestor last.
+	#
+	# Results are stored in a cache keyed by extension path
+	func cached_inheritances_stack(extension_path: String) -> Array:
+		if stack_cache.has(extension_path):
+			return stack_cache[extension_path]
+
+		var stack := []
+
+		var parent_script: Script = load(extension_path)
+		while parent_script:
+			stack.push_front(parent_script.resource_path)
+			parent_script = parent_script.get_base_script()
+		stack.pop_back()
+
+		stack_cache[extension_path] = stack
+		return stack
+
 
 static func apply_extension(extension_path: String) -> Script:
 	# Check path to file exists
@@ -108,22 +107,12 @@ static func apply_extension(extension_path: String) -> Script:
 
 	ModLoaderStore.saved_scripts[parent_script_path].append(child_script)
 
-	ModLoaderLog.info("Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME)
+	ModLoaderLog.info(
+		"Installing script extension: %s <- %s" % [parent_script_path, extension_path], LOG_NAME
+	)
 	child_script.take_over_path(parent_script_path)
 
 	return child_script
-
-
-# Sort an array of ScriptExtensionData following the load order
-static func _sort_extensions_from_load_order(extensions: Array) -> Array:
-	var extensions_sorted := []
-
-	for _mod_data in ModLoaderStore.mod_load_order:
-		for script in extensions:
-			if script.mod_id == _mod_data.dir_name:
-				extensions_sorted.push_front(script)
-
-	return extensions_sorted
 
 
 # Reload all children classes of the vanilla class we just extended
@@ -143,7 +132,6 @@ static func _reload_vanilla_child_classes_for(script: Script) -> void:
 
 	for _class in current_child_classes:
 		for child_class in classes:
-
 			if child_class.base == _class.get_class():
 				load(child_class.path).reload()
 
@@ -152,7 +140,9 @@ static func _reload_vanilla_child_classes_for(script: Script) -> void:
 static func remove_specific_extension_from_script(extension_path: String) -> void:
 	# Check path to file exists
 	if not _ModLoaderFile.file_exists(extension_path):
-		ModLoaderLog.error("The extension script path \"%s\" does not exist" % [extension_path], LOG_NAME)
+		ModLoaderLog.error(
+			'The extension script path "%s" does not exist' % [extension_path], LOG_NAME
+		)
 		return
 
 	var extension_script: Script = ResourceLoader.load(extension_path)
@@ -161,13 +151,22 @@ static func remove_specific_extension_from_script(extension_path: String) -> voi
 
 	# Check if the script to reset has been extended
 	if not ModLoaderStore.saved_scripts.has(parent_script_path):
-		ModLoaderLog.error("The extension parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error(
+			'The extension parent script path "%s" has not been extended' % [parent_script_path],
+			LOG_NAME
+		)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
 	if not ModLoaderStore.saved_scripts[parent_script_path].size() > 0:
-		ModLoaderLog.error("The extension script path \"%s\" does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error(
+			(
+				'The extension script path "%s" does not have the base script saved, this should never happen, if you encounter this please create an issue in the github repository'
+				% [parent_script_path]
+			),
+			LOG_NAME
+		)
 		return
 
 	var parent_script_extensions: Array = ModLoaderStore.saved_scripts[parent_script_path].duplicate()
@@ -181,7 +180,13 @@ static func remove_specific_extension_from_script(extension_path: String) -> voi
 			break
 
 	if found_script_extension == null:
-		ModLoaderLog.error("The extension script path \"%s\" has not been found in the saved extension of the base script" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error(
+			(
+				'The extension script path "%s" has not been found in the saved extension of the base script'
+				% [parent_script_path]
+			),
+			LOG_NAME
+		)
 		return
 	parent_script_extensions.erase(found_script_extension)
 
@@ -197,18 +202,28 @@ static func remove_specific_extension_from_script(extension_path: String) -> voi
 static func _remove_all_extensions_from_script(parent_script_path: String) -> void:
 	# Check path to file exists
 	if not _ModLoaderFile.file_exists(parent_script_path):
-		ModLoaderLog.error("The parent script path \"%s\" does not exist" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error(
+			'The parent script path "%s" does not exist' % [parent_script_path], LOG_NAME
+		)
 		return
 
 	# Check if the script to reset has been extended
 	if not ModLoaderStore.saved_scripts.has(parent_script_path):
-		ModLoaderLog.error("The parent script path \"%s\" has not been extended" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error(
+			'The parent script path "%s" has not been extended' % [parent_script_path], LOG_NAME
+		)
 		return
 
 	# Check if the script to reset has anything actually saved
 	# If we ever encounter this it means something went very wrong in extending
 	if not ModLoaderStore.saved_scripts[parent_script_path].size() > 0:
-		ModLoaderLog.error("The parent script path \"%s\" does not have the base script saved, \nthis should never happen, if you encounter this please create an issue in the github repository" % [parent_script_path], LOG_NAME)
+		ModLoaderLog.error(
+			(
+				'The parent script path "%s" does not have the base script saved, \nthis should never happen, if you encounter this please create an issue in the github repository'
+				% [parent_script_path]
+			),
+			LOG_NAME
+		)
 		return
 
 	var parent_script: Script = ModLoaderStore.saved_scripts[parent_script_path][0]

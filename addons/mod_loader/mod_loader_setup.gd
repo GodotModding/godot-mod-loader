@@ -27,11 +27,6 @@ const new_global_classes := [
 		"path": "res://addons/mod_loader/resources/mod_manifest.gd"
 	}, {
 		"base": "Resource",
-		"class": "ScriptExtensionData",
-		"language": "GDScript",
-		"path": "res://addons/mod_loader/resources/script_extension_data.gd"
-	}, {
-		"base": "Resource",
 		"class": "ModLoaderCurrentOptions",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/resources/options_current.gd"
