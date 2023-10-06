@@ -57,7 +57,7 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 
 	var mod_dir_open_error := mod_dir.get_open_error()
 	if not mod_dir_open_error == OK:
-		ModLoaderLog.error("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
+		ModLoaderLog.info("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
 		return {}
 	var mod_dir_listdir_error := mod_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not mod_dir_listdir_error == OK:

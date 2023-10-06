@@ -71,9 +71,11 @@ func load_manifest() -> void:
 	var mod_manifest := ModManifest.new(manifest_dict)
 
 	is_loadable = _has_manifest(mod_manifest)
-	if not is_loadable: return
+	if not is_loadable:
+		return
 	is_loadable = _is_mod_dir_name_same_as_id(mod_manifest)
-	if not is_loadable: return
+	if not is_loadable:
+		return
 	manifest = mod_manifest
 
 

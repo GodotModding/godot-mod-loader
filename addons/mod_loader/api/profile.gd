@@ -389,7 +389,7 @@ static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> M
 
 	# If no mods are specified in the mod_list, log a warning and return the new profile
 	if mod_list.keys().size() == 0:
-		ModLoaderLog.warning("No mod_ids inside \"mod_list\" for user profile \"%s\" " % profile_name, LOG_NAME)
+		ModLoaderLog.info("No mod_ids inside \"mod_list\" for user profile \"%s\" " % profile_name, LOG_NAME)
 		return new_profile
 
 	# Set the mod_list
