@@ -12,7 +12,7 @@ extends Node
 # Most of these settings should never need to change, aside from the DEBUG_*
 # options (which should be `false` when distributing compiled PCKs)
 
-const MODLOADER_VERSION = "6.1.0"
+const MODLOADER_VERSION = "6.2.0"
 
 # If true, a complete array of filepaths is stored for each mod. This is
 # disabled by default because the operation can be very expensive, but may
@@ -150,15 +150,55 @@ func _update_ml_options_from_options_resource() -> void:
 	var ml_options_path := "res://addons/mod_loader/options/options.tres"
 
 	# Get user options for ModLoader
-	if _ModLoaderFile.file_exists(ml_options_path):
-		var options_resource := load(ml_options_path)
-		if not options_resource.current_options == null:
-			var current_options: Resource = options_resource.current_options
-			# Update from the options in the resource
-			for key in ml_options:
-				ml_options[key] = current_options[key]
-	else:
+	if not _ModLoaderFile.file_exists(ml_options_path):
 		ModLoaderLog.fatal(str("A critical file is missing: ", ml_options_path), LOG_NAME)
+
+	var options_resource: ModLoaderCurrentOptions = load(ml_options_path)
+	if options_resource.current_options == null:
+		ModLoaderLog.warning(str(
+			"No current options are set. Falling back to defaults. ",
+			"Edit your options at %s. " % ml_options_path
+		), LOG_NAME)
+	else:
+		var current_options = options_resource.current_options
+		if not current_options is ModLoaderOptionsProfile:
+			ModLoaderLog.error(str(
+				"Current options is not a valid Resource of type ModLoaderOptionsProfile. ",
+				"Please edit your options at %s. " % ml_options_path
+			), LOG_NAME)
+		# Update from the options in the resource
+		for key in ml_options:
+			ml_options[key] = current_options[key]
+
+	# Get options overrides by feature tags
+	# An override is saved as Dictionary[String: ModLoaderOptionsProfile]
+	for feature_tag in options_resource.feature_override_options.keys():
+		if not feature_tag is String:
+			ModLoaderLog.error(str(
+				"Options override keys are required to be of type String. Failing key: \"%s.\" " % feature_tag,
+				"Please edit your options at %s. " % ml_options_path,
+				"Consult the documentation for all available feature tags: ",
+				"https://docs.godotengine.org/en/3.5/tutorials/export/feature_tags.html"
+			), LOG_NAME)
+			continue
+
+		if not OS.has_feature(feature_tag):
+			ModLoaderLog.info("Options override feature tag \"%s\". does not apply, skipping." % feature_tag, LOG_NAME)
+			continue
+
+		ModLoaderLog.info("Applying options override with feature tag \"%s\"." % feature_tag, LOG_NAME)
+		var override_options = options_resource.feature_override_options[feature_tag]
+		if not override_options is ModLoaderOptionsProfile:
+			ModLoaderLog.error(str(
+				"Options override is not a valid Resource of type ModLoaderOptionsProfile. ",
+				"Options override key with invalid resource: \"%s\". " % feature_tag,
+				"Please edit your options at %s. " % ml_options_path
+			), LOG_NAME)
+			continue
+
+		# Update from the options in the resource
+		for key in ml_options:
+			ml_options[key] = override_options[key]
 
 
 # Update ModLoader's options, via CLI args
