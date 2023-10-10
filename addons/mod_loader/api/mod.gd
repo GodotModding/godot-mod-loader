@@ -23,7 +23,6 @@ const LOG_NAME := "ModLoader:Mod"
 #
 # Returns: void
 static func install_script_extension(child_script_path: String) -> void:
-
 	var mod_id: String = ModLoaderUtils.get_string_in_between(child_script_path, "res://mods-unpacked/", "/")
 	var mod_data: ModData = get_mod_data(mod_id)
 	if not ModLoaderStore.saved_extension_paths.has(mod_data.manifest.get_mod_id()):
