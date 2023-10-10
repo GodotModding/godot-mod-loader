@@ -123,7 +123,7 @@ static func _reload_vanilla_child_classes_for(script: Script) -> void:
 		return
 	var current_child_classes := []
 	var actual_path: String = script.get_base_script().resource_path
-	var classes: Array = ProjectSettings.get_setting("_global_script_classes")
+	var classes: Array = ProjectSettings.get_global_class_list()
 
 	for _class in classes:
 		if _class.path == actual_path:
