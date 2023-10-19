@@ -12,5 +12,5 @@ static func _get_date_string() -> String:
 	return "%s-%02d-%02d" % [ date_time.year, date_time.month, date_time.day ]
 
 # Returns the current date and time as a string in the format yyyy-mm-dd_hh:mm:ss
-static func _get_date_time_string() -> String:
+static func get_date_time_string() -> String:
 	return "%s_%s" % [ _get_date_string(), _get_time_string() ]
