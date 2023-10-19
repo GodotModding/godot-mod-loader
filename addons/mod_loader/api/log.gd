@@ -446,21 +446,7 @@ class ModLoaderLogCompare:
 # Internal Date Time
 # =============================================================================
 
-# Import the ModLoaderTime class
-const ModLoaderTime = preload("time.gd")
 
-# This create an instance of ModLoaderTime
-var time_utils = ModLoaderTime.new()
-
-# ModLoaderTime instance Function
-func _ready():
-    var time_str = time_utils._get_time_string()
-    var date_str = time_utils._get_date_string()
-    var date_time_str = time_utils._get_date_time_string()
-
-    print("Time: ", time_str)
-    print("Date: ", date_str)
-    print("Date-Time: ", date_time_str)
 
 
 # Internal File
@@ -504,7 +490,7 @@ static func _rotate_log_file() -> void:
 	var error := log_file.open(MOD_LOG_PATH, File.WRITE)
 	if not error == OK:
 		assert(false, "Could not open log file, error code: %s" % error)
-	log_file.store_string('%s Created log' % _get_date_string())
+	log_file.store_string('%s Created log' % ModLoaderTime.get_date_string())
 	log_file.close()
 
 
