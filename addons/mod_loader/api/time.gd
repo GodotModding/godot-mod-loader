@@ -2,7 +2,7 @@ class_name ModLoaderTime
 extends Node
 
 # Returns the current time as a string in the format hh:mm:ss
-static func _get_time_string() -> String:
+static func get_time_string() -> String:
 	var date_time := Time.get_datetime_dict_from_system()
 	return "%02d:%02d:%02d" % [ date_time.hour, date_time.minute, date_time.second ]
 
