@@ -1,6 +1,5 @@
-extends Node
-
 class_name ModLoaderTime
+extends Node
 
 # Returns the current time as a string in the format hh:mm:ss
 static func _get_time_string() -> String:
