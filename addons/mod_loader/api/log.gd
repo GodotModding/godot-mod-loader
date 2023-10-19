@@ -446,22 +446,21 @@ class ModLoaderLogCompare:
 # Internal Date Time
 # =============================================================================
 
-# Returns the current time as a string in the format hh:mm:ss
-static func _get_time_string() -> String:
-	var date_time := Time.get_datetime_dict_from_system()
-	return "%02d:%02d:%02d" % [ date_time.hour, date_time.minute, date_time.second ]
+# Import the ModLoaderTime class
+const ModLoaderTime = preload("time.gd")
 
+# This create an instance of ModLoaderTime
+var time_utils = ModLoaderTime.new()
 
-# Returns the current date as a string in the format yyyy-mm-dd
-static func _get_date_string() -> String:
-	var date_time := Time.get_datetime_dict_from_system()
-	return "%s-%02d-%02d" % [ date_time.year, date_time.month, date_time.day ]
+# ModLoaderTime instance Function
+func _ready():
+    var time_str = time_utils._get_time_string()
+    var date_str = time_utils._get_date_string()
+    var date_time_str = time_utils._get_date_time_string()
 
-
-# Returns the current date and time as a string in the format yyyy-mm-dd_hh:mm:ss
-static func _get_date_time_string() -> String:
-	return "%s_%s" % [ _get_date_string(), _get_time_string() ]
-
+    print("Time: ", time_str)
+    print("Date: ", date_str)
+    print("Date-Time: ", date_time_str)
 
 
 # Internal File
