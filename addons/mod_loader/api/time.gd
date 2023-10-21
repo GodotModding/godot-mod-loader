@@ -1,4 +1,3 @@
-# ModLoaderTime class
 # This class provides utility functions to retrieve the current time, date, and date-time in specific string formats.
 class_name ModLoaderTime
 extends Node
