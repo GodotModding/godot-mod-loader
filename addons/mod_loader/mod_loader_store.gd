@@ -50,6 +50,8 @@ var previous_mod_dirs := []
 # Store all extenders paths
 var script_extensions := []
 
+var callable_stack := {}
+
 # True if ModLoader has displayed the warning about using zipped mods
 var has_shown_editor_zips_warning := false
 

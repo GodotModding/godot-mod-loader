@@ -39,6 +39,19 @@ static func install_script_extension(child_script_path: String) -> void:
 		_ModLoaderScriptExtension.apply_extension(child_script_path)
 
 
+static func set_callable_stack(new_callable_stack: Dictionary) -> void:
+	ModLoaderStore.callable_stack = new_callable_stack
+
+
+static func add_to_callable_stack(mod_callable: Callable, script_path: String, method_name: String, is_before := false) -> void:
+	ModLoaderStore.callable_stack[script_path][method_name]["before" if is_before else "after"].push_back(mod_callable)
+
+
+static func call_from_callable_stack(self_object: Object, script_path: String, method_name: String, is_before := false) -> void:
+	for mod_func in ModLoaderStore.callable_stack[script_path][method_name]["before" if is_before else "after"]:
+		mod_func.call(self_object)
+
+
 # Register an array of classes to the global scope since Godot only does that in the editor.
 #
 # Format: `{ "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }`
