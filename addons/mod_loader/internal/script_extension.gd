@@ -18,13 +18,14 @@ static func handle_script_extensions() -> void:
 				"The child script path '%s' does not exist" % [extension_path], LOG_NAME
 			)
 
-		# Sort by inheritance
-		extension_paths.sort_custom(Callable(InheritanceSorting, "_check_inheritances"))
+	# Sort by inheritance
+	var inheritance_sorting := InheritanceSorting.new()
+	extension_paths.sort_custom(Callable(inheritance_sorting, "_check_inheritances"))
 
-		# Load and install all extensions
-		for extension in extension_paths:
-			var script: Script = apply_extension(extension)
-			_reload_vanilla_child_classes_for(script)
+	# Load and install all extensions
+	for extension in extension_paths:
+		var script: Script = apply_extension(extension)
+		_reload_vanilla_child_classes_for(script)
 
 
 # Sorts script paths by their ancestors.  Scripts are organized by their common
