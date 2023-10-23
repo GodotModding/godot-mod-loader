@@ -85,6 +85,9 @@ static func apply_extension(extension_path: String) -> Script:
 	# Passing the .duplicate() would return a '' path
 	child_script.set_meta("extension_script_path", extension_path)
 
+	# Check for arguments in the init function
+	var args := _handle_init_args(child_script)
+
 	# Force Godot to compile the script now.
 	# We need to do this here to ensure that the inheritance chain is
 	# properly set up, and multiple mods can chain-extend the same
@@ -92,7 +95,7 @@ static func apply_extension(extension_path: String) -> Script:
 	# This is also needed to make Godot instantiate the extended class
 	# when creating singletons.
 	# The actual instance is thrown away.
-	child_script.new()
+	child_script.callv("new", args)
 
 	var parent_script: Script = child_script.get_base_script()
 	var parent_script_path: String = parent_script.resource_path
@@ -113,6 +116,23 @@ static func apply_extension(extension_path: String) -> Script:
 	child_script.take_over_path(parent_script_path)
 
 	return child_script
+
+
+static func _handle_init_args(script: Script) -> Array:
+	var args := []
+	var methods := script.get_method_list()
+
+	for method in methods:
+		if method.name == "_init":
+			for arg in method.args:
+				var default_arg := _get_default_arg_based_on_type(arg.type)
+				args.push_back(default_arg)
+
+	return args
+
+
+static func _get_default_arg_based_on_type(arg_type: int) -> Object:
+	return null
 
 
 # Reload all children classes of the vanilla class we just extended
