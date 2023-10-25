@@ -102,23 +102,23 @@ static func create_profile(profile_name: String) -> bool:
 #
 # Returns: bool
 static func rename_profile(old_profile_name: String, new_profile_name: String) -> bool:
-	# Verify that the old profile name is not already in use
-	if ModLoaderStore.user_profiles.has(old_profile_name):
-		ModLoaderLog.error("User profile with the name of \"%s\" already exists." % profile_name, LOG_NAME)
+	# Verify that the old profile name is already in use
+	if not ModLoaderStore.user_profiles.has(old_profile_name):
+		ModLoaderLog.error("User profile with the name of \"%s\" does not exist." % old_profile_name, LOG_NAME)
 		return false
   
-  # Verify that the new profile_name is not already in use
-  if ModLoaderStore.user_profiles.has(new_profile_name):
-    ModLoaderLog.error("User profile with the name of \"%s\" already exists." % new_profile_name, LOG_NAME)
-    return false
+	# Verify that the new profile_name is not already in use
+  	if ModLoaderStore.user_profiles.has(new_profile_name):
+    	ModLoaderLog.error("User profile with the name of \"%s\" already exists." % new_profile_name, LOG_NAME)
+    	return false
 
-  # Rename user profile
-  var profile_to_rename = ModLoaderStore.user_profiles[old_profile_name]
-  profile_to_rename.name = new_profile_name
+  	# Rename user profile
+  	var profile_to_rename = ModLoaderStore.user_profiles[old_profile_name].duplicate(true)
+  	profile_to_rename.name = new_profile_name
 
 	# Remove old profile entry, replace it with new name entry in the ModLoaderStore
-	ModLoaderStore.user_profiles.erase(old_profile_name) = new_profile
-  ModLoaderStore.user_profiles[new_profile_name] = profile_to_rename
+	ModLoaderStore.user_profiles.erase(old_profile_name)
+  	ModLoaderStore.user_profiles[new_profile_name] = profile_to_rename
 
 	# Set it as the current profile
 	if ModLoaderStore.current_user_profile == old_profile_name:
