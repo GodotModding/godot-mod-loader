@@ -122,7 +122,7 @@ static func rename_profile(old_profile_name: String, new_profile_name: String) -
 
 	# Set it as the current profile
 	if ModLoaderStore.current_user_profile == old_profile_name:
-    ModLoaderStore.current_user_profile = new_profile_name
+    	ModLoaderStore.current_user_profile = new_profile_name
 
 	# Store the new profile in the json file
 	var is_save_success := _save()
