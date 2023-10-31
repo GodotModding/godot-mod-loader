@@ -106,6 +106,7 @@ static func rename_profile(old_profile_name: String, new_profile_name: String) -
 	if not ModLoaderStore.user_profiles.has(old_profile_name):
 		ModLoaderLog.error("User profile with the name of \"%s\" does not exist." % old_profile_name, LOG_NAME)
 		return false
+<<<<<<< HEAD
   
 	# Verify that the new profile_name is not already in use
   	if ModLoaderStore.user_profiles.has(new_profile_name):
@@ -123,6 +124,25 @@ static func rename_profile(old_profile_name: String, new_profile_name: String) -
 	# Set it as the current profile
 	if ModLoaderStore.current_user_profile == old_profile_name:
     	ModLoaderStore.current_user_profile = new_profile_name
+=======
+
+	# Verify that the new profile_name is not already in use
+	if ModLoaderStore.user_profiles.has(new_profile_name):
+		ModLoaderLog.error("User profile with the name of \"%s\" already exists." % new_profile_name, LOG_NAME)
+		return false
+
+	# Rename user profile
+	var profile_to_rename = ModLoaderStore.user_profiles[old_profile_name].duplicate(true)
+	profile_to_rename.name = new_profile_name
+
+	# Remove old profile entry, replace it with new name entry in the ModLoaderStore
+	ModLoaderStore.user_profiles.erase(old_profile_name)
+	ModLoaderStore.user_profiles[new_profile_name] = profile_to_rename
+
+	# Set it as the current profile
+	if ModLoaderStore.current_user_profile == ModLoaderStore.user_profiles[old_profile_name]:
+		ModLoaderStore.current_user_profile[new_profile_name]
+>>>>>>> 5e66546 (Corrected false indentation and error)
 
 	# Store the new profile in the json file
 	var is_save_success := _save()
