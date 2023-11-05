@@ -12,6 +12,8 @@ const FILE_PATH_USER_PROFILES := "user://mod_user_profiles.json"
 # API profile functions
 # =============================================================================
 
+export var name := ""
+export var mod_list := {}
 
 # Enables a mod - it will be loaded on the next game start
 #
@@ -94,6 +96,7 @@ static func create_profile(profile_name: String) -> bool:
 
 	return is_save_success
 
+
 # Renames an existing user profile.
 #
 # Parameters:
@@ -113,16 +116,16 @@ static func rename_profile(old_profile_name: String, new_profile_name: String) -
 		return false
 
 	# Rename user profile
-	var profile_to_rename = ModLoaderStore.user_profiles[old_profile_name].duplicate(true)
-	profile_to_rename.name = new_profile_name
+	var profile_renamed := ModLoaderStore.user_profiles[old_profile_name].duplicate() as ModUserProfile
+	profile_renamed.name = new_profile_name
 
 	# Remove old profile entry, replace it with new name entry in the ModLoaderStore
 	ModLoaderStore.user_profiles.erase(old_profile_name)
-	ModLoaderStore.user_profiles[new_profile_name] = profile_to_rename
+	ModLoaderStore.user_profiles[profile_renamed] = profile_renamed
 
-	# Set it as the current profile
-	if ModLoaderStore.current_user_profile == ModLoaderStore.user_profiles[old_profile_name]:
-		ModLoaderStore.current_user_profile[new_profile_name]
+	# Set it as the current profile if it was the current profile
+	if ModLoaderStore.current_user_profile.name == old_profile_name:
+		set_profile(profile_renamed)
 
 	# Store the new profile in the json file
 	var is_save_success := _save()
