@@ -45,10 +45,10 @@ class InheritanceSorting:
 				return a_stack[index] < b_stack[index]
 			last_index = index
 
-		if last_index < b_stack.size():
+		if last_index < b_stack.size() - 1:
 			return true
 
-		return extension_a < extension_b
+		return compare_mods_order(extension_a, extension_b)
 	
 	# Returns a list of scripts representing all the ancestors of the extension
 	# script with the most recent ancestor last.
@@ -68,6 +68,21 @@ class InheritanceSorting:
 		
 		stack_cache[extension_path] = stack
 		return stack
+	
+	# Secondary comparator function for resolving scripts extending the same vanilla script
+	# Will return whether a comes before b in the load order
+	func compare_mods_order(extension_a:String, extension_b:String)->bool:
+		var mod_a_id = extension_a.trim_prefix(_ModLoaderPath.get_unpacked_mods_dir_path()).get_slice("/", 0)
+		var mod_b_id = extension_b.trim_prefix(_ModLoaderPath.get_unpacked_mods_dir_path()).get_slice("/", 0)
+		
+		for mod in ModLoaderStore.mod_load_order:
+			if mod.dir_name == mod_a_id:
+				return true
+			elif mod.dir_name == mod_b_id:
+				return false
+		
+		# Should never happen
+		return extension_a < extension_b
 
 
 static func apply_extension(extension_path: String) -> Script:
