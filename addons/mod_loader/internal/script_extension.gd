@@ -30,7 +30,12 @@ static func handle_script_extensions() -> void:
 # a script extending script B if A is an ancestor of B.
 class InheritanceSorting:
 	var stack_cache := {}
-
+	var load_order_table := {}
+	var unpacked_dir = _ModLoaderPath.get_unpacked_mods_dir_path()
+	
+	func _init():
+		_populate_load_order_table()
+	
 	# Comparator function.  return true if a should go before b.  This may
 	# enforce conditions beyond the stated inheritance relationship.
 	func _check_inheritances(extension_a: String, extension_b: String) -> bool:
@@ -72,17 +77,17 @@ class InheritanceSorting:
 	# Secondary comparator function for resolving scripts extending the same vanilla script
 	# Will return whether a comes before b in the load order
 	func compare_mods_order(extension_a:String, extension_b:String)->bool:
-		var mod_a_id = extension_a.trim_prefix(_ModLoaderPath.get_unpacked_mods_dir_path()).get_slice("/", 0)
-		var mod_b_id = extension_b.trim_prefix(_ModLoaderPath.get_unpacked_mods_dir_path()).get_slice("/", 0)
+		var mod_a_id:String = ModLoaderUtils.get_string_in_between(extension_a, unpacked_dir, "/")
+		var mod_b_id:String = ModLoaderUtils.get_string_in_between(extension_b, unpacked_dir, "/")
 		
+		return load_order_table[mod_a_id] < load_order_table[mod_b_id]
+	
+	# Populate a load order dictionary for faster access and comparison between mod ids
+	func _populate_load_order_table() -> void:
+		var mod_index := 0
 		for mod in ModLoaderStore.mod_load_order:
-			if mod.dir_name == mod_a_id:
-				return true
-			elif mod.dir_name == mod_b_id:
-				return false
-		
-		# Should never happen
-		return extension_a < extension_b
+			load_order_table[mod.dir_name] = mod_index
+			mod_index += 1
 
 
 static func apply_extension(extension_path: String) -> Script:
