@@ -184,7 +184,7 @@ static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> 
 	return mod_config_dir.plus_file( config_name + ".json")
 
 
-# Returns the mod directory
+# Returns the mod directory name ("some-mod") from a given path (e.g. "res://mods-unpacked/some-mod/extensions/extension.gd")
 static func get_mod_dir(path: String) -> String:
 	var initial = ModLoaderStore.UNPACKED_DIR
 	var ending = "/"
