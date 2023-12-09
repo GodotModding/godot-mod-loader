@@ -83,8 +83,8 @@ class InheritanceSorting:
 	# Secondary comparator function for resolving scripts extending the same vanilla script
 	# Will return whether a comes before b in the load order
 	func compare_mods_order(extension_a: String, extension_b: String) -> bool:
-		var mod_a_id: String = ModLoaderUtils.get_string_in_between(extension_a, unpacked_dir, "/")
-		var mod_b_id: String = ModLoaderUtils.get_string_in_between(extension_b, unpacked_dir, "/")
+		var mod_a_id: String = _ModLoaderPath.get_mod_dir(extension_a)
+		var mod_b_id: String = _ModLoaderPath.get_mod_dir(extension_b)
 		
 		return load_order[mod_a_id] < load_order[mod_b_id]
 	
