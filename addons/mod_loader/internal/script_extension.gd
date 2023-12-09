@@ -137,6 +137,7 @@ static func apply_extension(extension_path: String) -> Script:
 
 	return child_script
 
+
 # Reload all children classes of the vanilla class we just extended
 # Calling reload() the children of an extended class seems to allow them to be extended
 # e.g if B is a child class of A, reloading B after apply an extender of A allows extenders of B to properly extend B, taking A's extender(s) into account
