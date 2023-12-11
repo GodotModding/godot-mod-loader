@@ -12,7 +12,7 @@ runs:
     - name: "Test Linux"
       if: ${{ runner.OS == 'Linux' }}
       env:
-        GODOT_BIN: "/home/runner/godot-linux/godot"
+        GODOT_BIN: "/root/godot-linux/godot"
       shell: bash
       run: |
         $GODOT_BIN -s addons/gut/gut_cmdln.gd -d --path .

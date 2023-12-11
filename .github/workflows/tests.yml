@@ -11,6 +11,7 @@ on:
       godot-version:
         required: true
         type: string
+        default: '3.5.3'
 
   workflow_dispatch:
     inputs:
@@ -45,7 +46,7 @@ jobs:
           godot-version: ${{ inputs.godot-version }}
           godot-mono: false
           godot-status-version: 'stable'
-          godot-bin-name: 'linux.x86_64'
+          godot-bin-name: 'linux_headless.64'
           godot-cache-path: '~/godot-linux'
 
       - name: "🧪 Run Tests"

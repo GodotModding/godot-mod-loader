@@ -10,5 +10,5 @@ jobs:
   tests:
     name: "Running GUT tests on Godot 3.5.3"
     uses: ./.github/workflows/tests.yml
-    width:
+    with:
       godot-version: '3.5.3'
