@@ -1,0 +1,40 @@
+{
+	"name": "mod3",
+	"namespace": "test",
+	"version_number": "0.0.1",
+	"description": "Description of your mod...",
+	"website_url": "https://github.com/exampleauthor/examplemod",
+	"dependencies": [
+
+	],
+	"extra": {
+		"godot": {
+			"authors": [
+				"AuthorName"
+			],
+			"optional_dependencies": [
+
+			],
+			"compatible_game_version": [
+				"0.0.1"
+			],
+			"compatible_mod_loader_version": [
+				"6.1.0"
+			],
+			"incompatibilities": [
+
+			],
+			"load_before": [
+
+			],
+			"tags": [
+
+			],
+			"config_schema": {
+
+			},
+			"description_rich": "",
+			"image": null
+		}
+	}
+}

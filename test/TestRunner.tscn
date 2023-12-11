@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://addons/gut/plugin_control.gd" type="Script" id=1]
+
+[node name="TestRunner" type="Control"]
+margin_right = 740.0
+margin_bottom = 250.0
+rect_min_size = Vector2( 740, 250 )
+script = ExtResource( 1 )
+_directory1 = "res://Unit"
