@@ -4,9 +4,6 @@ name: test
 description: "Runs the tests via GUT CLI"
 
 inputs:
-  godot-bin:
-    required: true
-    default: "/root/godot-linux/godot"
   godot-test-project:
     required: true
     default: ${{ github.workspace }}/test
@@ -26,10 +23,9 @@ runs:
     - name: "Run Tests"
       if: ${{ runner.OS == 'Linux' }}
       env:
-        GODOT_BIN: ${{ inputs.godot-bin }}
         TEST_PROJECT: ${{ inputs.godot-test-project }}
       shell: bash
       run: |
         cd "${TEST_PROJECT}"
         chmod +x run_tests.sh
-        ./run_tests.sh "${GODOT_BIN}"
+        ./run_tests.sh $HOME/godot-linux/godot
