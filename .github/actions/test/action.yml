@@ -1,9 +1,12 @@
+# Inspired by https://github.com/utopia-rise/fmod-gdextension/blob/godot-3.x/demo/run_tests.sh
+
 name: test
 description: "Runs the tests via GUT CLI"
 
 inputs:
   godot-bin:
     required: true
+    default: "/root/godot-linux/godot"
   godot-test-project:
     required: true
     default: ${{ github.workspace }}/test
@@ -21,7 +24,7 @@ runs:
     - name: "Test Linux"
       if: ${{ runner.OS == 'Linux' }}
       env:
-        GODOT_BIN: "/root/godot-linux/godot"
+        GODOT_BIN: ${{ inputs.godot-bin }}
       shell: bash
       run: |
         $GODOT_BIN -s addons/gut/gut_cmdln.gd -d --path ${{  inputs.godot-test-project }} | ( no_error="false"; while read -r line
