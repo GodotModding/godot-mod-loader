@@ -23,23 +23,13 @@ runs:
       shell: bash
       run: ln -s ${{ github.workspace }}/addons/JSON_Schema_Validator ${{ github.workspace }}/test/addons/JSON_Schema_Validator
 
-    - name: "Test Linux"
+    - name: "Run Tests"
       if: ${{ runner.OS == 'Linux' }}
       env:
         GODOT_BIN: ${{ inputs.godot-bin }}
+        TEST_PROJECT: ${{ inputs.godot-test-project }}
       shell: bash
       run: |
-        "${GODOT_BIN}" -s addons/gut/gut_cmdln.gd -d --path ${{ inputs.godot-test-project }} | ( no_error="false"; while read -r line
-        do
-          echo "$line"
-          if echo "$line" | grep -q "All tests passed"; then
-              no_error="true"
-          fi
-        done
-        if [[ "$no_error" == "true" ]]; then
-            exit 0
-        else
-            echo "ERROR: Some assertions failed !"
-            exit 1
-        fi
-        ); exit $?
+        cd "${TEST_PROJECT}"
+        chmod +x run_tests.sh
+        ./run_tests.sh "${GODOT_BIN}"

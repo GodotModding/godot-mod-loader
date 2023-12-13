@@ -46,7 +46,6 @@ jobs:
         uses: ./.github/actions/godot-install
         with:
           godot-version: ${{ inputs.godot-version }}
-          godot-mono: false
           godot-status-version: 'stable'
           godot-bin-name: 'linux_headless.64'
           godot-cache-path: '~/godot-linux'
