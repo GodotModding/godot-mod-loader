@@ -29,7 +29,7 @@ runs:
         GODOT_BIN: ${{ inputs.godot-bin }}
       shell: bash
       run: |
-        $GODOT_BIN -s addons/gut/gut_cmdln.gd -d --path ${{  inputs.godot-test-project }} | ( no_error="false"; while read -r line
+        "${GODOT_BIN}" -s addons/gut/gut_cmdln.gd -d --path ${{ inputs.godot-test-project }} | ( no_error="false"; while read -r line
         do
           echo "$line"
           if echo "$line" | grep -q "All tests passed"; then
