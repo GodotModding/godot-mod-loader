@@ -1,3 +1,5 @@
+# Inspired by https://github.com/bitbrain/beehave/blob/godot-4.x/.github/workflows/unit-tests.yml
+
 name: tests
 run-name: ${{ github.head_ref || github.ref_name }}-tests
 

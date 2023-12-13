@@ -1,3 +1,5 @@
+# Inspired by https://github.com/bitbrain/beehave/blob/godot-4.x/.github/actions/godot-install/action.yml
+
 name: install-godot-binary
 description: "Installs the Godot Runtime"
 
