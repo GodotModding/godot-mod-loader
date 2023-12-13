@@ -1,5 +1,7 @@
 # Inspired by https://github.com/bitbrain/beehave/blob/godot-4.x/.github/workflows/beehave-ci.yml
 
+name: Mod Loader CI
+
 on:
   push:
     paths-ignore:
@@ -16,20 +18,20 @@ on:
       - '**.md'
       - '**plugin.cfg'
 
-  concurrency:
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-  jobs:
-    check_dependencies:
-      runs-on: ubuntu-latest
-      name: PR Dependency Check
-      steps:
-      - uses: gregsdennis/dependencies-action@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    tests:
-      name: "Running GUT tests on Godot 3.5.3"
-      uses: ./.github/workflows/tests.yml
-      with:
-        godot-version: '3.5.3'
+jobs:
+  check_dependencies:
+    runs-on: ubuntu-latest
+    name: PR Dependency Check
+    steps:
+    - uses: gregsdennis/dependencies-action@main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  tests:
+    name: "Running GUT tests on Godot 3.5.3"
+    uses: ./.github/workflows/tests.yml
+    with:
+      godot-version: '3.5.3'
