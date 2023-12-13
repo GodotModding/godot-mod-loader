@@ -55,3 +55,4 @@ jobs:
         uses: ./.github/actions/test
         with:
           godot-bin: ${{ env.GODOT_BIN }}
+          godot-test-project: ${{ github.workspace }}/test

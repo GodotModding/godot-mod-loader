@@ -4,15 +4,37 @@ description: "Runs the tests via GUT CLI"
 inputs:
   godot-bin:
     required: true
+  godot-test-project:
+    required: true
+    default: ${{ github.workspace }}/test
 
 runs:
   using: composite
 
   steps:
+    - name: "⚔ Link Mod Loader"
+      run: ln -s ${{ github.workspace }}/addons/mod_loader ${{ github.workspace }}/test/addons/mod_loader
+
+    - name: "⚔ Link JSON_Schema_Validator"
+      run: ln -s ${{ github.workspace }}/addons/JSON_Schema_Validator ${{ github.workspace }}/test/addons/JSON_Schema_Validator
+
     - name: "Test Linux"
       if: ${{ runner.OS == 'Linux' }}
       env:
         GODOT_BIN: "/root/godot-linux/godot"
       shell: bash
       run: |
-        $GODOT_BIN -s addons/gut/gut_cmdln.gd -d --path .
+        $GODOT_BIN -s addons/gut/gut_cmdln.gd -d --path ${{  inputs.godot-test-project }} | ( no_error="false"; while read -r line
+        do
+          echo "$line"
+          if echo "$line" | grep -q "All tests passed"; then
+              no_error="true"
+          fi
+        done
+        if [[ "$no_error" == "true" ]]; then
+            exit 0
+        else
+            echo "ERROR: Some assertions failed !"
+            exit 1
+        fi
+        ); exit $?
