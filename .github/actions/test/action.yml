@@ -4,6 +4,12 @@ name: test
 description: "Runs the tests via GUT CLI"
 
 inputs:
+  gut-download-path:
+    required: true
+    default: ${{ github.workspace }}/gut_download
+  gut-cache-path:
+    required: true
+    default: ${{ github.workspace }}/test/addons/gut
   godot-test-project:
     required: true
     default: ${{ github.workspace }}/test
@@ -12,6 +18,38 @@ runs:
   using: composite
 
   steps:
+
+    - name: "Set Cache Name"
+      shell: bash
+      run: |
+        echo "CACHE_NAME_GUT=${{ runner.OS }}-GUT_v7.4.1" >> "$GITHUB_ENV"
+
+    - name: "GUT Cache"
+      uses: actions/cache@v3
+      id: gut-cache-binary
+      with:
+        path: ${{ inputs.gut-cache-path }}
+        key: ${{ env.CACHE_NAME_GUT }}
+        restore-keys: ${{ env.CACHE_NAME_GUT }}
+
+    - name: "Download GUT"
+      if: steps.gut-cache-binary.outputs.cache-hit != 'true'
+      continue-on-error: false
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.gut-download-path }}
+        chmod 770 ${{ inputs.gut-download-path }}
+        mkdir -p ${{ inputs.gut-cache-path }}
+        chmod 770 ${{ inputs.gut-cache-path }}
+
+        wget https://github.com/bitwes/Gut/archive/refs/tags/v7.4.1.zip -P ${{ inputs.gut-download-path }}
+        unzip ${{ inputs.gut-download-path }}/v7.4.1.zip -d ${{ inputs.gut-download-path }}/unzip
+
+        mv ${{ inputs.gut-download-path }}/unzip/Gut-7.4.1/addons/gut ${{ inputs.godot-test-project }}/addons
+        rm -r ${{ inputs.gut-download-path }}
+
+        ls -R ${{ inputs.godot-test-project }}
+
     - name: "⚔ Link Mod Loader"
       shell: bash
       run: ln -s ${{ github.workspace }}/addons/mod_loader ${{ github.workspace }}/test/addons/mod_loader
@@ -21,11 +59,11 @@ runs:
       run: ln -s ${{ github.workspace }}/addons/JSON_Schema_Validator ${{ github.workspace }}/test/addons/JSON_Schema_Validator
 
     - name: "Run Tests"
-      if: ${{ runner.OS == 'Linux' }}
+      if: ${{ runner.OS == 'Linux'}} && ${{ !cancelled() }}
       env:
         TEST_PROJECT: ${{ inputs.godot-test-project }}
       shell: bash
       run: |
         cd "${TEST_PROJECT}"
         chmod +x run_tests.sh
-        ./run_tests.sh $HOME/godot-linux/godot
+        ./run_tests.sh "$HOME/godot-linux/godot"
