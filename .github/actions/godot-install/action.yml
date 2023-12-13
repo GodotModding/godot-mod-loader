@@ -29,16 +29,15 @@ runs:
       run: |
         echo "CACHE_NAME=${{ runner.OS }}-Godot_v${{ inputs.godot-version }}-${{ inputs.godot-status-version }}" >> "$GITHUB_ENV"
 
-    - name: "Build Cache"
-      uses: actions/cache@v3
-      id: godot-cache-binary
+    - name: "Godot Cache Restore"
+      uses: actions/cache/restore@v3
+      id: godot-restore-cache
       with:
         path: ${{ inputs.godot-cache-path }}
         key: ${{ env.CACHE_NAME }}
-        restore-keys: ${{ env.CACHE_NAME }}
 
     - name: "Download and Install Godot ${{ inputs.godot-version }}"
-      if: steps.godot-cache-binary.outputs.cache-hit != 'true'
+      if: steps.godot-restore-cache.outputs.cache-hit != 'true'
       continue-on-error: false
       shell: bash
       run: |
@@ -61,3 +60,10 @@ runs:
 
         chmod u+x ${{ inputs.godot-cache-path }}/godot
         echo "${{ inputs.godot-cache-path }}/godot"
+
+    - name: "Godot Cache Save"
+      if: steps.godot-restore-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: ${{ inputs.godot-cache-path }}
+        key: ${{ steps.godot-restore-cache.outputs.cache-primary-key }}
