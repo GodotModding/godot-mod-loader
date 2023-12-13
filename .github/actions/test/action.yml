@@ -16,9 +16,11 @@ runs:
 
   steps:
     - name: "⚔ Link Mod Loader"
+      shell: bash
       run: ln -s ${{ github.workspace }}/addons/mod_loader ${{ github.workspace }}/test/addons/mod_loader
 
     - name: "⚔ Link JSON_Schema_Validator"
+      shell: bash
       run: ln -s ${{ github.workspace }}/addons/JSON_Schema_Validator ${{ github.workspace }}/test/addons/JSON_Schema_Validator
 
     - name: "Test Linux"
