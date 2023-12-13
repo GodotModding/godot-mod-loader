@@ -1,4 +1,3 @@
 .import/
 *.import
-addons/JSON_Schema_Validator
-addons/mod_loader
+addons/*
