@@ -100,25 +100,6 @@ static func _is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 	return true
 
 
-# Returns the string in between two strings in a provided string
-static func get_string_in_between(string: String, initial: String, ending: String) -> String:
-	var start_index: int = string.find(initial)
-	if start_index == -1:
-		ModLoaderLog.error("Initial string not found.", LOG_NAME)
-		return ""
-
-	start_index += initial.length()
-
-	var end_index: int = string.find(ending, start_index)
-	if end_index == -1:
-		ModLoaderLog.error("Ending string not found.", LOG_NAME)
-		return ""
-
-	var found_string: String = string.substr(start_index, end_index - start_index)
-
-	return found_string
-
-
 # Deprecated
 # =============================================================================
 
