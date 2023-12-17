@@ -12,6 +12,8 @@ const FILE_PATH_USER_PROFILES := "user://mod_user_profiles.json"
 # API profile functions
 # =============================================================================
 
+export var name := ""
+export var mod_list := {}
 
 # Enables a mod - it will be loaded on the next game start
 #
@@ -91,6 +93,45 @@ static func create_profile(profile_name: String) -> bool:
 
 	if is_save_success:
 		ModLoaderLog.debug("Created new user profile \"%s\"" % profile_name, LOG_NAME)
+
+	return is_save_success
+
+
+# Renames an existing user profile.
+#
+# Parameters:
+# - old_profile_name (String): The current name for the user profile (must be unique).
+# - new_profile_name (String): The new name for the user profile (must be unique).
+#
+# Returns: bool
+static func rename_profile(old_profile_name: String, new_profile_name: String) -> bool:
+	# Verify that the old profile name is already in use
+	if not ModLoaderStore.user_profiles.has(old_profile_name):
+		ModLoaderLog.error("User profile with the name of \"%s\" does not exist." % old_profile_name, LOG_NAME)
+		return false
+
+	# Verify that the new profile_name is not already in use
+	if ModLoaderStore.user_profiles.has(new_profile_name):
+		ModLoaderLog.error("User profile with the name of \"%s\" already exists." % new_profile_name, LOG_NAME)
+		return false
+
+	# Rename user profile
+	var profile_renamed := ModLoaderStore.user_profiles[old_profile_name].duplicate() as ModUserProfile
+	profile_renamed.name = new_profile_name
+
+	# Remove old profile entry, replace it with new name entry in the ModLoaderStore
+	ModLoaderStore.user_profiles.erase(old_profile_name)
+	ModLoaderStore.user_profiles[profile_renamed] = profile_renamed
+
+	# Set it as the current profile if it was the current profile
+	if ModLoaderStore.current_user_profile.name == old_profile_name:
+		set_profile(profile_renamed)
+
+	# Store the new profile in the json file
+	var is_save_success := _save()
+
+	if is_save_success:
+		ModLoaderLog.debug("Renamed user profile from \"%s\" to \"%s\"" % [old_profile_name, new_profile_name], LOG_NAME)
 
 	return is_save_success
 
