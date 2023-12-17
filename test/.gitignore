@@ -1,0 +1,10 @@
+.import/
+*.import
+addons/
+
+# Gut stuff in root dir
+asset_lib_icon.png
+gut_panel.png
+.gut_editor_shortcuts.cfg
+BigFont.tres
+BigFontTheme.tres

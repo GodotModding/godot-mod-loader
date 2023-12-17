@@ -1,0 +1,216 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=4
+
+_global_script_classes=[ {
+"base": "Reference",
+"class": "GutHookScript",
+"language": "GDScript",
+"path": "res://addons/gut/hook_script.gd"
+}, {
+"base": "Node",
+"class": "GutTest",
+"language": "GDScript",
+"path": "res://addons/gut/test.gd"
+}, {
+"base": "Reference",
+"class": "JSONSchema",
+"language": "GDScript",
+"path": "res://addons/JSON_Schema_Validator/json_schema_validator.gd"
+}, {
+"base": "Resource",
+"class": "ModConfig",
+"language": "GDScript",
+"path": "res://addons/mod_loader/resources/mod_config.gd"
+}, {
+"base": "Resource",
+"class": "ModData",
+"language": "GDScript",
+"path": "res://addons/mod_loader/resources/mod_data.gd"
+}, {
+"base": "Object",
+"class": "ModLoaderConfig",
+"language": "GDScript",
+"path": "res://addons/mod_loader/api/config.gd"
+}, {
+"base": "Resource",
+"class": "ModLoaderCurrentOptions",
+"language": "GDScript",
+"path": "res://addons/mod_loader/resources/options_current.gd"
+}, {
+"base": "Node",
+"class": "ModLoaderDeprecated",
+"language": "GDScript",
+"path": "res://addons/mod_loader/api/deprecated.gd"
+}, {
+"base": "Node",
+"class": "ModLoaderLog",
+"language": "GDScript",
+"path": "res://addons/mod_loader/api/log.gd"
+}, {
+"base": "Object",
+"class": "ModLoaderMod",
+"language": "GDScript",
+"path": "res://addons/mod_loader/api/mod.gd"
+}, {
+"base": "Reference",
+"class": "ModLoaderModManager",
+"language": "GDScript",
+"path": "res://addons/mod_loader/api/mod_manager.gd"
+}, {
+"base": "Resource",
+"class": "ModLoaderOptionsProfile",
+"language": "GDScript",
+"path": "res://addons/mod_loader/resources/options_profile.gd"
+}, {
+"base": "Reference",
+"class": "ModLoaderSetupLog",
+"language": "GDScript",
+"path": "res://addons/mod_loader/setup/setup_log.gd"
+}, {
+"base": "Reference",
+"class": "ModLoaderSetupUtils",
+"language": "GDScript",
+"path": "res://addons/mod_loader/setup/setup_utils.gd"
+}, {
+"base": "Object",
+"class": "ModLoaderUserProfile",
+"language": "GDScript",
+"path": "res://addons/mod_loader/api/profile.gd"
+}, {
+"base": "Node",
+"class": "ModLoaderUtils",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/mod_loader_utils.gd"
+}, {
+"base": "Resource",
+"class": "ModManifest",
+"language": "GDScript",
+"path": "res://addons/mod_loader/resources/mod_manifest.gd"
+}, {
+"base": "Resource",
+"class": "ModUserProfile",
+"language": "GDScript",
+"path": "res://addons/mod_loader/resources/mod_user_profile.gd"
+}, {
+"base": "Node",
+"class": "ScriptA",
+"language": "GDScript",
+"path": "res://script_extension_sorting/script_a.gd"
+}, {
+"base": "ScriptA",
+"class": "ScriptB",
+"language": "GDScript",
+"path": "res://script_extension_sorting/script_b.gd"
+}, {
+"base": "ScriptB",
+"class": "ScriptC",
+"language": "GDScript",
+"path": "res://script_extension_sorting/script_c.gd"
+}, {
+"base": "Node",
+"class": "ScriptD",
+"language": "GDScript",
+"path": "res://script_extension_sorting/script_d.gd"
+}, {
+"base": "Reference",
+"class": "_ModLoaderCLI",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/cli.gd"
+}, {
+"base": "Reference",
+"class": "_ModLoaderCache",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/cache.gd"
+}, {
+"base": "Reference",
+"class": "_ModLoaderDependency",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/dependency.gd"
+}, {
+"base": "Reference",
+"class": "_ModLoaderFile",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/file.gd"
+}, {
+"base": "Object",
+"class": "_ModLoaderGodot",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/godot.gd"
+}, {
+"base": "Reference",
+"class": "_ModLoaderPath",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/path.gd"
+}, {
+"base": "Reference",
+"class": "_ModLoaderScriptExtension",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/script_extension.gd"
+}, {
+"base": "Node",
+"class": "_ModLoaderSteam",
+"language": "GDScript",
+"path": "res://addons/mod_loader/internal/third_party/steam.gd"
+} ]
+_global_script_class_icons={
+"GutHookScript": "",
+"GutTest": "",
+"JSONSchema": "",
+"ModConfig": "",
+"ModData": "",
+"ModLoaderConfig": "",
+"ModLoaderCurrentOptions": "",
+"ModLoaderDeprecated": "",
+"ModLoaderLog": "",
+"ModLoaderMod": "",
+"ModLoaderModManager": "",
+"ModLoaderOptionsProfile": "",
+"ModLoaderSetupLog": "",
+"ModLoaderSetupUtils": "",
+"ModLoaderUserProfile": "",
+"ModLoaderUtils": "",
+"ModManifest": "",
+"ModUserProfile": "",
+"ScriptA": "",
+"ScriptB": "",
+"ScriptC": "",
+"ScriptD": "",
+"_ModLoaderCLI": "",
+"_ModLoaderCache": "",
+"_ModLoaderDependency": "",
+"_ModLoaderFile": "",
+"_ModLoaderGodot": "",
+"_ModLoaderPath": "",
+"_ModLoaderScriptExtension": "",
+"_ModLoaderSteam": ""
+}
+
+[application]
+
+config/name="Godot Mod Loader Test"
+run/main_scene="res://TestRunner.tscn"
+config/icon="res://icon.png"
+
+[autoload]
+
+ModLoaderStore="*res://addons/mod_loader/mod_loader_store.gd"
+ModLoader="*res://addons/mod_loader/mod_loader.gd"
+
+[gui]
+
+common/drop_mouse_on_gui_input_disabled=true
+
+[physics]
+
+common/enable_pause_aware_picking=true
+
+[rendering]
+
+environment/default_environment="res://default_env.tres"

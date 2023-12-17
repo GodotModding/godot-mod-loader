@@ -1,0 +1,58 @@
+# Inspired by https://github.com/bitbrain/beehave/blob/godot-4.x/.github/workflows/unit-tests.yml
+
+name: tests
+run-name: ${{ github.head_ref || github.ref_name }}-tests
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: false
+        type: string
+        default: 'ubuntu-22.04'
+      godot-version:
+        required: true
+        type: string
+        default: '3.5.3'
+
+  workflow_dispatch:
+    inputs:
+      os:
+        required: false
+        type: string
+        default: 'ubuntu-22.04'
+      godot-version:
+        required: true
+        type: string
+
+concurrency:
+  group: tests-${{ github.head_ref || github.ref_name }}-${{ inputs.godot-version }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: "Tests"
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 15
+
+    steps:
+      - name: "📦 Checkout Mod Loader Repository"
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          submodules: 'recursive'
+
+      - name: "🤖 Install Godot ${{ inputs.godot-version }}"
+        uses: ./.github/actions/godot-install
+        with:
+          godot-version: ${{ inputs.godot-version }}
+          godot-status-version: 'stable'
+          godot-bin-name: 'linux_headless.64'
+          godot-cache-path: '~/godot-linux'
+
+      - name: "🧪 Run Tests"
+        if: ${{ !cancelled() }}
+        timeout-minutes: 4
+        uses: ./.github/actions/test
+        with:
+          godot-test-project: ${{ github.workspace }}/test

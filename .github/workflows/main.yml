@@ -1,4 +1,27 @@
-on: [pull_request]
+# Inspired by https://github.com/bitbrain/beehave/blob/godot-4.x/.github/workflows/beehave-ci.yml
+
+name: Mod Loader CI
+
+on:
+  push:
+    paths-ignore:
+      - '**.jpg'
+      - '**.png'
+      - '**.svg'
+      - '**.md'
+      - '**plugin.cfg'
+  pull_request:
+    paths-ignore:
+      - '**.jpg'
+      - '**.png'
+      - '**.svg'
+      - '**.md'
+      - '**plugin.cfg'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check_dependencies:
     runs-on: ubuntu-latest
@@ -7,3 +30,8 @@ jobs:
     - uses: gregsdennis/dependencies-action@main
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  tests:
+    name: "Running GUT tests on Godot 3.5.3"
+    uses: ./.github/workflows/tests.yml
+    with:
+      godot-version: '3.5.3'

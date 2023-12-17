@@ -1,0 +1,69 @@
+# Inspired by https://github.com/bitbrain/beehave/blob/godot-4.x/.github/actions/godot-install/action.yml
+
+name: install-godot-binary
+description: "Installs the Godot Runtime"
+
+inputs:
+  godot-version:
+    description: "The Godot engine version"
+    type: string
+    required: true
+  godot-status-version:
+    description: "The Godot engine status version"
+    type: string
+    required: true
+  godot-bin-name:
+    type: string
+    required: true
+  godot-cache-path:
+    type: string
+    required: true
+
+
+runs:
+  using: composite
+  steps:
+
+    - name: "Set Cache Name"
+      shell: bash
+      run: |
+        echo "CACHE_NAME=${{ runner.OS }}-Godot_v${{ inputs.godot-version }}-${{ inputs.godot-status-version }}" >> "$GITHUB_ENV"
+
+    - name: "Godot Cache Restore"
+      uses: actions/cache/restore@v3
+      id: godot-restore-cache
+      with:
+        path: ${{ inputs.godot-cache-path }}
+        key: ${{ env.CACHE_NAME }}
+
+    - name: "Download and Install Godot ${{ inputs.godot-version }}"
+      if: steps.godot-restore-cache.outputs.cache-hit != 'true'
+      continue-on-error: false
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.godot-cache-path }}
+        chmod 770 ${{ inputs.godot-cache-path }}
+        DIR="$HOME/.config/godot"
+        if [ ! -d "$DIR" ]; then
+          mkdir -p "$DIR"
+          chmod 770 "$DIR"
+        fi
+
+        DOWNLOAD_URL=https://github.com/godotengine/godot/releases/download/${{ inputs.godot-version }}-${{ inputs.godot-status-version }}
+        GODOT_BIN=Godot_v${{ inputs.godot-version }}-${{ inputs.godot-status-version }}_${{ inputs.godot-bin-name }}
+
+        GODOT_PACKAGE=$GODOT_BIN.zip
+        wget $DOWNLOAD_URL/$GODOT_PACKAGE -P ${{ inputs.godot-cache-path }}
+        unzip ${{ inputs.godot-cache-path }}/$GODOT_PACKAGE -d ${{ inputs.godot-cache-path }}
+
+        mv ${{ inputs.godot-cache-path }}/$GODOT_BIN ${{ inputs.godot-cache-path }}/godot
+
+        chmod u+x ${{ inputs.godot-cache-path }}/godot
+        echo "${{ inputs.godot-cache-path }}/godot"
+
+    - name: "Godot Cache Save"
+      if: steps.godot-restore-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: ${{ inputs.godot-cache-path }}
+        key: ${{ steps.godot-restore-cache.outputs.cache-primary-key }}

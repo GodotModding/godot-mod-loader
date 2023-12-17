@@ -1,0 +1,80 @@
+# Inspired by https://github.com/utopia-rise/fmod-gdextension/blob/godot-3.x/demo/run_tests.sh
+
+name: test
+description: "Runs the tests via GUT CLI"
+
+inputs:
+  gut-download-path:
+    required: true
+    default: ~/gut_download
+  gut-addons-path:
+    required: true
+    default: ${{ github.workspace }}/test/addons/gut
+  godot-test-project:
+    required: true
+    default: ${{ github.workspace }}/test
+
+runs:
+  using: composite
+
+  steps:
+
+    - name: "Set Cache Name"
+      shell: bash
+      run: |
+        echo "CACHE_NAME_GUT=GUT_v7.4.1" >> "$GITHUB_ENV"
+
+    - name: "GUT Cache Restore"
+      uses: actions/cache/restore@v3
+      id: gut-restore-cache
+      with:
+        path: ${{ inputs.gut-download-path }}
+        key: ${{ runner.os }}-${{ env.CACHE_NAME_GUT }}
+
+    - name: "Download GUT"
+      if: steps.gut-restore-cache.outputs.cache-hit != 'true'
+      continue-on-error: false
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.gut-download-path }}
+        chmod 770 ${{ inputs.gut-download-path }}
+
+        wget https://github.com/bitwes/Gut/archive/refs/tags/v7.4.1.zip -P ${{ inputs.gut-download-path }}
+        unzip ${{ inputs.gut-download-path }}/v7.4.1.zip -d ${{ inputs.gut-download-path }}/unzip
+
+    - name: "GUT Cache Save"
+      if: steps.gut-restore-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: ${{ inputs.gut-download-path }}
+        key: ${{ steps.gut-restore-cache.outputs.cache-primary-key }}
+
+    - name: "Create addons Directory"
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: mkdir -p ${{ github.workspace }}/test/addons
+
+    - name: "⚔ Link GUT"
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: ln -s ${{ inputs.gut-download-path }}/unzip/Gut-7.4.1/addons/gut ${{ github.workspace }}/test/addons/gut
+
+    - name: "⚔ Link Mod Loader"
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: ln -s ${{ github.workspace }}/addons/mod_loader ${{ github.workspace }}/test/addons/mod_loader
+
+    - name: "⚔ Link JSON_Schema_Validator"
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: ln -s ${{ github.workspace }}/addons/JSON_Schema_Validator ${{ github.workspace }}/test/addons/JSON_Schema_Validator
+
+    - name: "Run Tests"
+      if: ${{ runner.OS == 'Linux'}} && ${{ !cancelled() }}
+      env:
+        TEST_PROJECT: ${{ inputs.godot-test-project }}
+      shell: bash
+      run: |
+        cd "${TEST_PROJECT}"
+        chmod +x run_tests.sh
+        ./run_tests.sh "$HOME/godot-linux/godot"
