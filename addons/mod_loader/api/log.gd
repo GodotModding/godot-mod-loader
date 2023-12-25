@@ -458,21 +458,6 @@ class ModLoaderLogCompare:
 # Internal Date Time
 # =============================================================================
 
-# Returns the current time as a string in the format hh:mm:ss
-static func _get_time_string() -> String:
-	var date_time := Time.get_datetime_dict_from_system()
-	return "%02d:%02d:%02d" % [ date_time.hour, date_time.minute, date_time.second ]
-
-
-# Returns the current date as a string in the format yyyy-mm-dd
-static func _get_date_string() -> String:
-	var date_time := Time.get_datetime_dict_from_system()
-	return "%s-%02d-%02d" % [ date_time.year, date_time.month, date_time.day ]
-
-
-# Returns the current date and time as a string in the format yyyy-mm-dd_hh:mm:ss
-static func _get_date_time_string() -> String:
-	return "%s_%s" % [ _get_date_string(), _get_time_string() ]
 
 
 
@@ -517,7 +502,7 @@ static func _rotate_log_file() -> void:
 	var error := log_file.open(MOD_LOG_PATH, File.WRITE)
 	if not error == OK:
 		assert(false, "Could not open log file, error code: %s" % error)
-	log_file.store_string('%s Created log' % _get_date_string())
+	log_file.store_string('%s Created log' % ModLoaderTime.get_date_string())
 	log_file.close()
 
 
