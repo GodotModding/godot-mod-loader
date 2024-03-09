@@ -56,12 +56,6 @@ var has_shown_editor_zips_warning := false
 # Things to keep to ensure they are not garbage collected (used by `save_scene`)
 var saved_objects := []
 
-# Stores all the taken over scripts for restoration
-var saved_scripts := {}
-
-# Stores main scripts for mod disabling
-var saved_mod_mains := {}
-
 # Stores script extension paths with the key being the namespace of a mod
 var saved_extension_paths := {}
 

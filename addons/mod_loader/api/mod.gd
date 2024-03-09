@@ -29,14 +29,10 @@ static func install_script_extension(child_script_path: String) -> void:
 		ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()] = []
 	ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()].append(child_script_path)
 
-	# If this is called during initialization, add it with the other
-	# extensions to be installed taking inheritance chain into account
-	if ModLoaderStore.is_initializing:
-		ModLoaderStore.script_extensions.push_back(child_script_path)
-
-	# If not, apply the extension directly
-	else:
-		_ModLoaderScriptExtension.apply_extension(child_script_path)
+	if not ModLoaderStore.is_initializing:
+		ModLoaderLog.error("Cannot install extension after init", LOG_NAME)
+		return
+	ModLoaderStore.script_extensions.push_back(child_script_path)
 
 
 # Register an array of classes to the global scope since Godot only does that in the editor.

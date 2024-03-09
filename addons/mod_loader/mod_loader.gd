@@ -182,27 +182,6 @@ func _load_mods() -> void:
 	ModLoaderStore.is_initializing = false
 
 
-# Internal call to reload mods
-func _reload_mods() -> void:
-	_reset_mods()
-	_load_mods()
-
-
-# Internal call that handles the resetting of all mod related data
-func _reset_mods() -> void:
-	_disable_mods()
-	ModLoaderStore.mod_data.clear()
-	ModLoaderStore.mod_load_order.clear()
-	ModLoaderStore.mod_missing_dependencies.clear()
-	ModLoaderStore.script_extensions.clear()
-
-
-# Internal call that handles the disabling of all mods
-func _disable_mods() -> void:
-	for mod in ModLoaderStore.mod_data:
-		_disable_mod(ModLoaderStore.mod_data[mod])
-
-
 # Check autoload positions:
 # Ensure 1st autoload is `ModLoaderStore`, and 2nd is `ModLoader`.
 func _check_autoload_positions() -> void:
@@ -349,35 +328,8 @@ func _init_mod(mod: ModData) -> void:
 		mod_main_instance = mod_main_script.new()
 	mod_main_instance.name = mod.manifest.get_mod_id()
 
-	ModLoaderStore.saved_mod_mains[mod_main_path] = mod_main_instance
-
 	ModLoaderLog.debug("Adding child -> %s" % mod_main_instance, LOG_NAME)
 	add_child(mod_main_instance, true)
-
-
-# Call the disable method in every mod if present.
-# This way developers can implement their own disable handling logic,
-# that is needed if there are actions that are not done through the Mod Loader.
-func _disable_mod(mod: ModData) -> void:
-	if mod == null:
-		ModLoaderLog.error("The provided ModData does not exist", LOG_NAME)
-		return
-	var mod_main_path := mod.get_required_mod_file_path(ModData.required_mod_files.MOD_MAIN)
-
-	if not ModLoaderStore.saved_mod_mains.has(mod_main_path):
-		ModLoaderLog.error("The provided Mod %s has no saved mod main" % mod.manifest.get_mod_id(), LOG_NAME)
-		return
-
-	var mod_main_instance: Node = ModLoaderStore.saved_mod_mains[mod_main_path]
-	if mod_main_instance.has_method("_disable"):
-		mod_main_instance._disable()
-	else:
-		ModLoaderLog.warning("The provided Mod %s does not have a \"_disable\" method" % mod.manifest.get_mod_id(), LOG_NAME)
-
-	ModLoaderStore.saved_mod_mains.erase(mod_main_path)
-	_ModLoaderScriptExtension.remove_all_extensions_of_mod(mod)
-
-	remove_child(mod_main_instance)
 
 
 # Deprecated
