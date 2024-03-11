@@ -349,7 +349,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 		_store_log(log_entry)
 
 	# Check if the scene_tree is available
-	if Engine.get_main_loop():
+	if Engine.get_main_loop() and ModLoader:
 		ModLoader.emit_signal("logged", log_entry)
 
 	_code_note(str(
