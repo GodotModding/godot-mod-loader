@@ -83,6 +83,7 @@ func _exit_tree() -> void:
 
 
 func _load_mods() -> void:
+	ModLoaderStore.previous_mod_dirs = _ModLoaderPath.get_dir_paths_in_dir(_ModLoaderPath.get_unpacked_mods_dir_path())
 	# Loop over "res://mods" and add any mod zips to the unpacked virtual
 	# directory (UNPACKED_DIR)
 	var zip_data := _load_mod_zips()
@@ -230,14 +231,13 @@ func _check_autoload_positions() -> void:
 func _load_mod_zips() -> Dictionary:
 	var zip_data := {}
 
-	if not ModLoaderStore.ml_options.steam_workshop_enabled:
-		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
+	var mods_folder_path := _ModLoaderPath.get_path_to_mods()
 
-		# If we're not using Steam workshop, just loop over the mod ZIPs.
-		var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
-		zip_data.merge(loaded_zip_data)
-	else:
-		# If we're using Steam workshop, loop over the workshop item directories
+	# For local mods, just loop over the mod ZIPs.
+	var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
+	zip_data.merge(loaded_zip_data)
+	if ModLoaderStore.ml_options.steam_workshop_enabled:
+		# If we're using Steam workshop, also loop over the workshop item directories
 		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
 		zip_data.merge(loaded_workshop_zip_data)
 
