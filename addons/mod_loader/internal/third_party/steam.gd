@@ -17,7 +17,7 @@ static func load_steam_workshop_zips() -> Dictionary:
 
 	var workshop_dir := DirAccess.open(workshop_folder_path)
 	if workshop_dir == null:
-		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir.get_open_error()], LOG_NAME)
+		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, DirAccess.get_open_error()], LOG_NAME)
 		return {}
 	var workshop_dir_listdir_error := workshop_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not workshop_dir_listdir_error == OK:
