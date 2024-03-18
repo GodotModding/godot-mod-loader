@@ -227,7 +227,7 @@ func load_mod_config_defaults() -> ModConfig:
 		var cache_schema_md5: String = cache_schema_md5s[config.mod_id] if cache_schema_md5s.has(config.mod_id) else ''
 
 		# Generate a new default config if the config schema has changed or there is nothing cached
-		if not current_schema_md5 == cache_schema_md5 or not cache_schema_md5.is_empty():
+		if not current_schema_md5 == cache_schema_md5 or cache_schema_md5.is_empty():
 			config.data = _generate_default_config_from_schema(config.schema.properties)
 
 		# If the config schema has not changed just load the json file
