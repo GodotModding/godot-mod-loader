@@ -226,18 +226,18 @@ func _check_autoload_positions() -> void:
 		var _pos_ml_core := _ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
 
 
-# Loop over "res://mods" and add any mod zips to the unpacked virtual directory
-# (UNPACKED_DIR)
+# Add any mod zips to the unpacked virtual directory
 func _load_mod_zips() -> Dictionary:
 	var zip_data := {}
 
-	var mods_folder_path := _ModLoaderPath.get_path_to_mods()
-
-	# For local mods, just loop over the mod ZIPs.
-	var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
-	zip_data.merge(loaded_zip_data)
-	if ModLoaderStore.ml_options.steam_workshop_enabled:
-		# If we're using Steam workshop, also loop over the workshop item directories
+	if ModLoaderStore.ml_options.load_from_local:
+		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
+		# Loop over the mod zips in the "mods" directory
+		var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
+		zip_data.merge(loaded_zip_data)
+	
+	if ModLoaderStore.ml_options.load_from_steam_workshop or ModLoaderStore.ml_options.steam_workshop_enabled:
+		# If we're using Steam workshop, loop over the workshop item directories
 		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
 		zip_data.merge(loaded_workshop_zip_data)
 
@@ -254,7 +254,7 @@ func _setup_mods() -> int:
 	if dir == null:
 		ModLoaderLog.error("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return -1
-	if not dir.list_dir_begin() == OK:# TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
+	if not dir.list_dir_begin() == OK:
 		ModLoaderLog.error("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
 		return -1
 

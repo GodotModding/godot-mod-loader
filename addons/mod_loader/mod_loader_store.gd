@@ -111,6 +111,7 @@ var ml_options := {
 
 	# If true, ModLoader will load mod ZIPs from the Steam workshop directory,
 	# instead of the default location (res://mods)
+	# INFO: Redundant since the introduction of mod source options, kept for backwards compatibility.
 	steam_workshop_enabled = false,
 
 	# Overrides for the path mods/configs/workshop folders are loaded from.
@@ -130,6 +131,12 @@ var ml_options := {
 
 	# Array of mods that should be ignored when logging messages (contains mod IDs as strings)
 	ignored_mod_names_in_log = [],
+
+	# Mod Sources
+	# Indicates whether to load mods from the Steam Workshop directory, or the overridden workshop path.
+	load_from_steam_workshop = false,
+	# Indicates whether to load mods from the "mods" folder located at the game's install directory, or the overridden mods path.
+	load_from_local = true,
 }
 
 
@@ -169,6 +176,8 @@ func _update_ml_options_from_options_resource() -> void:
 		# Update from the options in the resource
 		for key in ml_options:
 			ml_options[key] = current_options[key]
+			if key == "steam_workshop_enabled" and current_options[key] == true:
+				ModLoaderDeprecated.deprecated_message("The Steam Workshop Enabled option has been deprecated. Please use the mod source options instead.", "6.3.0")
 
 	# Get options overrides by feature tags
 	# An override is saved as Dictionary[String: ModLoaderOptionsProfile]
@@ -199,6 +208,8 @@ func _update_ml_options_from_options_resource() -> void:
 		# Update from the options in the resource
 		for key in ml_options:
 			ml_options[key] = override_options[key]
+			if key == "steam_workshop_enabled" and override_options[key] == true:
+				ModLoaderDeprecated.deprecated_message("The Steam Workshop Enabled option has been deprecated. Please use the mod source options instead.", "6.3.0")
 
 
 # Update ModLoader's options, via CLI args
