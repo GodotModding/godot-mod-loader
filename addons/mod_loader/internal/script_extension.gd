@@ -19,8 +19,7 @@ static func handle_script_extensions() -> void:
 			)
 
 	# Sort by inheritance
-	var new_inheritance_sorting := InheritanceSorting.new()
-	extension_paths.sort_custom(new_inheritance_sorting.check_inheritances)
+	InheritanceSorting.new(extension_paths)
 
 	# Load and install all extensions
 	for extension in extension_paths:
@@ -33,6 +32,9 @@ static func handle_script_extensions() -> void:
 # a script extending script B if A is an ancestor of B.
 class InheritanceSorting:
 	var stack_cache := {}
+
+	func _init(inheritance_array_to_sort: Array) -> void:
+		inheritance_array_to_sort.sort_custom(check_inheritances)
 
 	# Comparator function.  return true if a should go before b.  This may
 	# enforce conditions beyond the stated inheritance relationship.
