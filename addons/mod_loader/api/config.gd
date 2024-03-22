@@ -345,3 +345,42 @@ static func get_current_config_name(mod_id: String) -> String:
 
 	# Return the name of the current configuration for the mod
 	return current_user_profile.mod_list[mod_id].current_config
+
+
+# Refreshes the data of the provided configuration by reloading it from the config file.
+#
+# Parameters:
+# - config (ModConfig): The ModConfig object whose data needs to be refreshed.
+#
+# Returns:
+# - ModConfig: The ModConfig object with refreshed data if successful, or the original object otherwise.
+static func refresh_config_data(config: ModConfig) -> ModConfig:
+	# Retrieve updated configuration data from the config file
+	var new_config_data := _ModLoaderFile.get_json_as_dict(config.save_path)
+	# Update the data property of the ModConfig object with the refreshed data
+	config.data = new_config_data
+
+	return config
+
+
+# Iterates over all mods to refresh the data of their current configurations, if available.
+# Compares the previous configuration data with the refreshed data and emits the `current_config_changed` signal if changes are detected.
+#
+# This function ensures that any changes made to the configuration files outside the application
+# are reflected within the application's runtime, allowing for dynamic updates without the need for a restart.
+static func refresh_current_configs() -> void:
+	for mod_id in ModLoaderMod.get_mod_data_all().keys():
+		# Retrieve the current configuration for the mod
+		var config := get_current_config(mod_id)
+		# Skip if the mod has no config
+		if not config:
+			continue
+		# Create a deep copy of the current configuration data for comparison
+		var config_data_previous := config.data.duplicate(true)
+		# Refresh the configuration data
+		var config_new := refresh_config_data(config)
+
+		# Compare previous data with refreshed data
+		if not config_data_previous == config_new.data:
+			# Emit signal indicating that the current configuration has changed
+			ModLoader.current_config_changed.emit(config)
