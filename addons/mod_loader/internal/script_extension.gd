@@ -18,24 +18,25 @@ static func handle_script_extensions() -> void:
 				"The child script path '%s' does not exist" % [extension_path], LOG_NAME
 			)
 
-		# Sort by inheritance
-		extension_paths.sort_custom(InheritanceSorting._check_inheritances)
+	# Sort by inheritance
+	var new_inheritance_sorting := InheritanceSorting.new()
+	extension_paths.sort_custom(new_inheritance_sorting.check_inheritances)
 
-		# Load and install all extensions
-		for extension in extension_paths:
-			var script: Script = apply_extension(extension)
-			_reload_vanilla_child_classes_for(script)
+	# Load and install all extensions
+	for extension in extension_paths:
+		var script: Script = apply_extension(extension)
+		_reload_vanilla_child_classes_for(script)
 
 
 # Sorts script paths by their ancestors.  Scripts are organized by their common
 # ancestors then sorted such that scripts extending script A will be before
 # a script extending script B if A is an ancestor of B.
 class InheritanceSorting:
-	static var stack_cache := {}
+	var stack_cache := {}
 
 	# Comparator function.  return true if a should go before b.  This may
 	# enforce conditions beyond the stated inheritance relationship.
-	static func _check_inheritances(extension_a: String, extension_b: String) -> bool:
+	func check_inheritances(extension_a: String, extension_b: String) -> bool:
 		var a_stack := cached_inheritances_stack(extension_a)
 		var b_stack := cached_inheritances_stack(extension_b)
 
@@ -56,7 +57,7 @@ class InheritanceSorting:
 	# script with the most recent ancestor last.
 	#
 	# Results are stored in a cache keyed by extension path
-	static func cached_inheritances_stack(extension_path: String) -> Array:
+	func cached_inheritances_stack(extension_path: String) -> Array:
 		if stack_cache.has(extension_path):
 			return stack_cache[extension_path]
 
@@ -239,4 +240,3 @@ static func remove_all_extensions_of_mod(mod: ModData) -> void:
 	for extension_path in _to_remove_extension_paths:
 		remove_specific_extension_from_script(extension_path)
 		ModLoaderStore.saved_extension_paths.erase(mod.manifest.get_mod_id())
-
