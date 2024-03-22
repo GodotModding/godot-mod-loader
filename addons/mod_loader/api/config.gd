@@ -397,11 +397,12 @@ static func refresh_config_data(config: ModConfig) -> ModConfig:
 # are reflected within the application's runtime, allowing for dynamic updates without the need for a restart.
 static func refresh_current_configs() -> void:
 	for mod_id in ModLoaderMod.get_mod_data_all().keys():
+		# Skip if the mod has no config
+		if not has_current_config(mod_id):
+			return
+
 		# Retrieve the current configuration for the mod
 		var config := get_current_config(mod_id)
-		# Skip if the mod has no config
-		if not config:
-			continue
 		# Create a deep copy of the current configuration data for comparison
 		var config_data_previous := config.data.duplicate(true)
 		# Refresh the configuration data
