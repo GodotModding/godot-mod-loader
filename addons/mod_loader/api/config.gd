@@ -284,6 +284,37 @@ static func get_config(mod_id: String, config_name: String) -> ModConfig:
 	return configs[config_name]
 
 
+# Checks whether a mod has a current configuration set.
+# This function is useful for determining if a mod has any configuration.
+# If a mod has no current configuration, it should not have any.
+#
+# Parameters:
+# - mod_id (String): The ID of the mod to check.
+#
+# Returns:
+# - bool: True if the mod has a current configuration, False otherwise.
+static func has_current_config(mod_id: String) -> bool:
+	var mod_data := ModLoaderMod.get_mod_data(mod_id)
+
+	if mod_data.current_config == null:
+		return false
+
+	return true
+
+
+# Checks whether a mod has a configuration with the specified name.
+#
+# Parameters:
+# - mod_id (String): The ID of the mod to check.
+# - config_name (String): The name of the configuration to check for.
+#
+# Returns:
+# - bool: True if the mod has a configuration with the specified name, False otherwise.
+static func has_config(mod_id: String, config_name: String) -> bool:
+	var mod_data := ModLoaderMod.get_mod_data(mod_id)
+	return mod_data.configs.has(config_name)
+
+
 # Retrieves the default configuration for a specified mod ID.
 #
 # Parameters:
