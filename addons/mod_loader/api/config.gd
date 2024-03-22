@@ -295,11 +295,7 @@ static func get_config(mod_id: String, config_name: String) -> ModConfig:
 # - bool: True if the mod has a current configuration, False otherwise.
 static func has_current_config(mod_id: String) -> bool:
 	var mod_data := ModLoaderMod.get_mod_data(mod_id)
-
-	if mod_data.current_config == null:
-		return false
-
-	return true
+	return not mod_data.current_config == null
 
 
 # Checks whether a mod has a configuration with the specified name.
