@@ -54,7 +54,8 @@ var script_extensions := []
 # Used to apply extension to scripts that are attached to preloaded scenes.
 var scenes_to_refresh := []
 
-# Stores edited version of vanilla PackedScenes, this version are applied after possible refresh of the scene.
+# Dictionary of callables to modify a specific scene.
+# Example property: "scene_path": [Callable, Callable]
 var scenes_to_modify := {}
 
 # True if ModLoader has displayed the warning about using zipped mods

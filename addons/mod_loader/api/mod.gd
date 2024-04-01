@@ -95,7 +95,7 @@ static func refresh_scene(scene_path: String) -> void:
 
 
 # Extends a specific scene by providing a callable function to modify it.
-# The callable recives an instance of the vanilla_scene as the first parameter.
+# The callable receives an instance of the vanilla_scene as the first parameter.
 #
 # Parameters:
 # - scene_vanilla_path (String): The path to the vanilla scene file.
