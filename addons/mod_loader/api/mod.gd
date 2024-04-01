@@ -74,50 +74,39 @@ static func add_translation(resource_path: String) -> void:
 	ModLoaderLog.info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
 
 
-# Appends a new node to a modified scene.
+# Refreshes a specific scene by marking it for refresh.
+#
+# This function is useful if a script extension is not automatically applied.
+# This situation can occur when a script is attached to a preloaded scene.
+# If you encounter issues where your script extension is not working as expected,
+# try to identify the scene to which it is attached and use this method to refresh it.
+# This will reload already loaded scenes and apply the script extension.
 #
 # Parameters:
-# - modified_scene (Node): The modified scene where the node will be appended.
-# - node_name (String): (Optional) The name of the new node. Default is an empty string.
-# - node_parent (Node): (Optional) The parent node where the new node will be added. Default is null (direct child of modified_scene).
-# - instance_path (String): (Optional) The path to a scene resource that will be instantiated as the new node.
-#   Default is an empty string resulting in a `Node` instance.
-# - is_visible (bool): (Optional) If true, the new node will be visible. Default is true.
+# - scene_path (String): The path to the scene file to be refreshed.
 #
 # Returns: void
-static func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
-	var new_node: Node
-	if not instance_path == "":
-		new_node = load(instance_path).instantiate()
-	else:
-		new_node = Node.new()
-	if not node_name == "":
-		new_node.name = node_name
-	if is_visible == false:
-		new_node.visible = false
-	if not node_parent == null:
-		var tmp_node: Node = modified_scene.get_node(node_parent)
-		tmp_node.add_child(new_node)
-		new_node.set_owner(modified_scene)
-	else:
-		modified_scene.add_child(new_node)
-		new_node.set_owner(modified_scene)
+static func refresh_scene(scene_path: String) -> void:
+	if scene_path in ModLoaderStore.scenes_to_refresh:
+		return
+
+	ModLoaderStore.scenes_to_refresh.push_back(scene_path)
+	ModLoaderLog.debug("Added \"%s\" to be refreshed." % scene_path, LOG_NAME)
 
 
-# Saves a modified scene to a file.
+# Extends a specific scene by providing a callable function to modify it.
+# The callable recives an instance of the vanilla_scene as the first parameter.
 #
 # Parameters:
-# - modified_scene (Node): The modified scene instance to be saved.
-# - scene_path (String): The path to the scene file that will be replaced.
+# - scene_vanilla_path (String): The path to the vanilla scene file.
+# - edit_callable (Callable): The callable function to modify the scene.
 #
 # Returns: void
-static func save_scene(modified_scene: Node, scene_path: String) -> void:
-	var packed_scene := PackedScene.new()
-	var _pack_error := packed_scene.pack(modified_scene)
-	ModLoaderLog.debug("packing scene -> %s" % packed_scene, LOG_NAME)
-	packed_scene.take_over_path(scene_path)
-	ModLoaderLog.debug("save_scene - taking over path - new path -> %s" % packed_scene.resource_path, LOG_NAME)
-	ModLoaderStore.saved_objects.append(packed_scene)
+static func extend_scene(scene_vanilla_path: String, edit_callable: Callable) -> void:
+	if not ModLoaderStore.scenes_to_modify.has(scene_vanilla_path):
+		ModLoaderStore.scenes_to_modify[scene_vanilla_path] = []
+
+	ModLoaderStore.scenes_to_modify[scene_vanilla_path].push_back(edit_callable)
 
 
 # Gets the ModData from the provided namespace
@@ -171,3 +160,14 @@ static func is_mod_loaded(mod_id: String) -> bool:
 		return false
 
 	return true
+
+
+# Deprecated
+# =============================================================================
+
+func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
+	ModLoaderDeprecated.deprecated_message("ModLoaderMod.append_node_in_scene has been removed, use ModLoaderMod.extend_scene() to edit non preloaded scenes.", "7.0.0")
+
+
+func save_scene(modified_scene: Node, scene_path: String) -> void:
+	ModLoaderDeprecated.deprecated_message("ModLoaderMod.save_scene has been removed, use ModLoaderMod.extend_scene() to edit non preloaded scenes.", "7.0.0")

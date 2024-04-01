@@ -50,6 +50,13 @@ var previous_mod_dirs := []
 # Store all extenders paths
 var script_extensions := []
 
+# Stores scene paths that need to be reloaded from file.
+# Used to apply extension to scripts that are attached to preloaded scenes.
+var scenes_to_refresh := []
+
+# Stores edited version of vanilla PackedScenes, this version are applied after possible refresh of the scene.
+var scenes_to_modify := {}
+
 # True if ModLoader has displayed the warning about using zipped mods
 var has_shown_editor_zips_warning := false
 
