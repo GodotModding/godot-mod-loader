@@ -184,6 +184,8 @@ func _load_mods() -> void:
 
 	_ModLoaderSceneExtension.handle_scene_extensions()
 
+	ModLoaderLog.success("DONE: Applied all scene extensions", LOG_NAME)
+
 	ModLoaderStore.is_initializing = false
 
 
