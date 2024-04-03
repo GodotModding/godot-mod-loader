@@ -160,14 +160,3 @@ static func is_mod_loaded(mod_id: String) -> bool:
 		return false
 
 	return true
-
-
-# Deprecated
-# =============================================================================
-
-func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
-	ModLoaderDeprecated.deprecated_message("ModLoaderMod.append_node_in_scene has been removed, use ModLoaderMod.extend_scene() to edit non preloaded scenes.", "7.0.0")
-
-
-func save_scene(modified_scene: Node, scene_path: String) -> void:
-	ModLoaderDeprecated.deprecated_message("ModLoaderMod.save_scene has been removed, use ModLoaderMod.extend_scene() to edit non preloaded scenes.", "7.0.0")
