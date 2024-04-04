@@ -100,7 +100,7 @@ static func apply_extension(extension_path: String) -> Script:
 		ModLoaderLog.error("The child script path '%s' does not exist" % [extension_path], LOG_NAME)
 		return null
 
-	var child_script: Script = ResourceLoader.load(extension_path)
+	var child_script: Script = load(extension_path)
 	# Adding metadata that contains the extension script path
 	# We cannot get that path in any other way
 	# Passing the child_script as is would return the base script path
@@ -114,7 +114,7 @@ static func apply_extension(extension_path: String) -> Script:
 	# This is also needed to make Godot instantiate the extended class
 	# when creating singletons.
 	# The actual instance is thrown away.
-	child_script.new()
+	child_script.reload()
 
 	var parent_script: Script = child_script.get_base_script()
 	var parent_script_path: String = parent_script.resource_path
