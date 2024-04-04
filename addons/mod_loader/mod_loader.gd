@@ -26,14 +26,6 @@ signal current_config_changed(config)
 # Prefix for this file when using mod_log or dev_log
 const LOG_NAME := "ModLoader"
 
-# --- DEPRECATED ---
-# UNPACKED_DIR was moved to ModLoaderStore.
-# However, many mods use this const directly, which is why the deprecation warning was added.
-var UNPACKED_DIR := "res://mods-unpacked/"
-
-# mod_data was moved to ModLoaderStore.
-# However, many mods use this const directly, which is why the deprecation warning was added.
-var mod_data := {}
 
 # Main
 # =============================================================================
