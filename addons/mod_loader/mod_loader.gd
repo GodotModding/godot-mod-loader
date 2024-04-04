@@ -172,6 +172,12 @@ func _load_mods() -> void:
 
 	ModLoaderLog.success("DONE: Installed all script extensions", LOG_NAME)
 
+	_ModLoaderSceneExtension.refresh_scenes()
+
+	_ModLoaderSceneExtension.handle_scene_extensions()
+
+	ModLoaderLog.success("DONE: Applied all scene extensions", LOG_NAME)
+
 	ModLoaderStore.is_initializing = false
 
 
