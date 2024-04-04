@@ -100,30 +100,12 @@ static func _is_valid_global_class_dict(global_class_dict: Dictionary) -> bool:
 	return true
 
 
-## Returns the [String] in between two strings in a provided [String]
-static func get_string_in_between(string: String, initial: String, ending: String) -> String:
-	var start_index: int = string.find(initial)
-	if start_index == -1:
-		ModLoaderLog.error("Initial string not found.", LOG_NAME)
-		return ""
+# Deprecated
+# =============================================================================
 
-	start_index += initial.length()
-
-	var end_index: int = string.find(ending, start_index)
-	if end_index == -1:
-		ModLoaderLog.error("Ending string not found.", LOG_NAME)
-		return ""
-
-	var found_string: String = string.substr(start_index, end_index - start_index)
-
-	return found_string
-
-
-## Deprecated[br]
-## =============================================================================[br][br]
-## Logs the error in red and a stack trace. Prefixed FATAL-ERROR
-## Stops the execution in editor
-## Always logged
+# Logs the error in red and a stack trace. Prefixed FATAL-ERROR
+# Stops the execution in editor
+# Always logged
 static func log_fatal(message: String, mod_name: String) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoaderUtils.log_fatal", "ModLoaderLog.fatal", "6.0.0")
 	ModLoaderLog.fatal(message, mod_name)
