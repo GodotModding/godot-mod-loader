@@ -184,8 +184,6 @@ func _update_ml_options_from_options_resource() -> void:
 		# Update from the options in the resource
 		for key in ml_options:
 			ml_options[key] = current_options[key]
-			if key == "steam_workshop_enabled" and current_options[key] == true:
-				ModLoaderDeprecated.deprecated_message("The Steam Workshop Enabled option has been deprecated. Please use the mod source options instead.", "6.3.0")
 
 	# Get options overrides by feature tags
 	# An override is saved as Dictionary[String: ModLoaderOptionsProfile]
@@ -216,8 +214,6 @@ func _update_ml_options_from_options_resource() -> void:
 		# Update from the options in the resource
 		for key in ml_options:
 			ml_options[key] = override_options[key]
-			if key == "steam_workshop_enabled" and override_options[key] == true:
-				ModLoaderDeprecated.deprecated_message("The Steam Workshop Enabled option has been deprecated. Please use the mod source options instead.", "6.3.0")
 
 
 # Update ModLoader's options, via CLI args
