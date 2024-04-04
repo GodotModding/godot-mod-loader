@@ -180,6 +180,12 @@ func _load_mods() -> void:
 
 	ModLoaderLog.success("DONE: Installed all script extensions", LOG_NAME)
 
+	_ModLoaderSceneExtension.refresh_scenes()
+
+	_ModLoaderSceneExtension.handle_scene_extensions()
+
+	ModLoaderLog.success("DONE: Applied all scene extensions", LOG_NAME)
+
 	ModLoaderStore.is_initializing = false
 
 
@@ -235,7 +241,7 @@ func _load_mod_zips() -> Dictionary:
 		# Loop over the mod zips in the "mods" directory
 		var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
 		zip_data.merge(loaded_zip_data)
-	
+
 	if ModLoaderStore.ml_options.load_from_steam_workshop or ModLoaderStore.ml_options.steam_workshop_enabled:
 		# If we're using Steam workshop, loop over the workshop item directories
 		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
@@ -396,16 +402,6 @@ func register_global_classes_from_array(new_global_classes: Array) -> void:
 func add_translation_from_resource(resource_path: String) -> void:
 	ModLoaderDeprecated.deprecated_changed("ModLoader.add_translation_from_resource", "ModLoaderMod.add_translation", "6.0.0")
 	ModLoaderMod.add_translation(resource_path)
-
-
-func append_node_in_scene(modified_scene: Node, node_name: String = "", node_parent = null, instance_path: String = "", is_visible: bool = true) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.append_node_in_scene", "ModLoaderMod.append_node_in_scene", "6.0.0")
-	ModLoaderMod.append_node_in_scene(modified_scene, node_name, node_parent, instance_path, is_visible)
-
-
-func save_scene(modified_scene: Node, scene_path: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.save_scene", "ModLoaderMod.save_scene", "6.0.0")
-	ModLoaderMod.save_scene(modified_scene, scene_path)
 
 
 func get_mod_config(mod_dir_name: String = "", key: String = "") -> ModConfig:
