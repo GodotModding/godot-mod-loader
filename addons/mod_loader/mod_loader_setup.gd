@@ -19,12 +19,62 @@ const new_global_classes := [
 		"base": "Node",
 		"class": "ModLoaderUtils",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/mod_loader_utils.gd"
+		"path": "res://addons/mod_loader/internal/mod_loader_utils.gd"
+	}, {
+		"base": "Reference",
+		"class": "_ModLoaderCache",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/internal/cache.gd"
+	}, {
+		"base": "Reference",
+		"class": "_ModLoaderCLI",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/internal/cli.gd"
+	}, {
+		"base": "Reference",
+		"class": "_ModLoaderDependency",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/internal/dependency.gd"
+	}, {
+		"base": "Reference",
+		"class": "_ModLoaderFile",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/internal/file.gd"
+	}, {
+		"base": "Object",
+		"class": "_ModLoaderGodot",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/internal/godot.gd"
+	}, {
+		"base": "Reference",
+		"class": "_ModLoaderPath",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/internal/path.gd"
+	}, {
+		"base": "Reference",
+		"class": "_ModLoaderScriptExtension",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/internal/script_extension.gd"
+	}, {
+		"base": "Resource",
+		"class": "ModUserProfile",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/resources/mod_user_profile.gd"
+	}, {
+		"base": "Resource",
+		"class": "ModConfig",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/resources/mod_config.gd"
 	}, {
 		"base": "Resource",
 		"class": "ModManifest",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/resources/mod_manifest.gd"
+	}, {
+		"base": "Resource",
+		"class": "ScriptExtensionData",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/resources/script_extension_data.gd"
 	}, {
 		"base": "Resource",
 		"class": "ModLoaderCurrentOptions",
@@ -51,7 +101,7 @@ const new_global_classes := [
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/mod.gd"
 	}, {
-		"base": "RefCounted",
+		"base": "Reference",
 		"class": "ModLoaderModManager",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/mod_manager.gd"
@@ -64,12 +114,22 @@ const new_global_classes := [
 		"base": "Node",
 		"class": "_ModLoaderSteam",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/api/third_party/steam.gd"
+		"path": "res://addons/mod_loader/internal/third_party/steam.gd"
 	}, {
 		"base": "Node",
 		"class": "ModLoaderLog",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/log.gd"
+	}, {
+		"base": "Object",
+		"class": "ModLoaderUserProfile",
+		"language": "GDScript",
+		"path": "res://addons/mod_loader/api/profile.gd"
+	}, {
+		"base": "Reference",
+		"class": "JSONSchema",
+		"language": "GDScript",
+		"path": "res://addons/JSON_Schema_Validator/json_schema_validator.gd"
 	}
 ]
 
