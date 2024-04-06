@@ -300,11 +300,13 @@ func _init_mod_data(mod_id: String, zip_path := "") -> void:
 	if not zip_path.is_empty():
 		mod.zip_name = _ModLoaderPath.get_file_name_from_path(zip_path)
 		mod.zip_path = zip_path
+		mod.set_mod_source(zip_path)
 	mod.dir_path = local_mod_path
 	mod.dir_name = mod_id
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
 	mod.is_locked = true if mod_id in ModLoaderStore.ml_options.locked_mods else false
+
 	ModLoaderStore.mod_data[mod_id] = mod
 
 	# Get the mod file paths
