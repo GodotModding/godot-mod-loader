@@ -293,7 +293,7 @@ func _setup_mods() -> int:
 # The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
 func _init_mod_data(mod_id: String, zip_path := "") -> void:
-		# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
+	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
 	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(mod_id)
 
 	var mod := ModData.new()
