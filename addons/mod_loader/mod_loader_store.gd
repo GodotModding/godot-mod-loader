@@ -122,6 +122,9 @@ var ml_options := {
 	# INFO: Redundant since the introduction of mod source options, kept for backwards compatibility.
 	steam_workshop_enabled = false,
 
+	# Application's Steam ID, used if workshop is enabled
+	steam_id = 0,
+
 	# Overrides for the path mods/configs/workshop folders are loaded from.
 	# Only applied if custom settings are provided, either via the options.tres
 	# resource, or via CLI args. Note that CLI args can be tested in the editor
