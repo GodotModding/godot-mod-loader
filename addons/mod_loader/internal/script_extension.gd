@@ -113,7 +113,6 @@ static func apply_extension(extension_path: String) -> Script:
 	# class multiple times.
 	# This is also needed to make Godot instantiate the extended class
 	# when creating singletons.
-	# The actual instance is thrown away.
 	child_script.reload()
 
 	var parent_script: Script = child_script.get_base_script()
