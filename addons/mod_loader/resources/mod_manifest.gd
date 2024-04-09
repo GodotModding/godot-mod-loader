@@ -303,13 +303,6 @@ func _handle_compatible_mod_loader_version(mod_id: String, godot_details: Dictio
 			LOG_NAME)
 		return []
 
-	# If a string was passed
-	ModLoaderDeprecated.deprecated_message(
-		str(
-			"%s - The single String value for \"compatible_mod_loader_version\" is deprecated. " +
-			"Please provide an Array. For more details visit %s"
-		) % [mod_id, link_manifest_docs],
-		"6.0.0")
 	return [string_value]
 
 

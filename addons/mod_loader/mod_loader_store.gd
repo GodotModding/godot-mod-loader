@@ -122,6 +122,9 @@ var ml_options := {
 	# INFO: Redundant since the introduction of mod source options, kept for backwards compatibility.
 	steam_workshop_enabled = false,
 
+	# Application's Steam ID, used if workshop is enabled
+	steam_id = 0,
+
 	# Overrides for the path mods/configs/workshop folders are loaded from.
 	# Only applied if custom settings are provided, either via the options.tres
 	# resource, or via CLI args. Note that CLI args can be tested in the editor
@@ -184,8 +187,6 @@ func _update_ml_options_from_options_resource() -> void:
 		# Update from the options in the resource
 		for key in ml_options:
 			ml_options[key] = current_options[key]
-			if key == "steam_workshop_enabled" and current_options[key] == true:
-				ModLoaderDeprecated.deprecated_message("The Steam Workshop Enabled option has been deprecated. Please use the mod source options instead.", "6.3.0")
 
 	# Get options overrides by feature tags
 	# An override is saved as Dictionary[String: ModLoaderOptionsProfile]
@@ -216,8 +217,6 @@ func _update_ml_options_from_options_resource() -> void:
 		# Update from the options in the resource
 		for key in ml_options:
 			ml_options[key] = override_options[key]
-			if key == "steam_workshop_enabled" and override_options[key] == true:
-				ModLoaderDeprecated.deprecated_message("The Steam Workshop Enabled option has been deprecated. Please use the mod source options instead.", "6.3.0")
 
 
 # Update ModLoader's options, via CLI args

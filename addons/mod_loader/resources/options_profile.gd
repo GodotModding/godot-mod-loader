@@ -11,6 +11,7 @@ extends Resource
 @export var disabled_mods: Array[String] = []
 @export var allow_modloader_autoloads_anywhere: bool = false
 @export var steam_workshop_enabled: bool = false
+@export var steam_id: int = 0
 @export_dir var override_path_to_mods = ""
 @export_dir var override_path_to_configs = ""
 @export_dir var override_path_to_workshop = ""
