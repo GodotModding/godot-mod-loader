@@ -26,14 +26,6 @@ signal current_config_changed(config)
 # Prefix for this file when using mod_log or dev_log
 const LOG_NAME := "ModLoader"
 
-# --- DEPRECATED ---
-# UNPACKED_DIR was moved to ModLoaderStore.
-# However, many mods use this const directly, which is why the deprecation warning was added.
-var UNPACKED_DIR := "res://mods-unpacked/": get = deprecated_direct_access_UNPACKED_DIR
-
-# mod_data was moved to ModLoaderStore.
-# However, many mods use this const directly, which is why the deprecation warning was added.
-var mod_data := {}: get = deprecated_direct_access_mod_data
 
 # Main
 # =============================================================================
@@ -341,18 +333,7 @@ func _init_mod(mod: ModData) -> void:
 	var mod_main_script: GDScript = ResourceLoader.load(mod_main_path)
 	ModLoaderLog.debug("Loaded script -> %s" % mod_main_script, LOG_NAME)
 
-	var argument_found: bool = false
-	for method in mod_main_script.get_script_method_list():
-		if method.name == "_init":
-			if method.args.size() > 0:
-				argument_found = true
-
-	var mod_main_instance: Node
-	if argument_found:
-		mod_main_instance = mod_main_script.new(self)
-		ModLoaderDeprecated.deprecated_message("The mod_main.gd _init argument (modLoader = ModLoader) is deprecated. Remove it from your _init to avoid crashes in the next major version.", "6.1.0")
-	else:
-		mod_main_instance = mod_main_script.new()
+	var mod_main_instance: Node = mod_main_script.new()
 	mod_main_instance.name = mod.manifest.get_mod_id()
 
 	ModLoaderStore.saved_mod_mains[mod_main_path] = mod_main_instance
@@ -384,36 +365,3 @@ func _disable_mod(mod: ModData) -> void:
 	_ModLoaderScriptExtension.remove_all_extensions_of_mod(mod)
 
 	remove_child(mod_main_instance)
-
-
-# Deprecated
-# =============================================================================
-
-func install_script_extension(child_script_path:String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.install_script_extension", "ModLoaderMod.install_script_extension", "6.0.0")
-	ModLoaderMod.install_script_extension(child_script_path)
-
-
-func register_global_classes_from_array(new_global_classes: Array) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.register_global_classes_from_array", "ModLoaderMod.register_global_classes_from_array", "6.0.0")
-	ModLoaderMod.register_global_classes_from_array(new_global_classes)
-
-
-func add_translation_from_resource(resource_path: String) -> void:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.add_translation_from_resource", "ModLoaderMod.add_translation", "6.0.0")
-	ModLoaderMod.add_translation(resource_path)
-
-
-func get_mod_config(mod_dir_name: String = "", key: String = "") -> ModConfig:
-	ModLoaderDeprecated.deprecated_changed("ModLoader.get_mod_config", "ModLoaderConfig.get_config", "6.0.0")
-	return ModLoaderConfig.get_config(mod_dir_name, ModLoaderConfig.DEFAULT_CONFIG_NAME)
-
-
-func deprecated_direct_access_UNPACKED_DIR() -> String:
-	ModLoaderDeprecated.deprecated_message("The const \"UNPACKED_DIR\" was removed, use \"ModLoaderMod.get_unpacked_dir()\" instead", "6.0.0")
-	return _ModLoaderPath.get_unpacked_mods_dir_path()
-
-
-func deprecated_direct_access_mod_data() -> Dictionary:
-	ModLoaderDeprecated.deprecated_message("The var \"mod_data\" was removed, use \"ModLoaderMod.get_mod_data_all()\" instead", "6.0.0")
-	return ModLoaderStore.mod_data

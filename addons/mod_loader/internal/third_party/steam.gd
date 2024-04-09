@@ -77,11 +77,17 @@ static func _get_path_to_workshop() -> String:
 	return path
 
 
-# Gets the steam app ID from steam_data.json, which should be in the root
+# Gets the steam app ID from ml_options or the steam_data.json, which should be in the root
 # directory (ie. res://steam_data.json). This file is used by Godot Workshop
 # Utility (GWU), which was developed by Brotato developer Blobfish:
 # https://github.com/thomasgvd/godot-workshop-utility
 static func _get_steam_app_id() -> String:
+	# Check if the steam id is stored in the options
+	if ModLoaderStore.ml_options.steam_id:
+		return str(ModLoaderStore.ml_options.steam_id)
+		ModLoaderLog.debug("No Steam ID specified in the Mod Loader options. Attempting to read the steam_data.json file next.", LOG_NAME)
+
+	# If the steam_id is not stored in the options try to get it from the steam_data.json file.
 	var game_install_directory := _ModLoaderPath.get_local_folder_dir()
 	var steam_app_id := ""
 	var file := FileAccess.open(game_install_directory.path_join("steam_data.json"), FileAccess.READ)
