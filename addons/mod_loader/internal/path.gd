@@ -180,4 +180,26 @@ static func get_path_to_mod_configs_dir(mod_id: String) -> String:
 static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> String:
 	var mod_config_dir := get_path_to_mod_configs_dir(mod_id)
 
+
 	return mod_config_dir.path_join(config_name + ".json")
+
+
+# Returns the mod directory name ("some-mod") from a given path (e.g. "res://mods-unpacked/some-mod/extensions/extension.gd")
+static func get_mod_dir(path: String) -> String:
+	var initial := ModLoaderStore.UNPACKED_DIR
+	var ending := "/"
+	var start_index: int = path.find(initial)
+	if start_index == -1:
+		ModLoaderLog.error("Initial string not found.", LOG_NAME)
+		return ""
+
+	start_index += initial.length()
+
+	var end_index: int = path.find(ending, start_index)
+	if end_index == -1:
+		ModLoaderLog.error("Ending string not found.", LOG_NAME)
+		return ""
+
+	var found_string: String = path.substr(start_index, end_index - start_index)
+
+	return found_string
