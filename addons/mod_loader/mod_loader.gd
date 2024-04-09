@@ -300,7 +300,7 @@ func _init_mod_data(mod_id: String, zip_path := "") -> void:
 	if not zip_path.is_empty():
 		mod.zip_name = _ModLoaderPath.get_file_name_from_path(zip_path)
 		mod.zip_path = zip_path
-		mod.set_mod_source(zip_path)
+		mod.source = mod.get_mod_source()
 	mod.dir_path = local_mod_path
 	mod.dir_name = mod_id
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)

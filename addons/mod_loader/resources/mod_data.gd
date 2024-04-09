@@ -174,13 +174,10 @@ func get_optional_mod_file_path(optional_file: int) -> String:
 	return ""
 
 
-func set_mod_source(path: String) -> void:
-	if path.contains("workshop"):
-		source = sources.STEAM_WORKSHOP
-		return
+func get_mod_source() -> sources:
+	if zip_path.contains("workshop"):
+		return sources.STEAM_WORKSHOP
+	if zip_path == "":
+		return sources.UNPACKED
 
-	if path == "":
-		source = sources.UNPACKED
-		return
-
-	source = sources.LOCAL
+	return sources.LOCAL
