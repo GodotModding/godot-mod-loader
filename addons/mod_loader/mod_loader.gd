@@ -293,18 +293,20 @@ func _setup_mods() -> int:
 # The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
 # which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
 func _init_mod_data(mod_id: String, zip_path := "") -> void:
-		# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
+	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
 	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(mod_id)
 
 	var mod := ModData.new()
 	if not zip_path.is_empty():
 		mod.zip_name = _ModLoaderPath.get_file_name_from_path(zip_path)
 		mod.zip_path = zip_path
+		mod.source = mod.get_mod_source()
 	mod.dir_path = local_mod_path
 	mod.dir_name = mod_id
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
 	mod.is_locked = true if mod_id in ModLoaderStore.ml_options.locked_mods else false
+
 	ModLoaderStore.mod_data[mod_id] = mod
 
 	# Get the mod file paths

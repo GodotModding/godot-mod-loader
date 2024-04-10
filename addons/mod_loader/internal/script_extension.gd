@@ -34,7 +34,6 @@ class InheritanceSorting:
 	var stack_cache := {}
 	# This dictionary's keys are mod_ids and it stores the corresponding position in the load_order
 	var load_order := {}
-	var unpacked_dir = _ModLoaderPath.get_unpacked_mods_dir_path()
 
 	func _init(inheritance_array_to_sort: Array) -> void:
 		_populate_load_order_table()

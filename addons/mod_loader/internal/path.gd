@@ -186,8 +186,8 @@ static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> 
 
 # Returns the mod directory name ("some-mod") from a given path (e.g. "res://mods-unpacked/some-mod/extensions/extension.gd")
 static func get_mod_dir(path: String) -> String:
-	var initial = ModLoaderStore.UNPACKED_DIR
-	var ending = "/"
+	var initial := ModLoaderStore.UNPACKED_DIR
+	var ending := "/"
 	var start_index: int = path.find(initial)
 	if start_index == -1:
 		ModLoaderLog.error("Initial string not found.", LOG_NAME)
