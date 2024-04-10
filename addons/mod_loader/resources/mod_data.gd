@@ -23,6 +23,16 @@ enum optional_mod_files {
 	OVERWRITES
 }
 
+# Specifies the source from which the mod has been loaded:
+# UNPACKED = From the mods-unpacked directory ( only when in the editor ).
+# LOCAL = From the local mod zip directory, which by default is ../game_dir/mods.
+# STEAM_WORKSHOP = Loaded from ../Steam/steamapps/workshop/content/1234567/[..].
+enum sources {
+	UNPACKED,
+	LOCAL,
+	STEAM_WORKSHOP,
+}
+
 # Name of the Mod's zip file
 var zip_name := ""
 # Path to the Mod's zip file
@@ -47,6 +57,8 @@ var manifest: ModManifest
 # Updated in load_configs
 var configs := {}
 var current_config: ModConfig: set = _set_current_config
+# Specifies the source from which the mod has been loaded
+var source: int
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PackedStringArray = []
@@ -154,8 +166,18 @@ func get_required_mod_file_path(required_file: int) -> String:
 			return dir_path.path_join("manifest.json")
 	return ""
 
+
 func get_optional_mod_file_path(optional_file: int) -> String:
 	match optional_file:
 		optional_mod_files.OVERWRITES:
 			return dir_path.path_join("overwrites.gd")
 	return ""
+
+
+func get_mod_source() -> sources:
+	if zip_path.contains("workshop"):
+		return sources.STEAM_WORKSHOP
+	if zip_path == "":
+		return sources.UNPACKED
+
+	return sources.LOCAL
