@@ -103,11 +103,16 @@ static func refresh_scene(scene_path: String) -> void:
 # - edit_callable (Callable): The callable function to modify the scene.
 #
 # Returns: void
-static func extend_scene(scene_vanilla_path: String, edit_callable: Callable) -> void:
+static func extend_scene(scene_vanilla_path: String, edit_callable: Callable, mod_id: String) -> void:
 	if not ModLoaderStore.scenes_to_modify.has(scene_vanilla_path):
 		ModLoaderStore.scenes_to_modify[scene_vanilla_path] = []
 
-	ModLoaderStore.scenes_to_modify[scene_vanilla_path].push_back(edit_callable)
+	ModLoaderStore.scenes_to_modify[scene_vanilla_path].push_back(
+		_ModLoaderSceneExtension.SceneEditCallable.new(
+			mod_id,
+			edit_callable
+		)
+	)
 
 
 # Gets the ModData from the provided namespace
