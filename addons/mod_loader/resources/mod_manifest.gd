@@ -34,7 +34,7 @@ var tags : PackedStringArray = []
 var config_schema := {}
 var description_rich := ""
 var image: CompressedTexture2D
-
+var steam_workshop_id := ""
 
 # Required keys in a mod's manifest.json file
 const REQUIRED_MANIFEST_KEYS_ROOT = [
@@ -94,6 +94,7 @@ func _init(manifest: Dictionary) -> void:
 	description_rich = ModLoaderUtils.get_string_from_dict(godot_details, "description_rich")
 	tags = ModLoaderUtils.get_array_from_dict(godot_details, "tags")
 	config_schema = ModLoaderUtils.get_dict_from_dict(godot_details, "config_schema")
+	steam_workshop_id = ModLoaderUtils.get_string_from_dict(godot_details, "steam_workshop_id")
 
 	if (
 		not is_mod_id_array_valid(mod_id, dependencies, "dependency") or
@@ -143,6 +144,10 @@ func _init(manifest: Dictionary) -> void:
 			["load_before", "incompatibilities"])
 	):
 		return
+	if not is_steam_workshop_id_valid(mod_id, steam_workshop_id):
+		# Attempt to update the steam_workshop_id with the correct one
+		if not _try_overriding_steam_workshop_id(mod_id):
+			return
 
 
 # Mod ID used in the mod loader
@@ -456,5 +461,56 @@ static func is_mod_id_valid(original_mod_id: String, check_mod_id: String, type 
 		if not is_silent:
 			ModLoaderLog.fatal(str(intro_text, "Mod ID has an invalid name for \"%s\". Name can only use letters, numbers and underscores, but was: \"%s\"" % [check_mod_id, check_name]), LOG_NAME)
 		return false
+
+	return true
+
+
+static func is_string_length_valid(mod_id: String, field: String, string: String, required_length: int, is_silent := false) -> bool:
+	if not string.length() == required_length:
+		if not is_silent:
+			ModLoaderLog.fatal("Invalid length in field \"%s\" of mod \"%s\" it should be \"%s\" but it is \"%s\"." % [field, mod_id, required_length, string.length()], LOG_NAME)
+		return false
+
+	return true
+
+
+static func is_steam_workshop_id_valid(mod_id: String, steam_workshop_id_to_validate: String, is_silent := false) -> bool:
+	var mod_data := ModLoaderMod.get_mod_data(mod_id)
+	var mod_source := mod_data.get_mod_source()
+	var steam_workshop_id_from_path := ""
+
+	if steam_workshop_id_to_validate.is_empty():
+		# Workshop id is optional, so we return true if no id is given
+		return true
+
+	# Validate the steam_workshop_id based on the zip_path if the mod is loaded from the workshop
+	if mod_source == ModData.sources.STEAM_WORKSHOP:
+		steam_workshop_id_from_path = _ModLoaderPath.get_steam_workshop_id(mod_data.zip_path)
+		if not steam_workshop_id_to_validate == steam_workshop_id_from_path:
+			if not is_silent:
+				ModLoaderLog.warning("The \"steam_workshop_id\": \"%s\" provided by the mod manifest of mod \"%s\" is incorrect, it should be \"%s\"." % [steam_workshop_id_to_validate, mod_id, steam_workshop_id_from_path], LOG_NAME)
+			return false
+	else:
+		if not is_string_length_valid(mod_id, "steam_workshop_id", steam_workshop_id_to_validate, 10, is_silent):
+			# Invalidate the manifest in this case because the mod is most likely in development if it is not loaded from the steam workshop.
+			return false
+
+	return true
+
+
+func _try_overriding_steam_workshop_id(mod_id: String) -> bool:
+	var mod_data := ModLoaderMod.get_mod_data(mod_id)
+	var mod_source := mod_data.get_mod_source()
+	var steam_workshop_id_from_path := ""
+
+	if not mod_source == ModData.sources.STEAM_WORKSHOP:
+		return false
+
+	steam_workshop_id_from_path = _ModLoaderPath.get_steam_workshop_id(mod_data.zip_path)
+
+	if steam_workshop_id_from_path.is_empty():
+		return false
+
+	steam_workshop_id = steam_workshop_id_from_path
 
 	return true
