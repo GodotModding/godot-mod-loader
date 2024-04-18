@@ -7,17 +7,6 @@ extends RefCounted
 const LOG_NAME := "ModLoader:SceneExtension"
 
 
-class SceneEditCallable:
-	extends Resource
-
-	var mod_id: String
-	var edit_callable: Callable
-
-	func _init(_mod_id: String, _edit_callable: Callable) -> void:
-		mod_id = _mod_id
-		edit_callable = _edit_callable
-
-
 # Iterates over the list of scenes to refresh them from storage.
 # Used to apply script extensions to preloaded scenes.
 static func refresh_scenes() -> void:
@@ -35,12 +24,12 @@ static func handle_scene_extensions() -> void:
 		for scene_edit_callable in ModLoaderStore.scenes_to_modify[scene_path]:
 			var cached_scene: PackedScene = load(scene_path)
 			var cached_scene_instance: Node = cached_scene.instantiate()
-			var edited_scene: Node = scene_edit_callable.edit_callable.call(cached_scene_instance)
+			var edited_scene: Node = scene_edit_callable.call(cached_scene_instance)
 			if not edited_scene:
 				ModLoaderLog.fatal(
 					(
-						"%s: Ensure you return the 'scene_instance' within your 'edit callable' for the scene at path: \"%s\"."
-						% [scene_edit_callable.mod_id, scene_path]
+						'Scene extension of "%s" failed since the edit callable "%s" does not return the modified scene_instance'
+						% [scene_path, scene_edit_callable.get_method()]
 					),
 					LOG_NAME
 				)

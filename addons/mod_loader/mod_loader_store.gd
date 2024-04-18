@@ -55,8 +55,7 @@ var script_extensions := []
 var scenes_to_refresh := []
 
 # Dictionary of callables to modify a specific scene.
-# Example property: "scene_path": [SceneEditCallable, SceneEditCallable]
-# SceneEditCallable sub class of _ModLoaderSceneExtension
+# Example property: "scene_path": [Callable, Callable]
 var scenes_to_modify := {}
 
 # True if ModLoader has displayed the warning about using zipped mods
