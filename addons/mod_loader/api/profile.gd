@@ -192,11 +192,11 @@ static func get_all_as_array() -> Array:
 # =============================================================================
 
 
-# Update the global list of disabled mods based on the current user profile
-# The user profile will override the disabled_mods property that can be set via the options resource in the editor.
-# Example: If "Mod-TestMod" is set in disabled_mods via the editor, the mod will appear disabled in the user profile.
-# If the user then enables the mod in the profile the entry in disabled_mods will be removed.
-static func _update_disabled_mods() -> void:
+# Update the global list of deactivated mods based on the current user profile
+# The user profile will override the deactivated_mods property that can be set via the options resource in the editor.
+# Example: If "Mod-TestMod" is set in deactivated_mods via the editor, the mod will appear deactivated in the user profile.
+# If the user then enables the mod in the profile the entry in deactivated_mods will be removed.
+static func _update_deactivated_mods() -> void:
 	var current_user_profile: ModUserProfile = get_current()
 
 	# Check if a current user profile is set
@@ -204,7 +204,7 @@ static func _update_disabled_mods() -> void:
 		ModLoaderLog.info("There is no current user profile. The \"default\" profile will be created.", LOG_NAME)
 		return
 
-	# Iterate through the mod list in the current user profile to find disabled mods
+	# Iterate through the mod list in the current user profile to find deactivated mods
 	for mod_id in current_user_profile.mod_list:
 		var mod_list_entry: Dictionary = current_user_profile.mod_list[mod_id]
 		if ModLoaderStore.mod_data.has(mod_id):
@@ -221,7 +221,7 @@ static func _update_disabled_mods() -> void:
 # Additionally, it checks for and deletes any mods from each profile's mod list that are no longer installed on the system.
 static func _update_mod_lists() -> bool:
 	# Generate a list of currently present mods by combining the mods
-	# in mod_data and ml_options.disabled_mods from ModLoaderStore.
+	# in mod_data and ml_options.deactivated_mods from ModLoaderStore.
 	var current_mod_list := _generate_mod_list()
 
 	# Iterate over all user profiles
@@ -297,7 +297,7 @@ static func _generate_mod_list() -> Dictionary:
 		mod_list[mod_id] = _generate_mod_list_entry(mod_id, true)
 
 	# Add the deactivated mods to the list
-	for mod_id in ModLoaderStore.ml_options.disabled_mods:
+	for mod_id in ModLoaderStore.ml_options.deactivated_mods:
 		mod_list[mod_id] = _generate_mod_list_entry(mod_id, false)
 
 	return mod_list
@@ -404,9 +404,9 @@ static func _load() -> bool:
 	# Load JSON data from the user profiles file
 	var data := _ModLoaderFile.get_json_as_dict(FILE_PATH_USER_PROFILES)
 
-	# If there is no data, log an error and return
+	# If there is no data, log an info and return
 	if data.is_empty():
-		ModLoaderLog.error("No profile file found at \"%s\"" % FILE_PATH_USER_PROFILES, LOG_NAME)
+		ModLoaderLog.info("No profile file found at \"%s\"" % FILE_PATH_USER_PROFILES, LOG_NAME)
 		return false
 
 	# Loop through each profile in the data and add them to ModLoaderStore

@@ -5,8 +5,8 @@ extends RefCounted
 # This Class provides util functions for working with paths.
 # Currently all of the included functions are internal and should only be used by the mod loader itself.
 
-const LOG_NAME := "ModLoader:Path3D"
-const MOD_CONFIG_DIR_PATH := "user://configs"
+const LOG_NAME := "ModLoader:Path"
+const MOD_CONFIG_DIR_PATH := "user://mod_configs"
 
 
 # Get the path to a local folder. Primarily used to get the  (packed) mods
