@@ -101,7 +101,6 @@ static func refresh_scene(scene_path: String) -> void:
 # Parameters:
 # - scene_vanilla_path (String): The path to the vanilla scene file.
 # - edit_callable (Callable): The callable function to modify the scene.
-# - mod_id (String): The mod_id of your mod, e.g., "namespace-modName".
 #
 # Returns: void
 static func extend_scene(scene_vanilla_path: String, edit_callable: Callable) -> void:
