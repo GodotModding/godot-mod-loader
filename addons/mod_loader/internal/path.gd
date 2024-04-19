@@ -55,7 +55,7 @@ static func get_file_name_from_path(path: String, make_lower_case := true, remov
 
 # Provide a zip_path to a workshop mod, returns the steam_workshop_id
 static func get_steam_workshop_id(zip_path: String) -> String:
-	if not zip_path_global.contains("/Steam/steamapps/workshop/content"):
+	if not zip_path.contains("/Steam/steamapps/workshop/content"):
 		return ""
 
 	return zip_path.get_base_dir().split("/")[-1]
