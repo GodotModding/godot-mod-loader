@@ -22,3 +22,15 @@ extends Resource
 @export var load_from_steam_workshop: bool = false
 ## Indicates whether to load mods from the "mods" folder located at the game's install directory, or the overridden mods path.
 @export var load_from_local: bool = true
+## Settings for scanning mods before loading them into the game's mods-unpacked directory and executing any code
+@export_group("Mod Scan")
+## [b]!!! This is just a small security measure, it will not make modding safe. !!![/b][br]
+## Please check the Wiki FAQ for additional information on sandboxing and security.[br][br]
+## Enable scanning mod zips before loading them into the game.
+@export var enable_mod_scan := false
+## Array to specify disallowed script classes
+@export var disallowed_script_classes: Array[StringName] = ["OS", "FileAccess", "DirAccess", "Script", "GDScript", "HTTPClient", "HTTPRequest", "WebSocketPeer", "WebRTCDataChannel", "WebRTCDataChannelExtension", "WebRTCMultiplayerPeer", "WebRTCPeerConnection", "WebRTCPeerConnectionExtension", "WebSocketMultiplayerPeer"]
+## Array to specify disallowed scene nodes
+@export var disallowed_scene_nodes: Array[StringName] = ["HTTPRequest"]
+## Array to specify allowed file extensions in mod zips
+@export var allowed_file_extensions: Array[StringName] = ["tscn", "tres", "gd", "svg", "png", "jpg", "anim"]
