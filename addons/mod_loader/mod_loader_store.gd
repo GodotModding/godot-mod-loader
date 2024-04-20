@@ -149,10 +149,10 @@ var ml_options := {
 	# Indicates whether to load mods from the "mods" folder located at the game's install directory, or the overridden mods path.
 	load_from_local = true,
 
-	# Mod Scan - Settings for scanning mods before loading them into the game's mods-unpacked directory and executing any code
+	# Mod Scan - Settings for scanning mods before loading them into the game's mods-unpacked directory.
 	enable_mod_scan = false,
-	disallowed_script_classes = [],
-	disallowed_scene_nodes = [],
+	disallowed_strings_in_script_files = [],
+	disallowed_strings_in_scene_files = [],
 	allowed_file_extensions = [],
 }
 

@@ -71,17 +71,17 @@ static func scan_zip(zip_path: String) -> bool:
 			file_string = file_data.get_string_from_utf8()
 
 		if file_extension == "gd":
-			# Check for disallowed script classes
-			for disallowed_script_class in ModLoaderStore.ml_options.disallowed_script_classes:
-				if file_string.contains("%s." % disallowed_script_class):
-					ModLoaderLog.warning("Script with call to \"%s\" detected!" % disallowed_script_class, LOG_NAME)
+			# Check for disallowed script strings
+			for disallowed_script_string in ModLoaderStore.ml_options.disallowed_strings_in_script_files:
+				if file_string.contains("%s" % disallowed_script_string):
+					ModLoaderLog.warning("Script with string \"%s\" detected!" % disallowed_script_string, LOG_NAME)
 					contains_disallowed_content = true
 
 		if file_extension == "tscn":
-			# Check for disallowed scene nodes
-			for disallowed_scene_node in ModLoaderStore.ml_options.disallowed_scene_nodes:
-				if file_string.contains(disallowed_scene_node):
-					ModLoaderLog.warning("Scene with disallowed Node \"%s\" detected!" % disallowed_scene_node, LOG_NAME)
+			# Check for disallowed scene strings
+			for disallowed_scene_string in ModLoaderStore.ml_options.disallowed_strings_in_scene_files:
+				if file_string.contains(disallowed_scene_string):
+					ModLoaderLog.warning("Scene with string \"%s\" detected!" % disallowed_scene_string, LOG_NAME)
 					contains_disallowed_content = true
 
 	reader.close()
