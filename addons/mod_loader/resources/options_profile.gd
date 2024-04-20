@@ -24,7 +24,7 @@ extends Resource
 @export var load_from_local: bool = true
 ## Settings for scanning mods before loading them into the game's mods-unpacked directory and executing any code
 @export_group("Mod Scan")
-## [b]!!! This is just a small security measure, it will not make modding safe. !!![/b][br]
+## [b]!!! This is not a security measure, it will not make modding safe. !!![/b][br]
 ## Please check the Wiki FAQ for additional information on sandboxing and security.[br][br]
 ## Enable scanning mod zips before loading them into the game.
 @export var enable_mod_scan := false

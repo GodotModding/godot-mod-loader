@@ -129,10 +129,13 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 
 		var mod_zip_path := folder_path.path_join(mod_zip_file_name)
 		var mod_zip_global_path := ProjectSettings.globalize_path(mod_zip_path)
-		var contains_disallowed_content := scan_zip(mod_zip_path)
-		if contains_disallowed_content:
-			ModLoaderLog.warning("disallowed mod content detected - skipped mod from path \"%s\"" % mod_zip_path, LOG_NAME)
-			continue
+
+		if ModLoaderStore.ml_options.enable_mod_scan:
+			var contains_disallowed_content := scan_zip(mod_zip_path)
+			if contains_disallowed_content:
+				ModLoaderLog.warning("disallowed mod content detected - skipped mod from path \"%s\"" % mod_zip_path, LOG_NAME)
+				continue
+
 		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_zip_global_path, false)
 
 		# Get the current directories inside UNPACKED_DIR
