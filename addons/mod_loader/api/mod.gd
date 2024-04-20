@@ -161,3 +161,17 @@ static func is_mod_loaded(mod_id: String) -> bool:
 		return false
 
 	return true
+
+
+# Returns true if the mod with the given mod_id was successfully loaded and is currently active.
+#
+# Parameters:
+# - mod_id (String): The ID of the mod.
+#
+# Returns:
+# - bool: true if the mod is loaded and active, false otherwise.
+static func is_mod_active(mod_id: String) -> bool:
+	if ModLoaderMod.is_mod_loaded(mod_id) and ModLoaderMod.get_mod_data(mod_id).is_active:
+		return true
+
+	return false
