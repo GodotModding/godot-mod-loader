@@ -1,9 +1,6 @@
 class_name ModLoaderOptionsProfile
 extends Resource
 
-# export (String) var my_string := ""
-# export (Resource) var upgrade_to_process_icon = null
-# export (Array, Resource) var elites: = []
 
 @export var enable_mods: bool = true
 @export var locked_mods: Array[String] = []

@@ -1,4 +1,4 @@
-# ModLoader - A mod loader for GDScript
+## ModLoader - A mod loader for GDScript
 #
 # Written in 2021 by harrygiel <harrygiel@gmail.com>,
 # in 2021 by Mariusz Chwalba <mariusz@chwalba.net>,
@@ -20,10 +20,13 @@
 extends Node
 
 
-signal logged(entry)
-signal current_config_changed(config)
+## Emitted if something is logged with [ModLoaderLog]
+signal logged(entry: ModLoaderLog.ModLoaderLogEntry)
+## Emitted if the [member ModData.current_config] of any mod changed.
+## Use the [member ModConfig.mod_id] of the [ModConfig] to check if the config of your mod has changed.
+signal current_config_changed(config: ModConfig)
 
-# Prefix for this file when using mod_log or dev_log
+
 const LOG_NAME := "ModLoader"
 
 

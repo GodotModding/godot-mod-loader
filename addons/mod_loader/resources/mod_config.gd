@@ -1,22 +1,26 @@
 class_name ModConfig
 extends Resource
+##
+## This Class is used to represent a configuration for a mod.[br]
+## The Class provides functionality to initialize, validate, save, and remove a mod's configuration.
+##
+## @tutorial(Creating a Mod Config Schema with JSON-Schemas): 	https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Configs
+## @tutorial(Config Schema):									https://github.com/GodotModding/godot-mod-loader/wiki/config-json
 
-# This Class is used to represent a configuration for a mod.
-# The Class provides functionality to initialize, validate, save, and remove a mod's configuration.
 
 const LOG_NAME := "ModLoader:ModConfig"
 
-# Name of the config - must be unique
+## Name of the config - must be unique
 var name: String
-# The mod_id this config belongs to
+## The mod_id this config belongs to
 var mod_id: String
-# The JSON-Schema this config uses for validation
+## The JSON-Schema this config uses for validation
 var schema: Dictionary
-# The data this config holds
+## The data this config holds
 var data: Dictionary
-# The path where the JSON file for this config is stored
+## The path where the JSON file for this config is stored
 var save_path: String
-# False if any data is invalid
+## False if any data is invalid
 var valid := false
 
 
@@ -67,13 +71,13 @@ func is_valid() -> bool:
 	return false
 
 
-# Saves the config data to the config file
+## Saves the config data to the config file
 func save_to_file() -> bool:
 	var is_success := _ModLoaderFile.save_dictionary_to_json_file(data, save_path)
 	return is_success
 
 
-# Removes the config file
+## Removes the config file
 func remove_file() -> bool:
 	var is_success := _ModLoaderFile.remove_file(save_path)
 	return is_success
