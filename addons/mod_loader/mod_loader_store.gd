@@ -117,11 +117,6 @@ var ml_options := {
 	# The ModLoaderStore Autoload still needs to be placed before the ModLoader Autoload.
 	allow_modloader_autoloads_anywhere = false,
 
-	# If true, ModLoader will load mod ZIPs from the Steam workshop directory,
-	# instead of the default location (res://mods)
-	# INFO: Redundant since the introduction of mod source options, kept for backwards compatibility.
-	steam_workshop_enabled = false,
-
 	# Application's Steam ID, used if workshop is enabled
 	steam_id = 0,
 
