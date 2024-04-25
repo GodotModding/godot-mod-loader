@@ -234,7 +234,7 @@ func _load_mod_zips() -> Dictionary:
 		var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
 		zip_data.merge(loaded_zip_data)
 
-	if ModLoaderStore.ml_options.load_from_steam_workshop or ModLoaderStore.ml_options.steam_workshop_enabled:
+	if ModLoaderStore.ml_options.load_from_steam_workshop:
 		# If we're using Steam workshop, loop over the workshop item directories
 		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
 		zip_data.merge(loaded_workshop_zip_data)
