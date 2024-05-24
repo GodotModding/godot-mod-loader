@@ -2,8 +2,8 @@ extends Node
 
 
 # ModLoaderStore
-# Singleton (autoload) for storing data. Should be added before ModLoader,
-# as an autoload called `ModLoaderStore`
+## Singleton (autoload) for storing data. Should be added before ModLoader,
+## as an autoload called `ModLoaderStore`
 
 
 # Constants

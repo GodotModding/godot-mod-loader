@@ -1,10 +1,20 @@
-extends Resource
 class_name ModUserProfile
+extends Resource
+##
+## This Class is used to represent a User Profile for the ModLoader.
 
 
-# This Class is used to represent a User Profile for the ModLoader.
-
+## The name of the profile
 var name := ""
+## A list of all installed mods
+## [codeblock]
+## "mod_list": {
+##     "Namespace-ModName": {
+##         "current_config": "default",
+##         "is_active": false,
+##         "zip_path": "",
+##     },
+## [/codeblock]
 var mod_list := {}
 
 

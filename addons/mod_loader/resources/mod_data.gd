@@ -1,8 +1,9 @@
 class_name ModData
 extends Resource
+##
+## Stores and validates all Data required to load a mod successfully
+## If some of the data is invalid, [member is_loadable] will be false
 
-# Stores and validates all Data required to load a mod successfully
-# If some of the data is invalid, [member is_loadable] will be false
 
 const LOG_NAME := "ModLoader:ModData"
 
@@ -33,31 +34,33 @@ enum sources {
 	STEAM_WORKSHOP,
 }
 
-# Name of the Mod's zip file
+## Name of the Mod's zip file
 var zip_name := ""
-# Path to the Mod's zip file
+## Path to the Mod's zip file
 var zip_path := ""
 
-# Directory of the mod. Has to be identical to [method ModManifest.get_mod_id]
+## Directory of the mod. Has to be identical to [method ModManifest.get_mod_id]
 var dir_name := ""
-# Path to the Mod's Directory
+## Path to the Mod's Directory
 var dir_path := ""
-# False if any data is invalid
+## False if any data is invalid
 var is_loadable := true
-# True if overwrites.gd exists
+## True if overwrites.gd exists
 var is_overwrite := false
-# True if mod can't be disabled or enabled in a user profile
+## True if mod can't be disabled or enabled in a user profile
 var is_locked := false
-# Flag indicating whether the mod should be loaded
+## Flag indicating whether the mod should be loaded
 var is_active := true
-# Is increased for every mod depending on this mod. Highest importance is loaded first
+## Is increased for every mod depending on this mod. Highest importance is loaded first
 var importance := 0
-# Contents of the manifest
+## Contents of the manifest
 var manifest: ModManifest
 # Updated in load_configs
+## All mod configs
 var configs := {}
+## The currently applied mod config
 var current_config: ModConfig: set = _set_current_config
-# Specifies the source from which the mod has been loaded
+## Specifies the source from which the mod has been loaded
 var source: int
 
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled

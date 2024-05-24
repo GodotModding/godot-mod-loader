@@ -1,39 +1,44 @@
 class_name ModManifest
 extends Resource
+##
+## Stores and validates contents of the manifest set by the user
 
-# Stores and validates contents of the manifest set by the user
 
 const LOG_NAME := "ModLoader:ModManifest"
 
-# Mod name.
 # Validated by [method is_name_or_namespace_valid]
+## Mod name.
 var name := ""
-# Mod namespace, most commonly the main author.
 # Validated by [method is_name_or_namespace_valid]
+## Mod namespace, most commonly the main author.
 var mod_namespace := ""
-# Semantic version. Not a number, but required to be named like this by Thunderstore
 # Validated by [method is_semver_valid]
+## Semantic version. Not a number, but required to be named like this by Thunderstore
 var version_number := "0.0.0"
 var description := ""
 var website_url := ""
-# Used to determine mod load order
+## Used to determine mod load order
 var dependencies: PackedStringArray = []
-# Used to determine mod load order
+## Used to determine mod load order
 var optional_dependencies: PackedStringArray = []
-
+## only used for information
 var authors: PackedStringArray = []
-# only used for information
+## only used for information
 var compatible_game_version: PackedStringArray = []
-# only used for information
 # Validated by [method _handle_compatible_mod_loader_version]
+## only used for information
 var compatible_mod_loader_version: PackedStringArray = []
-# only used for information
+## only used for information
 var incompatibilities: PackedStringArray = []
+## Used to determine mod load order
 var load_before: PackedStringArray = []
+## only used for information
 var tags : PackedStringArray = []
+## Schema for mod configs
 var config_schema := {}
 var description_rich := ""
 var image: CompressedTexture2D
+## only used for information
 var steam_workshop_id := ""
 
 # Required keys in a mod's manifest.json file
