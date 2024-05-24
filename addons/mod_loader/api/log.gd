@@ -367,7 +367,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 			_write_to_log_file(JSON.stringify(get_stack(), "  "))
 			assert(false, message)
 		"error":
-			printerr(message)
+			printerr(log_entry.get_prefix() + message)
 			push_error(message)
 			_write_to_log_file(log_entry.get_entry())
 		"warning":
