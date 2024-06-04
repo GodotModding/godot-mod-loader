@@ -107,11 +107,20 @@ var ml_options := {
 	enable_mods = true,
 	log_level = ModLoaderLog.VERBOSITY_LEVEL.DEBUG,
 
-	# Mods that can't be disabled or enabled in a user profile (contains mod IDs as strings)
+	# Mods that can't be deactivated or enabled in a user profile (contains mod IDs as strings)
 	locked_mods = [],
 
-	# Array of disabled mods (contains mod IDs as strings)
-	disabled_mods = [],
+	# Array of deactivated mods (contains mod IDs as strings)
+	deactivated_mods = [],
+	
+	# Generate a user profile with all mods deactivated.
+	# This can be used after a major game update to prevent crashes.
+	create_deactivated_mods_profile = false,
+	
+	# The name of the deactivated mods profile.
+	# Use this to customize the profile name. Make sure to change the name each time you want to deactivate all mods.
+	# The profile is only created if the name doesn't already exist. You can add a version suffix, for example.
+	deactivated_mods_profile_name = "deactivated_",
 
 	# If this flag is set to true, the ModLoaderStore and ModLoader Autoloads don't have to be the first Autoloads.
 	# The ModLoaderStore Autoload still needs to be placed before the ModLoader Autoload.
