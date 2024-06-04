@@ -5,7 +5,10 @@ extends Resource
 @export var enable_mods: bool = true
 @export var locked_mods: Array[String] = []
 @export var log_level := ModLoaderLog.VERBOSITY_LEVEL.DEBUG
-@export var disabled_mods: Array[String] = []
+## Mods in this array will only load metadata but will not apply any modifications.
+## This can be used to deactivate example mods.
+## Mods in this array are overridden by the settings in the user profile.
+@export var deactivated_mods: Array[String] = []
 @export var allow_modloader_autoloads_anywhere: bool = false
 @export var steam_id: int = 0
 @export_dir var override_path_to_mods = ""
