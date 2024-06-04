@@ -9,6 +9,13 @@ extends Resource
 ## This can be used to deactivate example mods.
 ## Mods in this array are overridden by the settings in the user profile.
 @export var deactivated_mods: Array[String] = []
+## Generate a user profile with all mods deactivated.
+## This can be used after a major game update to prevent crashes.
+@export var create_deactivated_mods_profile = false
+## The name of the deactivated mods profile.
+## Use this to customize the profile name. Make sure to change the name each time you want to deactivate all mods.
+## The profile is only created if the name doesn't already exist. You can add a version suffix, for example.
+@export var deactivated_mods_profile_name = "deactivated_"
 @export var allow_modloader_autoloads_anywhere: bool = false
 @export var steam_id: int = 0
 @export_dir var override_path_to_mods = ""

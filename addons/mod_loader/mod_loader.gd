@@ -115,6 +115,14 @@ func _load_mods() -> void:
 	# This should only occur on the first run of the game or if the JSON file was manually edited.
 	if not ModLoaderStore.user_profiles.has("default"):
 		var _success_user_profile_create := ModLoaderUserProfile.create_profile("default")
+	
+	# Create a user profile with all mods deactivated if the option is enabled.
+	if (
+		ModLoaderStore.ml_options.create_deactivated_mods_profile and
+		not ModLoaderStore.user_profiles.has(ModLoaderStore.ml_options.deactivated_mods_profile_name)
+	): 
+		if ModLoaderUserProfile.create_profile(ModLoaderStore.ml_options.deactivated_mods_profile_name):
+			ModLoaderUserProfile.disable_all_mods()
 
 	# Load Mod Configs
 	for dir_name in ModLoaderStore.mod_data:

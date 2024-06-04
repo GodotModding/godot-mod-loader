@@ -3,12 +3,10 @@ extends Object
 ##
 ## This Class provides methods for working with user profiles.
 
-
 const LOG_NAME := "ModLoader:UserProfile"
 
 # The path where the Mod User Profiles data is stored.
 const FILE_PATH_USER_PROFILES := "user://mod_user_profiles.json"
-
 
 # API profile functions
 # =============================================================================
@@ -21,11 +19,11 @@ const FILE_PATH_USER_PROFILES := "user://mod_user_profiles.json"
 ## - [code]user_profile[/code] ([ModUserProfile]): (Optional) The user profile to enable the mod for. Default is the current user profile.[br]
 ## [br]
 ## [b]Returns:[/b] [bool]
-static func enable_mod(mod_id: String, user_profile:= ModLoaderStore.current_user_profile) -> bool:
+static func enable_mod(mod_id: String, user_profile := ModLoaderStore.current_user_profile) -> bool:
 	return _set_mod_state(mod_id, user_profile.name, true)
 
 
-## Disables a mod - it will not be loaded on the next game start[br]
+## Disables a mod - it will not be loaded on the next game start.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## - [code]mod_id[/code] ([String]): The ID of the mod to disable.[br]
@@ -36,15 +34,31 @@ static func disable_mod(mod_id: String, user_profile := ModLoaderStore.current_u
 	return _set_mod_state(mod_id, user_profile.name, false)
 
 
-## Sets the current config for a mod in a user profile's mod_list.[br]
+## Disables all mods - they will not be loaded on the next game start.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]mod_id[/code] ([String]): The ID of the mod.[br]
-## - [code]mod_config[/code] ([ModConfig]): The mod config to set as the current config.[br]
-## - [code]user_profile[/code] ([ModUserProfile]): (Optional) The user profile to update. Default is the current user profile.[br]
+## - [code]user_profile[/code] ([ModUserProfile]): (Optional) The user profile to disable the mod for. Default is the current user profile.[br]
 ## [br]
 ## [b]Returns:[/b] [bool]
-static func set_mod_current_config(mod_id: String, mod_config: ModConfig, user_profile := ModLoaderStore.current_user_profile) -> bool:
+static func disable_all_mods(user_profile := ModLoaderStore.current_user_profile) -> bool:
+	for mod_id in user_profile.mod_list.keys():
+		if not _set_mod_state(mod_id, user_profile.name, false):
+			return false
+
+	return true
+
+
+# Sets the current config for a mod in a user profile's mod_list.
+#
+# Parameters:
+# - mod_id (String): The ID of the mod.
+# - mod_config (ModConfig): The mod config to set as the current config.
+# - user_profile (ModUserProfile): (Optional) The user profile to update. Default is the current user profile.
+#
+# Returns: bool
+static func set_mod_current_config(
+	mod_id: String, mod_config: ModConfig, user_profile := ModLoaderStore.current_user_profile
+) -> bool:
 	# Verify whether the mod_id is present in the profile's mod_list.
 	if not _is_mod_id_in_mod_list(mod_id, user_profile.name):
 		return false
@@ -56,7 +70,13 @@ static func set_mod_current_config(mod_id: String, mod_config: ModConfig, user_p
 	var is_save_success := _save()
 
 	if is_save_success:
-		ModLoaderLog.debug("Set the \"current_config\" of \"%s\" to \"%s\" in user profile \"%s\" " % [mod_id, mod_config.name, user_profile.name], LOG_NAME)
+		ModLoaderLog.debug(
+			(
+				'Set the "current_config" of "%s" to "%s" in user profile "%s" '
+				% [mod_id, mod_config.name, user_profile.name]
+			),
+			LOG_NAME
+		)
 
 	return is_save_success
 
@@ -70,7 +90,9 @@ static func set_mod_current_config(mod_id: String, mod_config: ModConfig, user_p
 static func create_profile(profile_name: String) -> bool:
 	# Verify that the profile name is not already in use
 	if ModLoaderStore.user_profiles.has(profile_name):
-		ModLoaderLog.error("User profile with the name of \"%s\" already exists." % profile_name, LOG_NAME)
+		ModLoaderLog.error(
+			'User profile with the name of "%s" already exists.' % profile_name, LOG_NAME
+		)
 		return false
 
 	var mod_list := _generate_mod_list()
@@ -91,7 +113,7 @@ static func create_profile(profile_name: String) -> bool:
 	var is_save_success := _save()
 
 	if is_save_success:
-		ModLoaderLog.debug("Created new user profile \"%s\"" % profile_name, LOG_NAME)
+		ModLoaderLog.debug('Created new user profile "%s"' % profile_name, LOG_NAME)
 
 	return is_save_success
 
@@ -105,7 +127,7 @@ static func create_profile(profile_name: String) -> bool:
 static func set_profile(user_profile: ModUserProfile) -> bool:
 	# Check if the profile name is unique
 	if not ModLoaderStore.user_profiles.has(user_profile.name):
-		ModLoaderLog.error("User profile with name \"%s\" not found." % user_profile.name, LOG_NAME)
+		ModLoaderLog.error('User profile with name "%s" not found.' % user_profile.name, LOG_NAME)
 		return false
 
 	# Update the current_user_profile in the ModLoaderStore
@@ -115,7 +137,7 @@ static func set_profile(user_profile: ModUserProfile) -> bool:
 	var is_save_success := _save()
 
 	if is_save_success:
-		ModLoaderLog.debug("Current user profile set to \"%s\"" % user_profile.name, LOG_NAME)
+		ModLoaderLog.debug('Current user profile set to "%s"' % user_profile.name, LOG_NAME)
 
 	return is_save_success
 
@@ -129,10 +151,18 @@ static func set_profile(user_profile: ModUserProfile) -> bool:
 static func delete_profile(user_profile: ModUserProfile) -> bool:
 	# If the current_profile is about to get deleted log an error
 	if ModLoaderStore.current_user_profile.name == user_profile.name:
-		ModLoaderLog.error(str(
-			"You cannot delete the currently selected user profile \"%s\" " +
-			"because it is currently in use. Please switch to a different profile before deleting this one.") % user_profile.name,
-		LOG_NAME)
+		ModLoaderLog.error(
+			(
+				str(
+					(
+						'You cannot delete the currently selected user profile "%s" '
+						+ "because it is currently in use. Please switch to a different profile before deleting this one."
+					)
+				)
+				% user_profile.name
+			),
+			LOG_NAME
+		)
 		return false
 
 	# Deleting the default profile is not allowed
@@ -143,14 +173,14 @@ static func delete_profile(user_profile: ModUserProfile) -> bool:
 	# Delete the user profile
 	if not ModLoaderStore.user_profiles.erase(user_profile.name):
 		# Erase returns false if the the key is not present in user_profiles
-		ModLoaderLog.error("User profile with name \"%s\" not found." % user_profile.name, LOG_NAME)
+		ModLoaderLog.error('User profile with name "%s" not found.' % user_profile.name, LOG_NAME)
 		return false
 
 	# Save profiles to the user profiles JSON file
 	var is_save_success := _save()
 
 	if is_save_success:
-		ModLoaderLog.debug("Deleted user profile \"%s\"" % user_profile.name, LOG_NAME)
+		ModLoaderLog.debug('Deleted user profile "%s"' % user_profile.name, LOG_NAME)
 
 	return is_save_success
 
@@ -170,7 +200,7 @@ static func get_current() -> ModUserProfile:
 ## [b]Returns:[/b] [ModUserProfile] or [code]null[/code] if not found
 static func get_profile(profile_name: String) -> ModUserProfile:
 	if not ModLoaderStore.user_profiles.has(profile_name):
-		ModLoaderLog.error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
+		ModLoaderLog.error('User profile with name "%s" not found.' % profile_name, LOG_NAME)
 		return null
 
 	return ModLoaderStore.user_profiles[profile_name]
@@ -201,7 +231,9 @@ static func _update_deactivated_mods() -> void:
 
 	# Check if a current user profile is set
 	if not current_user_profile:
-		ModLoaderLog.info("There is no current user profile. The \"default\" profile will be created.", LOG_NAME)
+		ModLoaderLog.info(
+			'There is no current user profile. The "default" profile will be created.', LOG_NAME
+		)
 		return
 
 	# Iterate through the mod list in the current user profile to find deactivated mods
@@ -211,9 +243,12 @@ static func _update_deactivated_mods() -> void:
 			ModLoaderStore.mod_data[mod_id].is_active = mod_list_entry.is_active
 
 	ModLoaderLog.debug(
-		"Updated the active state of all mods, based on the current user profile \"%s\""
-		% current_user_profile.name,
-	LOG_NAME)
+		(
+			'Updated the active state of all mods, based on the current user profile "%s"'
+			% current_user_profile.name
+		),
+		LOG_NAME
+	)
 
 
 # This function updates the mod lists of all user profiles with newly loaded mods that are not already present.
@@ -257,25 +292,30 @@ static func _update_mod_list(mod_list: Dictionary, mod_data := ModLoaderStore.mo
 
 		# Check if the current config doesn't exist
 		# This can happen if the config file was manually deleted
-		if mod_list_entry.has("current_config") and _ModLoaderPath.get_path_to_mod_config_file(mod_id, mod_list_entry.current_config).is_empty():
+		if (
+			mod_list_entry.has("current_config")
+			and _ModLoaderPath.get_path_to_mod_config_file(mod_id, mod_list_entry.current_config).is_empty()
+		):
 			# If the current config doesn't exist, reset it to the default configuration
 			mod_list_entry.current_config = ModLoaderConfig.DEFAULT_CONFIG_NAME
 
 		if (
 			# If the mod is not loaded
-			not mod_data.has(mod_id) and
+			not mod_data.has(mod_id)
 			# Check if the entry has a zip_path key
-			mod_list_entry.has("zip_path") and
+			and mod_list_entry.has("zip_path")
 			# Check if the entry has a zip_path
-			not mod_list_entry.zip_path.is_empty() and
+			and not mod_list_entry.zip_path.is_empty()
 			# Check if the zip file for the mod doesn't exist
-			not _ModLoaderFile.file_exists(mod_list_entry.zip_path)
+			and not _ModLoaderFile.file_exists(mod_list_entry.zip_path)
 		):
 			# If the mod directory doesn't exist,
 			# the mod is no longer installed and can be removed from the mod list
 			ModLoaderLog.debug(
-				"Mod \"%s\" has been deleted from all user profiles as the corresponding zip file no longer exists at path \"%s\"."
-				% [mod_id, mod_list_entry.zip_path],
+				(
+					'Mod "%s" has been deleted from all user profiles as the corresponding zip file no longer exists at path "%s".'
+					% [mod_id, mod_list_entry.zip_path]
+				),
 				LOG_NAME,
 				true
 			)
@@ -337,9 +377,12 @@ static func _set_mod_state(mod_id: String, profile_name: String, activate: bool)
 	# Check if it is a locked mod
 	if ModLoaderStore.mod_data.has(mod_id) and ModLoaderStore.mod_data[mod_id].is_locked:
 		ModLoaderLog.error(
-			"Unable to disable mod \"%s\" as it is marked as locked. Locked mods: %s"
-			% [mod_id, ModLoaderStore.ml_options.locked_mods],
-		LOG_NAME)
+			(
+				'Unable to disable mod "%s" as it is marked as locked. Locked mods: %s'
+				% [mod_id, ModLoaderStore.ml_options.locked_mods]
+			),
+			LOG_NAME
+		)
 		return false
 
 	# Handle mod state
@@ -352,7 +395,13 @@ static func _set_mod_state(mod_id: String, profile_name: String, activate: bool)
 	var is_save_success := _save()
 
 	if is_save_success:
-		ModLoaderLog.debug("Mod activation state changed: mod_id=%s activate=%s profile_name=%s" % [mod_id, activate, profile_name], LOG_NAME)
+		ModLoaderLog.debug(
+			(
+				"Mod activation state changed: mod_id=%s activate=%s profile_name=%s"
+				% [mod_id, activate, profile_name]
+			),
+			LOG_NAME
+		)
 
 	return is_save_success
 
@@ -368,7 +417,13 @@ static func _is_mod_id_in_mod_list(mod_id: String, profile_name: String) -> bool
 
 	# Return false if the mod_id is not in the profile's mod_list
 	if not user_profile.mod_list.has(mod_id):
-		ModLoaderLog.error("Mod id \"%s\" not found in the \"mod_list\" of user profile \"%s\"." % [mod_id, profile_name], LOG_NAME)
+		ModLoaderLog.error(
+			(
+				'Mod id "%s" not found in the "mod_list" of user profile "%s".'
+				% [mod_id, profile_name]
+			),
+			LOG_NAME
+		)
 		return false
 
 	# Return true if the mod_id is in the profile's mod_list
@@ -390,7 +445,9 @@ static func _create_new_profile(profile_name: String, mod_list: Dictionary) -> M
 
 	# If no mods are specified in the mod_list, log a warning and return the new profile
 	if mod_list.keys().size() == 0:
-		ModLoaderLog.info("No mod_ids inside \"mod_list\" for user profile \"%s\" " % profile_name, LOG_NAME)
+		ModLoaderLog.info(
+			'No mod_ids inside "mod_list" for user profile "%s" ' % profile_name, LOG_NAME
+		)
 		return new_profile
 
 	# Set the mod_list
@@ -406,7 +463,7 @@ static func _load() -> bool:
 
 	# If there is no data, log an info and return
 	if data.is_empty():
-		ModLoaderLog.info("No profile file found at \"%s\"" % FILE_PATH_USER_PROFILES, LOG_NAME)
+		ModLoaderLog.info('No profile file found at "%s"' % FILE_PATH_USER_PROFILES, LOG_NAME)
 		return false
 
 	# Loop through each profile in the data and add them to ModLoaderStore
@@ -427,10 +484,7 @@ static func _load() -> bool:
 # Saves the user profiles in the ModLoaderStore to the user profiles JSON file.
 static func _save() -> bool:
 	# Initialize a dictionary to hold the serialized user profiles data
-	var save_dict := {
-		"current_profile": "",
-		"profiles": {}
-	}
+	var save_dict := {"current_profile": "", "profiles": {}}
 
 	# Set the current profile name in the save_dict
 	save_dict.current_profile = ModLoaderStore.current_user_profile.name
