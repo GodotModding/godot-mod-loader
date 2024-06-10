@@ -14,15 +14,15 @@ Importantly, it provides methods to change existing scripts, scenes, and resourc
 
 ## Getting Started
 
-You can find detailed documentation, for game and mod developers, on the [Wiki](https://github.com/GodotModding/godot-mod-loader/wiki/) page.
+You can find detailed documentation, for game and mod developers, on the [Wiki](https://wiki.godotmodding.com/#/) page.
 
-1. Add ModLoader to your [Godot Project](https://github.com/GodotModding/godot-mod-loader/wiki/Godot-Project-Setup)   
+1. Add ModLoader to your [Godot Project](https://wiki.godotmodding.com/#/guides/integration/godot_project_setup)   
    *Details on how to set up the Mod Loader in your Godot Project, relevant for game and mod developers.*
-2. Create your [Mod Structure](https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Structure)   
+2. Create your [Mod Structure](https://wiki.godotmodding.com/#/guides/modding/mod_structure)   
    *The mods loaded by the Mod Loader must follow a specific directory structure.*
-3. Create your [Mod Files](https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Files)   
+3. Create your [Mod Files](https://wiki.godotmodding.com/#/guides/modding/mod_files)   
    *Learn about the required files to create your first mod.*
-4. Use the [API Methods](https://github.com/GodotModding/godot-mod-loader/wiki/ModLoader-API)   
+4. Use the [API Methods](https://wiki.godotmodding.com/#/api/mod_loader_api)   
    *A list of all available API Methods.*
 
 ## Godot Version
