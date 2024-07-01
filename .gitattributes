@@ -9,7 +9,3 @@
 
 # Tests
 test/                                   export-ignore
-
-# Files not required by AssetLib downloads (provided via download for manual installers)
-addons/mod_loader/vendor/               export-ignore
-addons/mod_loader/mod_loader_setup.gd   export-ignore
