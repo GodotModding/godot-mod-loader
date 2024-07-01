@@ -9,3 +9,6 @@
 
 # Tests
 test/                                   export-ignore
+
+# Must be ignored as we don't want to distribute an exe through the AssetLib
+addons/mod_loader/vendor/               export-ignore
