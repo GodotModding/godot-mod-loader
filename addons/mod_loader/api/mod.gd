@@ -11,6 +11,19 @@ extends Object
 const LOG_NAME := "ModLoader:Mod"
 
 
+static func set_callable_stack(new_callable_stack: Dictionary) -> void:
+	ModLoaderStore.callable_stack = new_callable_stack
+
+
+static func add_to_callable_stack(mod_callable: Callable, script_path: String, method_name: String, is_before := false) -> void:
+	ModLoaderStore.callable_stack[script_path][method_name]["before" if is_before else "after"].push_back(mod_callable)
+
+
+static func call_from_callable_stack(self_object: Object, script_path: String, method_name: String, is_before := false) -> void:
+	for mod_func in ModLoaderStore.callable_stack[script_path][method_name]["before" if is_before else "after"]:
+		mod_func.call(self_object)
+
+
 ## Installs a script extension that extends a vanilla script.[br]
 ## The [code]child_script_path[/code] should point to your mod's extender script.[br]
 ## Example: [code]"MOD/extensions/singletons/utils.gd"[/code][br]

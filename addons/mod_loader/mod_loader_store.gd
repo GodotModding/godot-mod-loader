@@ -30,6 +30,18 @@ const LOG_NAME = "ModLoader:Store"
 # Vars
 # =============================================================================
 
+# Example:
+# var callable_stack := {
+# 	"res://game/Game.gd": {
+# 		"_ready": {
+# 			"before": [],
+# 			"after": []
+# 		}
+# 	}
+# }
+
+var callable_stack := {}
+
 # Order for mods to be loaded in, set by `get_load_order`
 var mod_load_order := []
 
