@@ -16,10 +16,20 @@ static func set_callable_stack(new_callable_stack: Dictionary) -> void:
 
 
 static func add_to_callable_stack(mod_callable: Callable, script_path: String, method_name: String, is_before := false) -> void:
+	if not ModLoaderStore.callable_stack.has(script_path):
+		ModLoaderStore.callable_stack[script_path] = {}
+	if not ModLoaderStore.callable_stack[script_path].has(method_name):
+		ModLoaderStore.callable_stack[script_path][method_name] = { "before": [], "after": []}
 	ModLoaderStore.callable_stack[script_path][method_name]["before" if is_before else "after"].push_back(mod_callable)
 
 
-static func call_from_callable_stack(self_object: Object, script_path: String, method_name: String, is_before := false) -> void:
+static func call_from_callable_stack(self_object: Object, args: Array, script_path: String, method_name: String, is_before := false) -> void:
+	if not ModLoaderStore.callable_stack.has(script_path):
+		return
+
+	if not ModLoaderStore.callable_stack[script_path].has(method_name):
+		return
+
 	for mod_func in ModLoaderStore.callable_stack[script_path][method_name]["before" if is_before else "after"]:
 		mod_func.call(self_object)
 
