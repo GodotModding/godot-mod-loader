@@ -32,8 +32,10 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
 
+		print(method.name, method.return)
+		var type_string := type_string(method.return.type) if not method.return.type == 0 else ""
 		var method_arg_string := get_function_parameters(method.name, source_code)
-		var mod_loader_hook_string := get_mod_loader_hook(method.name, method_arg_string, path)
+		var mod_loader_hook_string := get_mod_loader_hook(method.name, method_arg_string, type_string, path)
 
 		# Store the method name
 		# Not sure if there is a way to get only the local methods in a script,
@@ -112,7 +114,7 @@ static func prefix_method_name(method_name: String, text: String, prefix := METH
 		return text
 
 
-static func get_mod_loader_hook(method_name: String, method_param_string: String, script_path: String, method_prefix := METHOD_PREFIX) -> String:
+static func get_mod_loader_hook(method_name: String, method_param_string: String, method_type: String, script_path: String, method_prefix := METHOD_PREFIX) -> String:
 	# Split parameters by commas
 	var param_list := method_param_string.split(",")
 
@@ -122,7 +124,7 @@ static func get_mod_loader_hook(method_name: String, method_param_string: String
 
 	# Join the cleaned parameter names back into a string
 	var arg_string := ",".join(param_list)
-	param_list = method_param_string.split(",")
+	param_list = arg_string.split(",")
 
 	# Remove types by splitting at ':' and taking the first part
 	for i in range(param_list.size()):
@@ -130,17 +132,25 @@ static func get_mod_loader_hook(method_name: String, method_param_string: String
 
 	arg_string = ",".join(param_list)
 
+	var type_string := " -> %s" % method_type if not method_type.is_empty() else ""
+	var return_var := "var %s := " % "return_var" if not method_type.is_empty() else ""
+	var method_return := "return %s" % "return_var" if not method_type.is_empty() else ""
+
 	return """
-func {%METHOD_NAME%}({%METHOD_PARAMS%}):
+func {%METHOD_NAME%}({%METHOD_PARAMS%}){%RETURN_TYPE_STRING%}:
 	ModLoaderMod.call_from_callable_stack(self, [{%METHOD_ARGS%}], "{%SCRIPT_PATH%}", "{%METHOD_NAME%}", true)
-	{%METHOD_PREFIX%}_{%METHOD_NAME%}({%METHOD_ARGS%})
+	{%METHOD_RETURN_VAR%}{%METHOD_PREFIX%}_{%METHOD_NAME%}({%METHOD_ARGS%})
 	ModLoaderMod.call_from_callable_stack(self, [{%METHOD_ARGS%}], "{%SCRIPT_PATH%}", "{%METHOD_NAME%}", false)
+	{%METHOD_RETURN%}
 """.format({
 		"%METHOD_PREFIX%": method_prefix,
 		"%METHOD_NAME%": method_name,
 		"%METHOD_PARAMS%": method_param_string,
+		"%RETURN_TYPE_STRING%": type_string,
 		"%METHOD_ARGS%": arg_string,
 		"%SCRIPT_PATH%": script_path,
+		"%METHOD_RETURN_VAR%": return_var,
+		"%METHOD_RETURN%": method_return
 	})
 
 
