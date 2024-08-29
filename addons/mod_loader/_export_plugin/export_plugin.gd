@@ -15,9 +15,19 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		return
 
 	var source_code := FileAccess.get_file_as_string(path)
+
+	var class_name_line := handle_class_name(source_code)
+	var global_name := class_name_line.replace("class_name", "").strip_edges()
+	print(class_name_line)
+	if not class_name_line.is_empty():
+		source_code = source_code.replace(class_name_line, "")
+		source_code = handle_self_ref(global_name, source_code)
+
+	print(path)
 	var new_script := GDScript.new()
 	new_script.source_code = source_code
-	new_script.reload()
+	var error := new_script.reload()
+	print(error)
 
 	var method_store: Array[String] = []
 
@@ -28,11 +38,10 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 	source_code = "%s\n%s" % [source_code, mod_loader_hooks_start_string]
 
 	for method in new_script.get_script_method_list():
+		print(method.name)
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
-
-		print(method.name, method.return)
 		var type_string := type_string(method.return.type) if not method.return.type == 0 else ""
 		var method_arg_string := get_function_parameters(method.name, source_code)
 		var mod_loader_hook_string := get_mod_loader_hook(method.name, method_arg_string, type_string, method.return.usage, path)
@@ -46,8 +55,26 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		source_code = prefix_method_name(method.name, source_code)
 		source_code = "%s\n%s" % [source_code, mod_loader_hook_string]
 
+	# Add back the class_name if there is one
+	if not class_name_line.is_empty():
+		source_code = "%s\n%s" % [class_name_line, source_code]
+
 	skip()
 	add_file(path, source_code.to_utf8_buffer(), false)
+
+
+static func handle_class_name(text: String) -> String:
+	var class_name_start_index := text.find("class_name")
+	if class_name_start_index == -1:
+		return ""
+	var class_name_end_index := text.find("\n", class_name_start_index)
+	var class_name_line := text.substr(class_name_start_index, class_name_end_index - class_name_start_index)
+
+	return class_name_line
+
+
+static func handle_self_ref(global_name: String, text: String) -> String:
+	return text.replace("self", "self as %s" % global_name)
 
 
 static func get_function_parameters(method_name: String, text: String) -> String:
