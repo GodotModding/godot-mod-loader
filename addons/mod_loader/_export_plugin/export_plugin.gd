@@ -14,20 +14,10 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 	if not type == "GDScript":
 		return
 
-	var source_code := FileAccess.get_file_as_string(path)
-
-	var class_name_line := handle_class_name(source_code)
-	var global_name := class_name_line.replace("class_name", "").strip_edges()
-	print(class_name_line)
-	if not class_name_line.is_empty():
-		source_code = source_code.replace(class_name_line, "")
-		source_code = handle_self_ref(global_name, source_code)
+	var current_script := load(path) as GDScript
+	var source_code := current_script.source_code
 
 	print(path)
-	var new_script := GDScript.new()
-	new_script.source_code = source_code
-	var error := new_script.reload()
-	print(error)
 
 	var method_store: Array[String] = []
 
@@ -37,14 +27,32 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 
 	source_code = "%s\n%s" % [source_code, mod_loader_hooks_start_string]
 
-	for method in new_script.get_script_method_list():
-		print(method.name)
+	print("--------------------Property List")
+	print(JSON.stringify(current_script.get_script_property_list(), "\t"))
+	print("--------------------Constant Map")
+	print(JSON.stringify(current_script.get_script_constant_map(), "\t"))
+	print("-------------------- Method List")
+	print(JSON.stringify(current_script.get_script_method_list(), "\t"))
+	print("--------------------")
+
+	for method in current_script.get_script_method_list():
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
+		#print(method.flags)
 		var type_string := type_string(method.return.type) if not method.return.type == 0 else ""
-		var method_arg_string := get_function_parameters(method.name, source_code)
-		var mod_loader_hook_string := get_mod_loader_hook(method.name, method_arg_string, type_string, method.return.usage, path)
+		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
+		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code)
+		var method_arg_string_names_only := get_function_arg_name_string(method.args)
+		var mod_loader_hook_string := get_mod_loader_hook(
+			method.name,
+			method_arg_string_names_only,
+			method_arg_string_with_defaults_and_types,
+			type_string,
+			method.return.usage,
+			is_static,
+			path
+		)
 
 		# Store the method name
 		# Not sure if there is a way to get only the local methods in a script,
@@ -54,10 +62,6 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		method_store.push_back(method.name)
 		source_code = prefix_method_name(method.name, source_code)
 		source_code = "%s\n%s" % [source_code, mod_loader_hook_string]
-
-	# Add back the class_name if there is one
-	if not class_name_line.is_empty():
-		source_code = "%s\n%s" % [class_name_line, source_code]
 
 	skip()
 	add_file(path, source_code.to_utf8_buffer(), false)
@@ -75,6 +79,14 @@ static func handle_class_name(text: String) -> String:
 
 static func handle_self_ref(global_name: String, text: String) -> String:
 	return text.replace("self", "self as %s" % global_name)
+
+
+static func get_function_arg_name_string(args: Array) -> String:
+	var arg_string := ""
+	for arg in args:
+		arg_string += "%s, " % arg.name
+
+	return arg_string
 
 
 static func get_function_parameters(method_name: String, text: String) -> String:
@@ -141,43 +153,39 @@ static func prefix_method_name(method_name: String, text: String, prefix := METH
 		return text
 
 
-static func get_mod_loader_hook(method_name: String, method_param_string: String, method_type: String, return_prop_usage: int, script_path: String, method_prefix := METHOD_PREFIX) -> String:
-	# Split parameters by commas
-	var param_list := method_param_string.split(",")
-
-	# Remove default values by splitting at '=' and taking the first part
-	for i in range(param_list.size()):
-		param_list[i] = param_list[i].split("=")[0]
-
-	# Join the cleaned parameter names back into a string
-	var arg_string := ",".join(param_list)
-	param_list = arg_string.split(",")
-
-	# Remove types by splitting at ':' and taking the first part
-	for i in range(param_list.size()):
-		param_list[i] = param_list[i].split(":")[0]
-
-	arg_string = ",".join(param_list)
-
+static func get_mod_loader_hook(
+	method_name: String,
+	method_arg_string_names_only: String,
+	method_arg_string_with_defaults_and_types: String,
+	method_type: String,
+	return_prop_usage: int,
+	is_static: bool,
+	script_path: String,
+	method_prefix := METHOD_PREFIX) -> String:
 	var type_string := " -> %s" % method_type if not method_type.is_empty() else ""
+	var static_string := "static " if is_static else ""
+	# Cannot use "self" inside a static function.
+	var self_string := "null" if is_static else "self"
 	var return_var := "var %s = " % "return_var" if not method_type.is_empty() or return_prop_usage == 131072 else ""
 	var method_return := "return %s" % "return_var" if not method_type.is_empty() or return_prop_usage == 131072 else ""
 
 	return """
-func {%METHOD_NAME%}({%METHOD_PARAMS%}){%RETURN_TYPE_STRING%}:
-	ModLoaderMod.call_from_callable_stack(self, [{%METHOD_ARGS%}], "{%SCRIPT_PATH%}", "{%METHOD_NAME%}", true)
+{%STATIC%}func {%METHOD_NAME%}({%METHOD_PARAMS%}){%RETURN_TYPE_STRING%}:
+	ModLoaderMod.call_from_callable_stack({%SELF%}, [{%METHOD_ARGS%}], "{%SCRIPT_PATH%}", "{%METHOD_NAME%}", true)
 	{%METHOD_RETURN_VAR%}{%METHOD_PREFIX%}_{%METHOD_NAME%}({%METHOD_ARGS%})
-	ModLoaderMod.call_from_callable_stack(self, [{%METHOD_ARGS%}], "{%SCRIPT_PATH%}", "{%METHOD_NAME%}", false)
+	ModLoaderMod.call_from_callable_stack({%SELF%}, [{%METHOD_ARGS%}], "{%SCRIPT_PATH%}", "{%METHOD_NAME%}", false)
 	{%METHOD_RETURN%}
 """.format({
 		"%METHOD_PREFIX%": method_prefix,
 		"%METHOD_NAME%": method_name,
-		"%METHOD_PARAMS%": method_param_string,
+		"%METHOD_PARAMS%": method_arg_string_with_defaults_and_types,
 		"%RETURN_TYPE_STRING%": type_string,
-		"%METHOD_ARGS%": arg_string,
+		"%METHOD_ARGS%": method_arg_string_names_only,
 		"%SCRIPT_PATH%": script_path,
 		"%METHOD_RETURN_VAR%": return_var,
-		"%METHOD_RETURN%": method_return
+		"%METHOD_RETURN%": method_return,
+		"%STATIC%": static_string,
+		"%SELF%": self_string,
 	})
 
 
