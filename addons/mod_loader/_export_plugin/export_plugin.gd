@@ -40,7 +40,7 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
 		#print(method.flags)
-		var type_string := type_string(method.return.type) if not method.return.type == 0 else ""
+		var type_string := get_return_type_string(method.return)
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
 		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code)
 		var method_arg_string_names_only := get_function_arg_name_string(method.args)
@@ -201,3 +201,13 @@ static func get_index_at_method_start(method_name: String, text: String) -> int:
 		return text.find("\n", result.get_end())
 	else:
 		return -1
+
+
+static func get_return_type_string(return_data: Dictionary) -> String:
+	if return_data.type == 0:
+		return ""
+
+	var type_base := type_string(return_data.type)
+	var type_hint := "" if return_data.hint_string.is_empty() else "[%s]" % return_data.hint_string
+
+	return "%s%s" % [type_base, type_hint]
