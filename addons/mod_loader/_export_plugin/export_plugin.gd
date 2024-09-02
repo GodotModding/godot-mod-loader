@@ -27,13 +27,13 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 
 	source_code = "%s\n%s" % [source_code, mod_loader_hooks_start_string]
 
-	print("--------------------Property List")
-	print(JSON.stringify(current_script.get_script_property_list(), "\t"))
-	print("--------------------Constant Map")
-	print(JSON.stringify(current_script.get_script_constant_map(), "\t"))
-	print("-------------------- Method List")
-	print(JSON.stringify(current_script.get_script_method_list(), "\t"))
-	print("--------------------")
+	#print("--------------------Property List")
+	#print(JSON.stringify(current_script.get_script_property_list(), "\t"))
+	#print("--------------------Constant Map")
+	#print(JSON.stringify(current_script.get_script_constant_map(), "\t"))
+	#print("-------------------- Method List")
+	#print(JSON.stringify(current_script.get_script_method_list(), "\t"))
+	#print("--------------------")
 
 	for method in current_script.get_script_method_list():
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
@@ -42,7 +42,7 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		#print(method.flags)
 		var type_string := get_return_type_string(method.return)
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
-		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code)
+		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code, is_static)
 		var method_arg_string_names_only := get_function_arg_name_string(method.args)
 		var mod_loader_hook_string := get_mod_loader_hook(
 			method.name,
@@ -60,7 +60,7 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		# including the methods from the scripts it extends,
 		# which leads to multiple entries in the list if they are overridden by the child script.
 		method_store.push_back(method.name)
-		source_code = prefix_method_name(method.name, source_code)
+		source_code = prefix_method_name(method.name, is_static, source_code)
 		source_code = "%s\n%s" % [source_code, mod_loader_hook_string]
 
 	skip()
@@ -89,16 +89,19 @@ static func get_function_arg_name_string(args: Array) -> String:
 	return arg_string
 
 
-static func get_function_parameters(method_name: String, text: String) -> String:
+static func get_function_parameters(method_name: String, text: String, is_static: bool, offset := 0) -> String:
 	# Regular expression to match the function definition with arbitrary whitespace
 	var pattern := "func\\s+" + method_name + "\\s*\\("
 	var regex := RegEx.new()
 	regex.compile(pattern)
 
 	# Search for the function definition
-	var result := regex.search(text)
+	var result := regex.search(text, offset)
 	if result == null:
 		return ""
+
+	if not is_top_level_func(text, result.get_start(), is_static):
+		return get_function_parameters(method_name, text, is_static, result.get_end())
 
 	# Find the index of the opening parenthesis
 	var opening_paren_index := result.get_end() - 1
@@ -126,28 +129,27 @@ static func get_function_parameters(method_name: String, text: String) -> String
 	var param_string := text.substr(opening_paren_index + 1, closing_paren_index - opening_paren_index - 1)
 
 	# Remove all whitespace characters (spaces, newlines, tabs) from the parameter string
-	param_string = param_string.replace(" ", "")
-	param_string = param_string.replace("\n", "")
-	param_string = param_string.replace("\t", "")
+	param_string = param_string.strip_edges()
 
 	return param_string
 
 
-static func get_method_arg_string(method_name: String, text: String) -> String:
-	var starting_index := text.find("func %s(" % method_name)
-	return ""
-
-
-static func prefix_method_name(method_name: String, text: String, prefix := METHOD_PREFIX) -> String:
+static func prefix_method_name(method_name: String, is_static: bool, text: String, prefix := METHOD_PREFIX, offset := 0) -> String:
 	# Regular expression to match the function definition with arbitrary whitespace
 	var pattern := "func\\s+%s\\s*\\(" % method_name
 	var regex := RegEx.new()
 	regex.compile(pattern)
 
-	var result := regex.search(text)
+	var result := regex.search(text, offset)
 
 	if result:
-		return text.replace(result.get_string(), "func %s_%s(" % [prefix, method_name])
+		if not is_top_level_func(text, result.get_start(), is_static):
+			return prefix_method_name(method_name, is_static, text, prefix, result.get_end())
+
+		text = text.erase(result.get_start(), result.get_end() - result.get_start())
+		text = text.insert(result.get_start(), "func %s_%s(" % [prefix, method_name])
+
+		return text
 	else:
 		print("WHAT?!")
 		return text
@@ -201,6 +203,19 @@ static func get_index_at_method_start(method_name: String, text: String) -> int:
 		return text.find("\n", result.get_end())
 	else:
 		return -1
+
+
+static func is_top_level_func(text: String, result_start_index: int, is_static := false) -> bool:
+	if is_static:
+		result_start_index = text.rfind("static", result_start_index)
+
+	var line_start_index := text.rfind("\n", result_start_index) + 1
+	var pre_func_length := result_start_index - line_start_index
+
+	if pre_func_length > 0:
+		return false
+
+	return true
 
 
 static func get_return_type_string(return_data: Dictionary) -> String:
