@@ -1,6 +1,6 @@
 extends EditorExportPlugin
 
-
+const REQUIRE_EXPLICIT_ADDITION := false
 const METHOD_PREFIX := "GodotModLoader"
 
 func _get_name() -> String:
@@ -35,6 +35,10 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
+		
+		if not is_func_moddable(method_first_line_start, source_code):
+			continue
+			
 		#print(method.flags)
 		var type_string := get_return_type_string(method.return)
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
@@ -192,6 +196,31 @@ static func get_mod_loader_hook(
 		"%SELF%": self_string,
 	})
 
+static func get_previous_line_to(text: String, index: int) -> String:
+	if index <= 0 or index >= text.length():
+		return ""
+
+	var start_index = index - 1
+	# Find the end of the previous line
+	while start_index > 0 and text[start_index] != "\n":
+		start_index -= 1
+
+	if start_index == 0:
+		return ""
+	
+	start_index -= 1
+
+	# Find the start of the previous line
+	var end_index = start_index
+	while start_index > 0 and text[start_index - 1] != "\n":
+		start_index -= 1
+
+	return text.substr(start_index, end_index - start_index + 1)
+
+static func is_func_moddable(method_start_idx, text) -> bool:
+	if not REQUIRE_EXPLICIT_ADDITION:
+		return true
+	return get_previous_line_to(text, method_start_idx).contains("@moddable")
 
 static func get_index_at_method_start(method_name: String, text: String) -> int:
 	# Regular expression to match the function definition with arbitrary whitespace
