@@ -16,16 +16,13 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 
 	var current_script := load(path) as GDScript
 	var source_code := current_script.source_code
-
-	print(path)
+	var source_code_additions := ""
 
 	var method_store: Array[String] = []
 
 	var mod_loader_hooks_start_string := """
 # ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin.
 """
-
-	source_code = "%s\n%s" % [source_code, mod_loader_hooks_start_string]
 
 	#print("--------------------Property List")
 	#print(JSON.stringify(current_script.get_script_property_list(), "\t"))
@@ -34,7 +31,6 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 	#print("-------------------- Method List")
 	#print(JSON.stringify(current_script.get_script_method_list(), "\t"))
 	#print("--------------------")
-
 	for method in current_script.get_script_method_list():
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
 		if method_first_line_start == -1 or method.name in method_store:
@@ -61,11 +57,14 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		# which leads to multiple entries in the list if they are overridden by the child script.
 		method_store.push_back(method.name)
 		source_code = prefix_method_name(method.name, is_static, source_code)
-		source_code = "%s\n%s" % [source_code, mod_loader_hook_string]
-
+		source_code_additions += "\n%s" % mod_loader_hook_string
+	
+	#if we have some additions to the code, append them at the end
+	if source_code_additions != "":
+		source_code = "%s\n%s\n%s" % [source_code,mod_loader_hooks_start_string, source_code_additions]
+	
 	skip()
 	add_file(path, source_code.to_utf8_buffer(), false)
-
 
 static func handle_class_name(text: String) -> String:
 	var class_name_start_index := text.find("class_name")
