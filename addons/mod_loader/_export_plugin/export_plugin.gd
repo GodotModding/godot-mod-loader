@@ -83,9 +83,12 @@ static func handle_self_ref(global_name: String, text: String) -> String:
 
 static func get_function_arg_name_string(args: Array) -> String:
 	var arg_string := ""
-	for arg in args:
-		arg_string += "%s, " % arg.name
-
+	for x in args.size():
+		if x == args.size() -1:
+			arg_string += args[x].name
+		else:
+			arg_string += "%s, " % args[x].name
+	
 	return arg_string
 
 
@@ -221,8 +224,12 @@ static func is_top_level_func(text: String, result_start_index: int, is_static :
 static func get_return_type_string(return_data: Dictionary) -> String:
 	if return_data.type == 0:
 		return ""
-
-	var type_base := type_string(return_data.type)
-	var type_hint := "" if return_data.hint_string.is_empty() else "[%s]" % return_data.hint_string
+	var type_base
+	if return_data.has("class_name") and not str(return_data.class_name).is_empty():
+		type_base = str(return_data.class_name) 
+	else:
+		type_base = type_string(return_data.type)
+		
+	var type_hint = "" if return_data.hint_string.is_empty() else ("[%s]" % return_data.hint_string)
 
 	return "%s%s" % [type_base, type_hint]
