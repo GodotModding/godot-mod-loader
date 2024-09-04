@@ -1,8 +1,8 @@
 extends EditorExportPlugin
 
 const REQUIRE_EXPLICIT_ADDITION := false
-const METHOD_PREFIX := "GodotModLoader"
-
+const METHOD_PREFIX := "vanilla_"
+const HASH_COLLISION_ERROR :="MODDING EXPORT ERROR: Hash collision between %s and %s. The collision can be resolved by renaming one of the methods or changing their scripts path."
 var hashmap := {}
 
 func _get_name() -> String:
@@ -15,15 +15,17 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 	if path.begins_with("res://addons") or path.begins_with("res://mods-unpacked"):
 		return
 
-	if not type == "GDScript":
+	if type != "GDScript":
 		return
 
 	var current_script := load(path) as GDScript
 	var source_code := current_script.source_code
 	var source_code_additions := ""
 
+	#we need to stop all vanilla methods from forming inheritance chains 
+	#since the generated methods will fulfill inheritance requirements
+	var class_prefix = str(hash(path))
 	var method_store: Array[String] = []
-
 	var mod_loader_hooks_start_string := """
 # ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin.
 """
@@ -39,13 +41,11 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
-
-		if not is_func_moddable(method_first_line_start, source_code):
+		
+		if not is_func_moddable(method.name, method_first_line_start, source_code):
 			continue
-
-		if is_setter(method.name, source_code):
-			continue
-
+			
+		#print(method.flags)
 		var type_string := get_return_type_string(method.return)
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
 		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code, is_static)
@@ -56,9 +56,9 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		var hash_before_data = [path, method.name,true]
 		var hash_after_data = [path, method.name,false]
 		if hashmap.has(hash_before):
-			push_error("MODDING EXPORT ERROR: hash collision between %s and %s." %[hashmap[hash_before], hash_before_data])
+			push_error(HASH_COLLISION_ERROR%[hashmap[hash_before], hash_before_data])
 		if hashmap.has(hash_after):
-			push_error("MODDING EXPORT ERROR: hash collision between %s and %s." %[hashmap[hash_after], hash_after_data])
+			push_error(HASH_COLLISION_ERROR %[hashmap[hash_after], hash_after_data])
 		hashmap[hash_before] = hash_before_data
 		hashmap[hash_after] = hash_after_data
 	
@@ -72,6 +72,7 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 			path,
 			hash_before,
 			hash_after,
+			METHOD_PREFIX + class_prefix,
 		)
 
 		# Store the method name
@@ -80,13 +81,13 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		# including the methods from the scripts it extends,
 		# which leads to multiple entries in the list if they are overridden by the child script.
 		method_store.push_back(method.name)
-		source_code = prefix_method_name(method.name, is_static, source_code)
+		source_code = prefix_method_name(method.name, is_static, source_code, METHOD_PREFIX + class_prefix)
 		source_code_additions += "\n%s" % mod_loader_hook_string
-
+	
 	#if we have some additions to the code, append them at the end
 	if source_code_additions != "":
 		source_code = "%s\n%s\n%s" % [source_code,mod_loader_hooks_start_string, source_code_additions]
-
+	
 	skip()
 	add_file(path, source_code.to_utf8_buffer(), false)
 
@@ -111,7 +112,7 @@ static func get_function_arg_name_string(args: Array) -> String:
 			arg_string += args[x].name
 		else:
 			arg_string += "%s, " % args[x].name
-
+	
 	return arg_string
 
 
@@ -180,7 +181,6 @@ static func prefix_method_name(method_name: String, is_static: bool, text: Strin
 		print("WHAT?!")
 		return text
 
-
 static func get_mod_loader_hook(
 	method_name: String,
 	method_arg_string_names_only: String,
@@ -198,7 +198,7 @@ static func get_mod_loader_hook(
 	var self_string := "null" if is_static else "self"
 	var return_var := "var %s = " % "return_var" if not method_type.is_empty() or return_prop_usage == 131072 else ""
 	var method_return := "return %s" % "return_var" if not method_type.is_empty() or return_prop_usage == 131072 else ""
-
+	
 	return """
 {%STATIC%}func {%METHOD_NAME%}({%METHOD_PARAMS%}){%RETURN_TYPE_STRING%}:
 	ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_BEFORE%})
@@ -231,7 +231,7 @@ static func get_previous_line_to(text: String, index: int) -> String:
 
 	if start_index == 0:
 		return ""
-
+	
 	start_index -= 1
 
 	# Find the start of the previous line
@@ -241,7 +241,9 @@ static func get_previous_line_to(text: String, index: int) -> String:
 
 	return text.substr(start_index, end_index - start_index + 1)
 
-static func is_func_moddable(method_start_idx, text) -> bool:
+static func is_func_moddable(method_name, method_start_idx, text) -> bool:
+	if is_setter(method_name, text) or is_getter(method_name,text):
+		return false
 	if not REQUIRE_EXPLICIT_ADDITION:
 		return true
 	return get_previous_line_to(text, method_start_idx).contains("@moddable")
@@ -278,17 +280,35 @@ static func get_return_type_string(return_data: Dictionary) -> String:
 		return ""
 	var type_base
 	if return_data.has("class_name") and not str(return_data.class_name).is_empty():
-		type_base = str(return_data.class_name)
+		type_base = str(return_data.class_name) 
 	else:
 		type_base = type_string(return_data.type)
-
+		
 	var type_hint = "" if return_data.hint_string.is_empty() else ("[%s]" % return_data.hint_string)
 
 	return "%s%s" % [type_base, type_hint]
 
-
-func is_setter(method_name: String, text: String, offset := 0) -> bool:
+static func is_setter(method_name: String, text: String, offset := 0) -> bool:
 	var pattern := "set\\s*=\\s*%s" % method_name
+	var regex := RegEx.new()
+	regex.compile(pattern)
+
+	var result := regex.search(text, offset)
+
+	if result:
+		var line_start_index := text.rfind("\n", result.get_start()) + 1
+		var line_start_string := text.substr(result.get_start(), result.get_start() - line_start_index)
+		if line_start_string.contains("#"):
+
+			return is_setter(method_name, text, result.get_end())
+
+		return true
+
+	return false
+
+
+static func is_getter(method_name: String, text: String, offset := 0) -> bool:
+	var pattern := "get\\s*=\\s*%s" % method_name
 	var regex := RegEx.new()
 	regex.compile(pattern)
 
