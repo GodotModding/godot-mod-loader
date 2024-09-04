@@ -35,11 +35,13 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
-		
+
 		if not is_func_moddable(method_first_line_start, source_code):
 			continue
-			
-		#print(method.flags)
+
+		if is_setter(method.name, source_code):
+			continue
+
 		var type_string := get_return_type_string(method.return)
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
 		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code, is_static)
@@ -62,11 +64,11 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		method_store.push_back(method.name)
 		source_code = prefix_method_name(method.name, is_static, source_code)
 		source_code_additions += "\n%s" % mod_loader_hook_string
-	
+
 	#if we have some additions to the code, append them at the end
 	if source_code_additions != "":
 		source_code = "%s\n%s\n%s" % [source_code,mod_loader_hooks_start_string, source_code_additions]
-	
+
 	skip()
 	add_file(path, source_code.to_utf8_buffer(), false)
 
@@ -91,7 +93,7 @@ static func get_function_arg_name_string(args: Array) -> String:
 			arg_string += args[x].name
 		else:
 			arg_string += "%s, " % args[x].name
-	
+
 	return arg_string
 
 
@@ -207,7 +209,7 @@ static func get_previous_line_to(text: String, index: int) -> String:
 
 	if start_index == 0:
 		return ""
-	
+
 	start_index -= 1
 
 	# Find the start of the previous line
@@ -254,10 +256,29 @@ static func get_return_type_string(return_data: Dictionary) -> String:
 		return ""
 	var type_base
 	if return_data.has("class_name") and not str(return_data.class_name).is_empty():
-		type_base = str(return_data.class_name) 
+		type_base = str(return_data.class_name)
 	else:
 		type_base = type_string(return_data.type)
-		
+
 	var type_hint = "" if return_data.hint_string.is_empty() else ("[%s]" % return_data.hint_string)
 
 	return "%s%s" % [type_base, type_hint]
+
+
+func is_setter(method_name: String, text: String, offset := 0) -> bool:
+	var pattern := "set\\s*=\\s*%s" % method_name
+	var regex := RegEx.new()
+	regex.compile(pattern)
+
+	var result := regex.search(text, offset)
+
+	if result:
+		var line_start_index := text.rfind("\n", result.get_start()) + 1
+		var line_start_string := text.substr(result.get_start(), result.get_start() - line_start_index)
+		if line_start_string.contains("#"):
+
+			return is_setter(method_name, text, result.get_end())
+
+		return true
+
+	return false
