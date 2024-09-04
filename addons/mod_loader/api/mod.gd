@@ -11,27 +11,24 @@ extends Object
 const LOG_NAME := "ModLoader:Mod"
 
 
-static func set_callable_stack(new_callable_stack: Dictionary) -> void:
-	ModLoaderStore.callable_stack = new_callable_stack
+static func set_modding_hooks(new_callable_stack: Dictionary) -> void:
+	ModLoaderStore.modding_hooks = new_callable_stack
 
 
-static func add_to_callable_stack(mod_callable: Callable, script_path: String, method_name: String, is_before := false) -> void:
-	if not ModLoaderStore.callable_stack.has(script_path):
-		ModLoaderStore.callable_stack[script_path] = {}
-	if not ModLoaderStore.callable_stack[script_path].has(method_name):
-		ModLoaderStore.callable_stack[script_path][method_name] = { "before": [], "after": []}
-	ModLoaderStore.callable_stack[script_path][method_name]["before" if is_before else "after"].push_back(mod_callable)
+static func add_hook(mod_callable: Callable, script_path: String, method_name: String, is_before := false) -> void:
+	var hash = get_hook_hash(script_path,method_name,is_before)
+	if not ModLoaderStore.modding_hooks.has(hash):
+		ModLoaderStore.modding_hooks[hash] = []
+	ModLoaderStore.modding_hooks[hash].push_back(mod_callable)
 
+static func call_hooks(self_object: Object, args: Array, hook_hash:int) -> void:
+	var hooks = ModLoaderStore.modding_hooks.get(hook_hash, null)
+	if hooks:
+		for mod_func in hooks:
+			mod_func.call(self_object)
 
-static func call_from_callable_stack(self_object: Object, args: Array, script_path: String, method_name: String, is_before := false) -> void:
-	if not ModLoaderStore.callable_stack.has(script_path):
-		return
-
-	if not ModLoaderStore.callable_stack[script_path].has(method_name):
-		return
-
-	for mod_func in ModLoaderStore.callable_stack[script_path][method_name]["before" if is_before else "after"]:
-		mod_func.call(self_object)
+static func get_hook_hash(path:String, method:String, is_before:bool) -> int:
+	return hash(path + method + ("before" if is_before else "after"))
 
 
 ## Installs a script extension that extends a vanilla script.[br]

@@ -3,9 +3,13 @@ extends EditorExportPlugin
 const REQUIRE_EXPLICIT_ADDITION := false
 const METHOD_PREFIX := "GodotModLoader"
 
+var hashmap := {}
+
 func _get_name() -> String:
 	return "Godot Mod Loader Export Plugin"
 
+func _export_begin(features: PackedStringArray, is_debug: bool, path: String, flags: int) -> void:
+	hashmap.clear()
 
 func _export_file(path: String, type: String, features: PackedStringArray) -> void:
 	if path.begins_with("res://addons") or path.begins_with("res://mods-unpacked"):
@@ -46,6 +50,18 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
 		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code, is_static)
 		var method_arg_string_names_only := get_function_arg_name_string(method.args)
+		
+		var hash_before = ModLoaderMod.get_hook_hash(path, method.name, true)
+		var hash_after = ModLoaderMod.get_hook_hash(path, method.name, false)
+		var hash_before_data = [path, method.name,true]
+		var hash_after_data = [path, method.name,false]
+		if hashmap.has(hash_before):
+			push_error("MODDING EXPORT ERROR: hash collision between %s and %s." %[hashmap[hash_before], hash_before_data])
+		if hashmap.has(hash_after):
+			push_error("MODDING EXPORT ERROR: hash collision between %s and %s." %[hashmap[hash_after], hash_after_data])
+		hashmap[hash_before] = hash_before_data
+		hashmap[hash_after] = hash_after_data
+	
 		var mod_loader_hook_string := get_mod_loader_hook(
 			method.name,
 			method_arg_string_names_only,
@@ -53,7 +69,9 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 			type_string,
 			method.return.usage,
 			is_static,
-			path
+			path,
+			hash_before,
+			hash_after,
 		)
 
 		# Store the method name
@@ -171,6 +189,8 @@ static func get_mod_loader_hook(
 	return_prop_usage: int,
 	is_static: bool,
 	script_path: String,
+	hash_before:int,
+	hash_after:int,
 	method_prefix := METHOD_PREFIX) -> String:
 	var type_string := " -> %s" % method_type if not method_type.is_empty() else ""
 	var static_string := "static " if is_static else ""
@@ -181,9 +201,9 @@ static func get_mod_loader_hook(
 
 	return """
 {%STATIC%}func {%METHOD_NAME%}({%METHOD_PARAMS%}){%RETURN_TYPE_STRING%}:
-	ModLoaderMod.call_from_callable_stack({%SELF%}, [{%METHOD_ARGS%}], "{%SCRIPT_PATH%}", "{%METHOD_NAME%}", true)
+	ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_BEFORE%})
 	{%METHOD_RETURN_VAR%}{%METHOD_PREFIX%}_{%METHOD_NAME%}({%METHOD_ARGS%})
-	ModLoaderMod.call_from_callable_stack({%SELF%}, [{%METHOD_ARGS%}], "{%SCRIPT_PATH%}", "{%METHOD_NAME%}", false)
+	ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_AFTER%})
 	{%METHOD_RETURN%}
 """.format({
 		"%METHOD_PREFIX%": method_prefix,
@@ -196,6 +216,8 @@ static func get_mod_loader_hook(
 		"%METHOD_RETURN%": method_return,
 		"%STATIC%": static_string,
 		"%SELF%": self_string,
+		"%HOOK_ID_BEFORE%" : hash_before,
+		"%HOOK_ID_AFTER%" : hash_after,
 	})
 
 static func get_previous_line_to(text: String, index: int) -> String:
