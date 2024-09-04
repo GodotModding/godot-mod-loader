@@ -22,7 +22,7 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 	if path.begins_with("res://addons") or path.begins_with("res://mods-unpacked"):
 		return
 
-	if type != "GDScript":
+	if  type != "GDScript":
 		return
 
 	var current_script := load(path) as GDScript
@@ -214,9 +214,11 @@ static func get_mod_loader_hook(
 
 	return """
 {%STATIC%}func {%METHOD_NAME%}({%METHOD_PARAMS%}){%RETURN_TYPE_STRING%}:
-	ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_BEFORE%})
+	if ModLoaderStore.any_mod_hooked:
+		ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_BEFORE%})
 	{%METHOD_RETURN_VAR%}{%METHOD_PREFIX%}_{%METHOD_NAME%}({%METHOD_ARGS%})
-	ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_AFTER%})
+	if ModLoaderStore.any_mod_hooked:
+		ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_AFTER%})
 	{%METHOD_RETURN%}
 """.format({
 		"%METHOD_PREFIX%": method_prefix,
@@ -255,9 +257,14 @@ static func get_previous_line_to(text: String, index: int) -> String:
 	return text.substr(start_index, end_index - start_index + 1)
 
 static func is_func_moddable(method_start_idx, text) -> bool:
+	var prevline = get_previous_line_to(text, method_start_idx)
+	
+	if prevline.contains("@not-moddable"):
+		return false
 	if not REQUIRE_EXPLICIT_ADDITION:
 		return true
-	return get_previous_line_to(text, method_start_idx).contains("@moddable")
+	
+	return prevline.contains("@moddable")
 
 static func get_index_at_method_start(method_name: String, text: String) -> int:
 	# Regular expression to match the function definition with arbitrary whitespace

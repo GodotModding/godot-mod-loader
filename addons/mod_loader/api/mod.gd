@@ -16,6 +16,7 @@ static func set_modding_hooks(new_callable_stack: Dictionary) -> void:
 
 
 static func add_hook(mod_callable: Callable, script_path: String, method_name: String, is_before := false) -> void:
+	ModLoaderStore.any_mod_hooked = true
 	var hash = get_hook_hash(script_path,method_name,is_before)
 	if not ModLoaderStore.modding_hooks.has(hash):
 		ModLoaderStore.modding_hooks[hash] = []

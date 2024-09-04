@@ -39,7 +39,7 @@ const LOG_NAME = "ModLoader:Store"
 # 		}
 # 	}
 # }
-
+var any_mod_hooked := false
 var modding_hooks := {}
 
 # Order for mods to be loaded in, set by `get_load_order`
