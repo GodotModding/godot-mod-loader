@@ -25,7 +25,7 @@ func process_script(path: String) -> String:
 	var class_prefix := str(hash(path))
 	var method_store: Array[String] = []
 	var mod_loader_hooks_start_string := \
-	"\n# ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin.\n"
+	"\n# ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin."
 
 	var getters_setters := collect_getters_and_setters(source_code)
 
@@ -189,8 +189,7 @@ static func get_mod_loader_hook(
 	{%METHOD_RETURN_VAR%}{%METHOD_PREFIX%}_{%METHOD_NAME%}({%METHOD_ARGS%})
 	if ModLoaderStore.any_mod_hooked:
 		ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_AFTER%})
-	{%METHOD_RETURN%}
-""".format({
+	{%METHOD_RETURN%}""".format({
 		"%METHOD_PREFIX%": method_prefix,
 		"%METHOD_NAME%": method_name,
 		"%METHOD_PARAMS%": method_arg_string_with_defaults_and_types,
