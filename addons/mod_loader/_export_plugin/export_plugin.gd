@@ -23,20 +23,19 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 	if path.begins_with("res://addons") or path.begins_with("res://mods-unpacked"):
 		return
 
-	if  type != "GDScript":
+	if type != "GDScript":
 		return
 
 	var current_script := load(path) as GDScript
 	var source_code := current_script.source_code
 	var source_code_additions := ""
 
-	#we need to stop all vanilla methods from forming inheritance chains
-	#since the generated methods will fulfill inheritance requirements
+	# We need to stop all vanilla methods from forming inheritance chains,
+	# since the generated methods will fulfill inheritance requirements
 	var class_prefix := str(hash(path))
 	var method_store: Array[String] = []
-	var mod_loader_hooks_start_string := """
-# ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin.
-"""
+	var mod_loader_hooks_start_string := \
+	"\n# ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin.\n"
 
 	var getters_setters := collect_getters_and_setters(source_code)
 
@@ -109,23 +108,17 @@ static func get_function_arg_name_string(args: Array) -> String:
 
 
 static func get_function_parameters(method_name: String, text: String, is_static: bool, offset := 0) -> String:
-	# Regular expression to match the function definition with arbitrary whitespace
-	var pattern := "func\\s+" + method_name + "\\s*\\("
-	var regex := RegEx.new()
-	regex.compile(pattern)
-
-	# Search for the function definition
-	var result := regex.search(text, offset)
+	var result := match_func_with_whitespace(method_name, text, offset)
 	if result == null:
 		return ""
-
-	if not is_top_level_func(text, result.get_start(), is_static):
-		return get_function_parameters(method_name, text, is_static, result.get_end())
 
 	# Find the index of the opening parenthesis
 	var opening_paren_index := result.get_end() - 1
 	if opening_paren_index == -1:
 		return ""
+
+	if not is_top_level_func(text, result.get_start(), is_static):
+		return get_function_parameters(method_name, text, is_static, result.get_end())
 
 	# Use a stack to match parentheses
 	var stack := []
@@ -147,31 +140,38 @@ static func get_function_parameters(method_name: String, text: String, is_static
 	# Extract the substring between the parentheses
 	var param_string := text.substr(opening_paren_index + 1, closing_paren_index - opening_paren_index - 1)
 
-	# Remove all whitespace characters (spaces, newlines, tabs) from the parameter string
-	param_string = param_string.strip_edges()
+	# Clean whitespace characters (spaces, newlines, tabs)
+	param_string = param_string.strip_edges()\
+		.replace(" ", "")\
+		.replace("\n", "")\
+		.replace("\t", "")\
+		.replace(",", ", ")\
+		.replace(":", ": ")
 
 	return param_string
 
 
 static func prefix_method_name(method_name: String, is_static: bool, text: String, prefix := METHOD_PREFIX, offset := 0) -> String:
-	# Regular expression to match the function definition with arbitrary whitespace
-	var pattern := "func\\s+%s\\s*\\(" % method_name
-	var regex := RegEx.new()
-	regex.compile(pattern)
+	var result := match_func_with_whitespace(method_name, text, offset)
 
-	var result := regex.search(text, offset)
-
-	if result:
-		if not is_top_level_func(text, result.get_start(), is_static):
-			return prefix_method_name(method_name, is_static, text, prefix, result.get_end())
-
-		text = text.erase(result.get_start(), result.get_end() - result.get_start())
-		text = text.insert(result.get_start(), "func %s_%s(" % [prefix, method_name])
-
+	if not result:
 		return text
-	else:
-		print("WHAT?!")
-		return text
+
+	if not is_top_level_func(text, result.get_start(), is_static):
+		return prefix_method_name(method_name, is_static, text, prefix, result.get_end())
+
+	text = text.erase(result.get_start(), result.get_end() - result.get_start())
+	text = text.insert(result.get_start(), "func %s_%s(" % [prefix, method_name])
+
+	return text
+
+
+static func match_func_with_whitespace(method_name: String, text: String, offset := 0) -> RegExMatch:
+	var func_with_whitespace := RegEx.new()
+	func_with_whitespace.compile("func\\s+%s\\s*\\(" % method_name)
+
+	# Search for the function definition
+	return func_with_whitespace.search(text, offset)
 
 
 static func get_mod_loader_hook(
@@ -215,6 +215,7 @@ static func get_mod_loader_hook(
 		"%HOOK_ID_AFTER%" : hash_after,
 	})
 
+
 static func get_previous_line_to(text: String, index: int) -> String:
 	if index <= 0 or index >= text.length():
 		return ""
@@ -249,12 +250,7 @@ static func is_func_moddable(method_start_idx, text) -> bool:
 
 
 static func get_index_at_method_start(method_name: String, text: String) -> int:
-	# Regular expression to match the function definition with arbitrary whitespace
-	var pattern := "func\\s+%s\\s*\\(" % method_name
-	var regex := RegEx.new()
-	regex.compile(pattern)
-
-	var result := regex.search(text)
+	var result := match_func_with_whitespace(method_name, text)
 
 	if result:
 		return text.find("\n", result.get_end())
