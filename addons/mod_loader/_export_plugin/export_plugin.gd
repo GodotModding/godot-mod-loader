@@ -12,6 +12,7 @@ var hashmap := {}
 func _get_name() -> String:
 	return "Godot Mod Loader Export Plugin"
 
+
 func _export_begin(features: PackedStringArray, is_debug: bool, path: String, flags: int) -> void:
 	hashmap.clear()
 	regex_getter_setter = RegEx.new()
@@ -31,20 +32,12 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 
 	#we need to stop all vanilla methods from forming inheritance chains
 	#since the generated methods will fulfill inheritance requirements
-	var class_prefix = str(hash(path))
+	var class_prefix := str(hash(path))
 	var method_store: Array[String] = []
 	var mod_loader_hooks_start_string := """
 # ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin.
 """
 
-	#print("--------------------Property List")
-	#print(JSON.stringify(current_script.get_script_property_list(), "\t"))
-	#print("--------------------Constant Map")
-	#print(JSON.stringify(current_script.get_script_constant_map(), "\t"))
-	#print("-------------------- Method List")
-	#print(JSON.stringify(current_script.get_script_method_list(), "\t"))
-	#print("--------------------")
-	#print(path.get_file())
 	var getters_setters := collect_getters_and_setters(source_code)
 
 	for method in current_script.get_script_method_list():
@@ -58,16 +51,15 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 		if not is_func_moddable(method_first_line_start, source_code):
 			continue
 
-		#print(method.flags)
 		var type_string := get_return_type_string(method.return)
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
 		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code, is_static)
 		var method_arg_string_names_only := get_function_arg_name_string(method.args)
 
-		var hash_before = ModLoaderMod.get_hook_hash(path, method.name, true)
-		var hash_after = ModLoaderMod.get_hook_hash(path, method.name, false)
-		var hash_before_data = [path, method.name,true]
-		var hash_after_data = [path, method.name,false]
+		var hash_before := ModLoaderMod.get_hook_hash(path, method.name, true)
+		var hash_after := ModLoaderMod.get_hook_hash(path, method.name, false)
+		var hash_before_data := [path, method.name,true]
+		var hash_after_data := [path, method.name,false]
 		if hashmap.has(hash_before):
 			push_error(HASH_COLLISION_ERROR%[hashmap[hash_before], hash_before_data])
 		if hashmap.has(hash_after):
@@ -103,19 +95,6 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 
 	skip()
 	add_file(path, source_code.to_utf8_buffer(), false)
-
-static func handle_class_name(text: String) -> String:
-	var class_name_start_index := text.find("class_name")
-	if class_name_start_index == -1:
-		return ""
-	var class_name_end_index := text.find("\n", class_name_start_index)
-	var class_name_line := text.substr(class_name_start_index, class_name_end_index - class_name_start_index)
-
-	return class_name_line
-
-
-static func handle_self_ref(global_name: String, text: String) -> String:
-	return text.replace("self", "self as %s" % global_name)
 
 
 static func get_function_arg_name_string(args: Array) -> String:
@@ -194,6 +173,7 @@ static func prefix_method_name(method_name: String, is_static: bool, text: Strin
 		print("WHAT?!")
 		return text
 
+
 static func get_mod_loader_hook(
 	method_name: String,
 	method_arg_string_names_only: String,
@@ -239,7 +219,7 @@ static func get_previous_line_to(text: String, index: int) -> String:
 	if index <= 0 or index >= text.length():
 		return ""
 
-	var start_index = index - 1
+	var start_index := index - 1
 	# Find the end of the previous line
 	while start_index > 0 and text[start_index] != "\n":
 		start_index -= 1
@@ -250,21 +230,23 @@ static func get_previous_line_to(text: String, index: int) -> String:
 	start_index -= 1
 
 	# Find the start of the previous line
-	var end_index = start_index
+	var end_index := start_index
 	while start_index > 0 and text[start_index - 1] != "\n":
 		start_index -= 1
 
 	return text.substr(start_index, end_index - start_index + 1)
 
+
 static func is_func_moddable(method_start_idx, text) -> bool:
-	var prevline = get_previous_line_to(text, method_start_idx)
-	
+	var prevline := get_previous_line_to(text, method_start_idx)
+
 	if prevline.contains("@not-moddable"):
 		return false
 	if not REQUIRE_EXPLICIT_ADDITION:
 		return true
-	
+
 	return prevline.contains("@moddable")
+
 
 static func get_index_at_method_start(method_name: String, text: String) -> int:
 	# Regular expression to match the function definition with arbitrary whitespace
@@ -296,13 +278,13 @@ static func is_top_level_func(text: String, result_start_index: int, is_static :
 static func get_return_type_string(return_data: Dictionary) -> String:
 	if return_data.type == 0:
 		return ""
-	var type_base
+	var type_base: String
 	if return_data.has("class_name") and not str(return_data.class_name).is_empty():
 		type_base = str(return_data.class_name)
 	else:
 		type_base = type_string(return_data.type)
 
-	var type_hint = "" if return_data.hint_string.is_empty() else ("[%s]" % return_data.hint_string)
+	var type_hint := "" if return_data.hint_string.is_empty() else ("[%s]" % return_data.hint_string)
 
 	return "%s%s" % [type_base, type_hint]
 
