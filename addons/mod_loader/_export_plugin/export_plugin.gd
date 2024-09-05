@@ -2,7 +2,7 @@ extends EditorExportPlugin
 
 const REQUIRE_EXPLICIT_ADDITION := false
 const METHOD_PREFIX := "vanilla_"
-const HASH_COLLISION_ERROR :="MODDING EXPORT ERROR: Hash collision between %s and %s. The collision can be resolved by renaming one of the methods or changing their scripts path."
+const HASH_COLLISION_ERROR := "MODDING EXPORT ERROR: Hash collision between %s and %s. The collision can be resolved by renaming one of the methods or changing their script's path."
 
 static var regex_getter_setter: RegEx
 
@@ -14,9 +14,7 @@ func _get_name() -> String:
 
 
 func _export_begin(features: PackedStringArray, is_debug: bool, path: String, flags: int) -> void:
-	hashmap.clear()
-	regex_getter_setter = RegEx.new()
-	regex_getter_setter.compile("(.*?[sg]et\\s*=\\s*)(\\w+)(\\g<1>)?(\\g<2>)?")
+	process_begin()
 
 
 func _export_file(path: String, type: String, features: PackedStringArray) -> void:
@@ -26,6 +24,17 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 	if type != "GDScript":
 		return
 
+	skip()
+	add_file(path, process_script(path, type, features).to_utf8_buffer(), false)
+
+
+func process_begin() -> void:
+	hashmap.clear()
+	regex_getter_setter = RegEx.new()
+	regex_getter_setter.compile("(.*?[sg]et\\s*=\\s*)(\\w+)(\\g<1>)?(\\g<2>)?")
+
+
+func process_script(path: String, type: String, features: PackedStringArray) -> String:
 	var current_script := load(path) as GDScript
 	var source_code := current_script.source_code
 	var source_code_additions := ""
@@ -92,8 +101,8 @@ func _export_file(path: String, type: String, features: PackedStringArray) -> vo
 	if source_code_additions != "":
 		source_code = "%s\n%s\n%s" % [source_code,mod_loader_hooks_start_string, source_code_additions]
 
-	skip()
-	add_file(path, source_code.to_utf8_buffer(), false)
+	return source_code
+
 
 
 static func get_function_arg_name_string(args: Array) -> String:
