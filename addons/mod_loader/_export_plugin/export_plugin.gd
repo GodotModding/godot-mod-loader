@@ -1,6 +1,6 @@
 extends EditorExportPlugin
 
-const ModHookPreprocessorScript := preload("res://addons/mod_loader/_export_plugin/mod_hook_preprocessor.gd")
+const ModHookPreprocessorScript := preload("res://addons/mod_loader/internal/mod_hook_preprocessor.gd")
 static var ModHookPreprocessor
 
 
