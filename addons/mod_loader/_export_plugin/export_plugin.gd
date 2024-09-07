@@ -1,7 +1,7 @@
 extends EditorExportPlugin
 
 const ModHookPreprocessorScript := preload("res://addons/mod_loader/internal/mod_hook_preprocessor.gd")
-static var ModHookPreprocessor
+static var ModHookPreprocessor: ModLoaderHookPreprocessor
 
 
 func _get_name() -> String:

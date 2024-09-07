@@ -1,3 +1,4 @@
+class_name ModLoaderHookPreprocessor
 extends Object
 
 const REQUIRE_EXPLICIT_ADDITION := false
@@ -7,6 +8,7 @@ const HASH_COLLISION_ERROR := "MODDING EXPORT ERROR: Hash collision between %s a
 static var regex_getter_setter: RegEx
 
 var hashmap := {}
+var previous_method := {}
 
 
 func process_begin() -> void:
@@ -29,8 +31,18 @@ func process_script(path: String) -> String:
 
 	var getters_setters := collect_getters_and_setters(source_code)
 
-	for method in current_script.get_script_method_list():
+	var script_method_list := current_script.get_script_method_list()
+
+	for i in script_method_list.size():
+		var method: Dictionary = script_method_list[i]
+
+		if i > 0:
+			# get_script_method_list() returns the methods in order they are in the source_code
+			# we can use that to get the code between two funcs.
+			previous_method = script_method_list[i - 1]
+
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
+
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
 
@@ -130,7 +142,7 @@ static func get_function_parameters(method_name: String, text: String, is_static
 	# Extract the substring between the parentheses
 	var param_string := text.substr(opening_paren_index + 1, closing_paren_index - opening_paren_index - 1)
 
-	# Clean whitespace characters (spaces, newlines, tabs)
+	# Clean trailing characters and whitespace
 	param_string = param_string.strip_edges()\
 		.replace(" ", "")\
 		.replace("\n", "")\
@@ -162,6 +174,15 @@ static func match_func_with_whitespace(method_name: String, text: String, offset
 
 	# Search for the function definition
 	return func_with_whitespace.search(text, offset)
+
+
+# TODO: Check for comment
+static func match_super_with_whitespace_all(text: String, offset := 0) -> Array[RegExMatch]:
+	var func_with_whitespace := RegEx.new()
+	func_with_whitespace.compile("super\\s*\\(")
+
+	# Search for the function definition
+	return func_with_whitespace.search_all(text, offset)
 
 
 static func get_mod_loader_hook(
@@ -289,3 +310,54 @@ static func collect_getters_and_setters(text: String) -> Dictionary:
 		result[mat.get_string(4)] = null
 
 	return result
+
+
+static func get_string_between_functions(method_name_start: String, method_name_end: String, text: String) -> void:
+	var method_start_match := match_func_with_whitespace(method_name_start, text)
+	var method_end_match := match_func_with_whitespace(method_name_end, text)
+
+	return text.substr(method_start_match.get_start(), method_end_match.get_start())
+
+
+static func get_super_string(method_name: String, text: String, is_static: bool, offset := 0) -> String:
+	var result := match_func_with_whitespace(method_name, text, offset)
+	if result == null:
+		return ""
+
+	# Find the index of the opening parenthesis
+	var opening_paren_index := result.get_end() - 1
+	if opening_paren_index == -1:
+		return ""
+
+	if not is_top_level_func(text, result.get_start(), is_static):
+		return get_function_parameters(method_name, text, is_static, result.get_end())
+
+	# Use a stack to match parentheses
+	var stack := []
+	var closing_paren_index := opening_paren_index
+	while closing_paren_index < text.length():
+		var char := text[closing_paren_index]
+		if char == '(':
+			stack.push_back('(')
+		elif char == ')':
+			stack.pop_back()
+			if stack.size() == 0:
+				break
+		closing_paren_index += 1
+
+	# If the stack is not empty, that means there's no matching closing parenthesis
+	if stack.size() != 0:
+		return ""
+
+	# Extract the substring between the parentheses
+	var param_string := text.substr(opening_paren_index + 1, closing_paren_index - opening_paren_index - 1)
+
+	# Clean trailing characters and whitespace
+	param_string = param_string.strip_edges()\
+		.replace(" ", "")\
+		.replace("\n", "")\
+		.replace("\t", "")\
+		.replace(",", ", ")\
+		.replace(":", ": ")
+
+	return param_string
