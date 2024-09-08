@@ -21,7 +21,8 @@ func process_script(path: String) -> String:
 	var current_script := load(path) as GDScript
 	var source_code := current_script.source_code
 	var source_code_additions := ""
-
+	print(path)
+	print("----------------------------")
 	# We need to stop all vanilla methods from forming inheritance chains,
 	# since the generated methods will fulfill inheritance requirements
 	var class_prefix := str(hash(path))
@@ -30,17 +31,10 @@ func process_script(path: String) -> String:
 	"\n# ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin."
 
 	var getters_setters := collect_getters_and_setters(source_code)
-
 	var script_method_list := current_script.get_script_method_list()
 
 	for i in script_method_list.size():
 		var method: Dictionary = script_method_list[i]
-
-		if i > 0:
-			# get_script_method_list() returns the methods in order they are in the source_code
-			# we can use that to get the code between two funcs.
-			previous_method = script_method_list[i - 1]
-
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
 
 		if method_first_line_start == -1 or method.name in method_store:
@@ -51,6 +45,44 @@ func process_script(path: String) -> String:
 
 		if not is_func_moddable(method_first_line_start, source_code):
 			continue
+
+		if i > 0:
+			# get_script_method_list() returns the methods in order they are in the source_code
+			# we can use that to get the code between two funcs.
+			previous_method = script_method_list[i - 1]
+			if not previous_method.name.begins_with("@"):
+				var method_name_start := "%s%s_%s" % [METHOD_PREFIX, class_prefix, previous_method.name]
+				var method_start_match := match_func_with_whitespace(method_name_start, source_code)
+				var method_end_match := match_func_with_whitespace(method.name, source_code)
+				var code_between_funcs := ""
+
+				if not method_start_match:
+					print("No match for \"%s\"" % previous_method.name)
+
+				if not method_end_match:
+					print("No match for \"%s\"" % method.name)
+
+				# TODO: Add a better last method check
+				if source_code.find("func ", method_end_match.get_end()) == -1:
+					print("last method! -> %s" % method.name)
+					code_between_funcs = source_code.substr(method_end_match.get_start())
+				else:
+					code_between_funcs = source_code.substr(method_start_match.get_start(), method_end_match.get_start() - method_start_match.get_start())
+
+				var supers := match_super_with_whitespace_all(code_between_funcs)
+				print(supers.size())
+				for super_result in supers:
+					print("super detected!")
+					var super_arg_string := get_super_arg_string(code_between_funcs, super_result.get_end() - 1)
+					print("super_arg_string")
+					print(super_arg_string)
+					code_between_funcs = code_between_funcs.replace("super(%s)" % super_arg_string, "super.%s(%s)" % [previous_method.name, super_arg_string])
+
+					print("new_code: ")
+					print(code_between_funcs)
+					source_code = source_code.erase(method_start_match.get_start(), method_end_match.get_start() - method_start_match.get_start())
+					source_code = source_code.insert(method_start_match.get_start(), code_between_funcs)
+
 
 		var type_string := get_return_type_string(method.return)
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
@@ -312,26 +344,24 @@ static func collect_getters_and_setters(text: String) -> Dictionary:
 	return result
 
 
-static func get_string_between_functions(method_name_start: String, method_name_end: String, text: String) -> void:
+static func get_string_between_functions(method_name_start: String, method_name_end: String, text: String) -> String:
 	var method_start_match := match_func_with_whitespace(method_name_start, text)
 	var method_end_match := match_func_with_whitespace(method_name_end, text)
 
-	return text.substr(method_start_match.get_start(), method_end_match.get_start())
+	print("method_name_start: %s - method_name_end: %s" % [method_name_start, method_name_end])
 
-
-static func get_super_string(method_name: String, text: String, is_static: bool, offset := 0) -> String:
-	var result := match_func_with_whitespace(method_name, text, offset)
-	if result == null:
+	if not method_start_match:
+		print("No match for \"%s\"" % method_name_start)
 		return ""
 
-	# Find the index of the opening parenthesis
-	var opening_paren_index := result.get_end() - 1
-	if opening_paren_index == -1:
+	if not method_end_match:
+		print("No match for \"%s\"" % method_end_match)
 		return ""
 
-	if not is_top_level_func(text, result.get_start(), is_static):
-		return get_function_parameters(method_name, text, is_static, result.get_end())
+	return text.substr(method_start_match.get_start(), method_end_match.get_start() - method_start_match.get_start())
 
+
+static func get_super_arg_string(text: String, opening_paren_index := 0) -> String:
 	# Use a stack to match parentheses
 	var stack := []
 	var closing_paren_index := opening_paren_index
@@ -350,14 +380,4 @@ static func get_super_string(method_name: String, text: String, is_static: bool,
 		return ""
 
 	# Extract the substring between the parentheses
-	var param_string := text.substr(opening_paren_index + 1, closing_paren_index - opening_paren_index - 1)
-
-	# Clean trailing characters and whitespace
-	param_string = param_string.strip_edges()\
-		.replace(" ", "")\
-		.replace("\n", "")\
-		.replace("\t", "")\
-		.replace(",", ", ")\
-		.replace(":", ": ")
-
-	return param_string
+	return text.substr(opening_paren_index + 1, closing_paren_index - opening_paren_index - 1)
