@@ -9,6 +9,7 @@ static var regex_getter_setter: RegEx
 
 var hashmap := {}
 var previous_method := {}
+var last_valid_method := {}
 
 
 func process_begin() -> void:
@@ -37,6 +38,21 @@ func process_script(path: String) -> String:
 		var method: Dictionary = script_method_list[i]
 		var method_first_line_start := get_index_at_method_start(method.name, source_code)
 
+		if i == script_method_list.size() -1:
+			# Check for super in last func
+			# TODO: Add a better last method check
+			var last_func_index := source_code.rfind("func ")
+			if not last_func_index == -1:
+				var code_between_end_and_last_func := source_code.substr(last_func_index)
+				var supers := match_super_with_whitespace_all(code_between_end_and_last_func)
+				for super_result in supers:
+					print("super detected at end of SCRIPT!!!")
+					var super_arg_string := get_super_arg_string(code_between_end_and_last_func, super_result.get_end() - 1)
+					print("replace super(%s) with super.%s(%s)" % [super_arg_string, last_valid_method.name, super_arg_string])
+					code_between_end_and_last_func = code_between_end_and_last_func.replace("super(%s)" % super_arg_string, "super.%s(%s)" % [last_valid_method.name, super_arg_string])
+					source_code = source_code.erase(last_func_index, source_code.length() - last_func_index)
+					source_code = source_code.insert(last_func_index, code_between_end_and_last_func)
+
 		if method_first_line_start == -1 or method.name in method_store:
 			continue
 
@@ -45,6 +61,8 @@ func process_script(path: String) -> String:
 
 		if not is_func_moddable(method_first_line_start, source_code):
 			continue
+
+		last_valid_method = method
 
 		if i > 0:
 			# get_script_method_list() returns the methods in order they are in the source_code
@@ -62,27 +80,20 @@ func process_script(path: String) -> String:
 				if not method_end_match:
 					print("No match for \"%s\"" % method.name)
 
-				# TODO: Add a better last method check
-				if source_code.find("func ", method_end_match.get_end()) == -1:
-					print("last method! -> %s" % method.name)
-					code_between_funcs = source_code.substr(method_end_match.get_start())
-				else:
-					code_between_funcs = source_code.substr(method_start_match.get_start(), method_end_match.get_start() - method_start_match.get_start())
+				code_between_funcs = source_code.substr(method_start_match.get_start(), method_end_match.get_start() - method_start_match.get_start())
 
 				var supers := match_super_with_whitespace_all(code_between_funcs)
-				print(supers.size())
+				print(supers)
 				for super_result in supers:
 					print("super detected!")
 					var super_arg_string := get_super_arg_string(code_between_funcs, super_result.get_end() - 1)
-					print("super_arg_string")
-					print(super_arg_string)
+					print("replace super(%s) with super.%s(%s)" % [super_arg_string, previous_method.name, super_arg_string])
 					code_between_funcs = code_between_funcs.replace("super(%s)" % super_arg_string, "super.%s(%s)" % [previous_method.name, super_arg_string])
 
-					print("new_code: ")
+					print("new_code: \n")
 					print(code_between_funcs)
 					source_code = source_code.erase(method_start_match.get_start(), method_end_match.get_start() - method_start_match.get_start())
 					source_code = source_code.insert(method_start_match.get_start(), code_between_funcs)
-
 
 		var type_string := get_return_type_string(method.return)
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
