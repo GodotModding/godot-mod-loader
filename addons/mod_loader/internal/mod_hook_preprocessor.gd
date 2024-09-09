@@ -2,17 +2,31 @@ extends Object
 
 const REQUIRE_EXPLICIT_ADDITION := false
 const METHOD_PREFIX := "vanilla_"
-const HASH_COLLISION_ERROR := "MODDING EXPORT ERROR: Hash collision between %s and %s. The collision can be resolved by renaming one of the methods or changing their script's path."
+const HASH_COLLISION_ERROR := \
+	"MODDING EXPORT ERROR: Hash collision between %s and %s. The collision can be resolved by renaming one of the methods or changing their script's path."
+const MOD_LOADER_HOOKS_START_STRING := \
+	"\n# ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin."
 
-static var regex_getter_setter: RegEx
+
+## finds function names used as setters and getters (excluding inline definitions)
+## group 2 and 4 contain the xetter names
+static var regex_getter_setter := RegEx.create_from_string("(.*?[sg]et\\s*=\\s*)(\\w+)(\\g<1>)?(\\g<2>)?")
+
+## finds every instance where super() is called
+## returns only the super word, excluding the (, as match to make substitution easier
+static var regex_super_call := RegEx.create_from_string("\\bsuper(?=\\s*\\()")
+
+## matches the indented function body
+## needs to start from the : of a function definition to work (offset)
+## the body of a function is every line that is empty or starts with an indent or comment
+static var regex_func_body := RegEx.create_from_string("(?smn)\\N*(\\n^(([\\t #]+\\N*)|$))*")
+
 
 var hashmap := {}
 
 
 func process_begin() -> void:
 	hashmap.clear()
-	regex_getter_setter = RegEx.new()
-	regex_getter_setter.compile("(.*?[sg]et\\s*=\\s*)(\\w+)(\\g<1>)?(\\g<2>)?")
 
 
 func process_script(path: String) -> String:
@@ -24,20 +38,26 @@ func process_script(path: String) -> String:
 	# since the generated methods will fulfill inheritance requirements
 	var class_prefix := str(hash(path))
 	var method_store: Array[String] = []
-	var mod_loader_hooks_start_string := \
-	"\n# ModLoader Hooks - The following code has been automatically added by the Godot Mod Loader export plugin."
 
 	var getters_setters := collect_getters_and_setters(source_code)
 
-	for method in current_script.get_script_method_list():
-		var method_first_line_start := get_index_at_method_start(method.name, source_code)
-		if method_first_line_start == -1 or method.name in method_store:
-			continue
+	var moddable_methods := current_script.get_script_method_list().filter(
+		func is_func_moddable(method: Dictionary):
+			if getters_setters.has(method.name):
+				return false
 
-		if getters_setters.has(method.name):
-			continue
+			var method_first_line_start := get_index_at_method_start(method.name, source_code)
+			if method_first_line_start == -1:
+				return false
 
-		if not is_func_moddable(method_first_line_start, source_code):
+			if not is_func_marked_moddable(method_first_line_start, source_code):
+				return false
+
+			return true
+	)
+
+	for method in moddable_methods:
+		if method.name in method_store:
 			continue
 
 		var type_string := get_return_type_string(method.return)
@@ -75,12 +95,12 @@ func process_script(path: String) -> String:
 		# including the methods from the scripts it extends,
 		# which leads to multiple entries in the list if they are overridden by the child script.
 		method_store.push_back(method.name)
-		source_code = prefix_method_name(method.name, is_static, source_code, METHOD_PREFIX + class_prefix)
+		source_code = edit_vanilla_method(method.name, is_static, source_code, METHOD_PREFIX + class_prefix)
 		source_code_additions += "\n%s" % mod_loader_hook_string
 
 	#if we have some additions to the code, append them at the end
 	if source_code_additions != "":
-		source_code = "%s\n%s\n%s" % [source_code,mod_loader_hooks_start_string, source_code_additions]
+		source_code = "%s\n%s\n%s" % [source_code, MOD_LOADER_HOOKS_START_STRING, source_code_additions]
 
 	return source_code
 
@@ -110,21 +130,8 @@ static func get_function_parameters(method_name: String, text: String, is_static
 	if not is_top_level_func(text, result.get_start(), is_static):
 		return get_function_parameters(method_name, text, is_static, result.get_end())
 
-	# Use a stack to match parentheses
-	var stack := []
-	var closing_paren_index := opening_paren_index
-	while closing_paren_index < text.length():
-		var char := text[closing_paren_index]
-		if char == '(':
-			stack.push_back('(')
-		elif char == ')':
-			stack.pop_back()
-			if stack.size() == 0:
-				break
-		closing_paren_index += 1
-
-	# If the stack is not empty, that means there's no matching closing parenthesis
-	if stack.size() != 0:
+	var closing_paren_index := get_closing_paren_index(opening_paren_index, text)
+	if closing_paren_index == -1:
 		return ""
 
 	# Extract the substring between the parentheses
@@ -141,24 +148,62 @@ static func get_function_parameters(method_name: String, text: String, is_static
 	return param_string
 
 
-static func prefix_method_name(method_name: String, is_static: bool, text: String, prefix := METHOD_PREFIX, offset := 0) -> String:
-	var result := match_func_with_whitespace(method_name, text, offset)
+static func get_closing_paren_index(opening_paren_index: int, text: String) -> int:
+	# Use a stack to match parentheses
+	var stack := []
+	var closing_paren_index := opening_paren_index
+	while closing_paren_index < text.length():
+		var char := text[closing_paren_index]
+		if char == '(':
+			stack.push_back('(')
+		elif char == ')':
+			stack.pop_back()
+			if stack.size() == 0:
+				break
+		closing_paren_index += 1
 
-	if not result:
+	# If the stack is not empty, that means there's no matching closing parenthesis
+	if stack.size() != 0:
+		return -1
+
+	return closing_paren_index
+
+
+static func edit_vanilla_method(method_name: String, is_static: bool, text: String, prefix := METHOD_PREFIX, offset := 0) -> String:
+	var func_def := match_func_with_whitespace(method_name, text, offset)
+
+	if not func_def:
 		return text
 
-	if not is_top_level_func(text, result.get_start(), is_static):
-		return prefix_method_name(method_name, is_static, text, prefix, result.get_end())
+	if not is_top_level_func(text, func_def.get_start(), is_static):
+		return edit_vanilla_method(method_name, is_static, text, prefix, func_def.get_end())
 
-	text = text.erase(result.get_start(), result.get_end() - result.get_start())
-	text = text.insert(result.get_start(), "func %s_%s(" % [prefix, method_name])
+	text = fix_method_super(method_name, func_def.get_end(), text)
+	text = text.erase(func_def.get_start(), func_def.get_end() - func_def.get_start())
+	text = text.insert(func_def.get_start(), "func %s_%s(" % [prefix, method_name])
+
+	return text
+
+
+static func fix_method_super(method_name: String, func_def_end: int, text: String, offset := 0) -> String:
+	var closing_paren_index := get_closing_paren_index(func_def_end, text)
+	var func_body_start_index := text.find(":", closing_paren_index) +1
+
+	var func_body := regex_func_body.search(text, func_body_start_index)
+	if not func_body:
+		return text
+	var func_body_end_index := func_body.get_end()
+
+	text = regex_super_call.sub(
+		text, "super.%s" % method_name,
+		true, func_body_start_index, func_body_end_index
+	)
 
 	return text
 
 
 static func match_func_with_whitespace(method_name: String, text: String, offset := 0) -> RegExMatch:
-	var func_with_whitespace := RegEx.new()
-	func_with_whitespace.compile("func\\s+%s\\s*\\(" % method_name)
+	var func_with_whitespace := RegEx.create_from_string("func\\s+%s\\s*\\(" % method_name)
 
 	# Search for the function definition
 	return func_with_whitespace.search(text, offset)
@@ -227,7 +272,7 @@ static func get_previous_line_to(text: String, index: int) -> String:
 	return text.substr(start_index, end_index - start_index + 1)
 
 
-static func is_func_moddable(method_start_idx, text) -> bool:
+static func is_func_marked_moddable(method_start_idx, text) -> bool:
 	var prevline := get_previous_line_to(text, method_start_idx)
 
 	if prevline.contains("@not-moddable"):
