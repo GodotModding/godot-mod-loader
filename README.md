@@ -26,7 +26,7 @@ You can find detailed documentation, for game and mod developers, on the [Wiki](
    *A list of all available API Methods.*
 
 ## Godot Version
-The current version of the Mod Loader is developed for Godot 3.5. The Godot 4 version is in progress on the [4.x branch](https://github.com/GodotModding/godot-mod-loader/tree/4.x), but it is currently hindered by an engine bug. We are hopeful that this issue will be resolved with the release of Godot 4.3. For more details and updates on the Godot 4 version, please follow this [issue](https://github.com/GodotModding/godot-mod-loader/issues/315) or join us on [our Discord](https://discord.godotmodding.com).
+The current version of the Mod Loader is developed for Godot 3. The Godot 4 version is in progress on the [4.x branch](https://github.com/GodotModding/godot-mod-loader/tree/4.x) and can be used as long as no `class_name`s are in the project. Projects with `class_name`s are currently affected by an [engine bug](https://github.com/godotengine/godot/issues/83542). We are hopeful that this issue will be resolved in the near future. For more details and updates on the Godot 4 version, please follow this [issue](https://github.com/GodotModding/godot-mod-loader/issues/315) or join us on [our Discord](https://discord.godotmodding.com).
 
 ## Development
 The latest work-in-progress build can be found on the [development branch](https://github.com/GodotModding/godot-mod-loader/tree/development).
@@ -38,3 +38,11 @@ The Mod Loader supports the following platforms:
 - Linux
 - Android
 - iOS
+
+## Games Made Moddable by This Project
+- [Brotato](https://store.steampowered.com/app/1942280/Brotato/) by 
+[Blobfish Games](https://store.steampowered.com/developer/blobfishgames)
+- [Dome Keeper](https://store.steampowered.com/app/1637320/Dome_Keeper/) by 
+[Bippinbits](https://store.steampowered.com/developer/bippinbits)
+- [Endoparasitic](https://store.steampowered.com/app/2124780/Endoparasitic/) by [Miziziziz](https://www.youtube.com/@Miziziziz)
+- [Windowkill](https://store.steampowered.com/app/2726450/Windowkill/) by [torcado](https://store.steampowered.com/developer/torcado)
