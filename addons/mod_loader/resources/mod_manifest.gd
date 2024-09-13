@@ -481,6 +481,9 @@ static func is_string_length_valid(mod_id: String, field: String, string: String
 
 static func is_steam_workshop_id_valid(mod_id: String, steam_workshop_id_to_validate: String, is_silent := false) -> bool:
 	var mod_data := ModLoaderMod.get_mod_data(mod_id)
+	if not mod_data:
+		# If there is no mod_data, we are probably working with the mod dev tool
+		return true
 	var mod_source := mod_data.get_mod_source()
 	var steam_workshop_id_from_path := ""
 

@@ -121,6 +121,9 @@ static func extend_scene(scene_vanilla_path: String, edit_callable: Callable) ->
 ## [br][b]Returns:[/b][br]
 ## - [ModData]: The [ModData] associated with the provided [code]mod_id[/code], or null if the [code]mod_id[/code] is invalid.[br]
 static func get_mod_data(mod_id: String) -> ModData:
+	if not ModLoaderStore.get("mod_data"):
+		return null
+
 	if not ModLoaderStore.mod_data.has(mod_id):
 		ModLoaderLog.error("%s is an invalid mod_id" % mod_id, LOG_NAME)
 		return null
