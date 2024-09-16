@@ -45,7 +45,7 @@ static func _get_json_string_as_dict(string: String) -> Dictionary:
 
 # Load the mod ZIP from the provided directory
 static func load_zips_in_folder(folder_path: String) -> Dictionary:
-	var URL_MOD_STRUCTURE_DOCS := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Structure"
+	var URL_MOD_STRUCTURE_DOCS := "https://wiki.godotmodding.com/#/guides/modding/mod_structure"
 	var zip_data := {}
 
 	var mod_dir := Directory.new()
