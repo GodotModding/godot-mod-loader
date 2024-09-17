@@ -279,7 +279,7 @@ func _generate_default_config_from_schema(property: Dictionary, current_prop := 
 
 # Handles deprecation of the single string value in the compatible_mod_loader_version.
 func _handle_compatible_mod_loader_version(mod_id: String, godot_details: Dictionary) -> Array:
-	var link_manifest_docs := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Files#manifestjson"
+	var link_manifest_docs := "https://wiki.godotmodding.com/#/guides/modding/mod_files?id=manifestjson"
 	var array_value := ModLoaderUtils.get_array_from_dict(godot_details, "compatible_mod_loader_version")
 
 	# If there are array values
