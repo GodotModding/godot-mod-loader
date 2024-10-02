@@ -1,64 +1,65 @@
-extends Node
+class_name _ModLoaderModHookPacker
+extends RefCounted
 
 
-const ModHookPreprocessorScript = preload("res://addons/mod_loader/internal/mod_hook_preprocessor.gd")
-static var ModHookPreprocessor
+# This class is used to generate mod hooks on demand and pack them into a zip file.
+# Currently all of the included functions are internal and should only be used by the mod loader itself.
+
+const LOG_NAME := "ModLoader:ModHookPacker"
 
 
-func _ready() -> void:
-	run_script()
-	await get_tree().process_frame
-	get_tree().quit()
+static func start() -> void:
+	var hook_pre_processor = _ModLoaderModHookPreProcessor.new()
+	hook_pre_processor.process_begin()
 
+	var mod_hook_pack_path := _ModLoaderPath.get_path_to_hook_pack()
 
-func run_script() -> void:
-	ModHookPreprocessor = ModHookPreprocessorScript.new()
-	ModHookPreprocessor.process_begin()
+	# Create mod hook pack path if necessary
+	if not DirAccess.dir_exists_absolute(mod_hook_pack_path.get_base_dir()):
+		var error := DirAccess.make_dir_recursive_absolute(mod_hook_pack_path.get_base_dir())
+		if not error == OK:
+			ModLoaderLog.error("Error creating the mod hook directory at %s" % mod_hook_pack_path, LOG_NAME)
+			return
+		ModLoaderLog.debug("Created dir at: %s" % mod_hook_pack_path, LOG_NAME)
 
-	# TODO: consider mac location
-	var res := OS.get_executable_path().get_base_dir()
-	if OS.has_feature("editor"):
-		res = ProjectSettings.globalize_path("res://").rsplit("/", true, 2)[0]
-
-	var save_base_path := res.path_join("godot_mod_loader/")
-	prints("Saved to:", save_base_path)
-	DirAccess.make_dir_recursive_absolute(save_base_path)
-
+	# Create mod hook zip
 	var zip_writer := ZIPPacker.new()
-	var err := zip_writer.open(save_base_path.path_join("temp_test_mod.zip"))
-	if err != OK:
-		printerr(err)
+	var error: Error
 
-	transform_scripts_recursive(ModHookPreprocessor.process_script, zip_writer)
-
-	zip_writer.close()
-
-
-func transform_scripts_recursive(callback: Callable, zip_writer: ZIPPacker, path := "res://") -> void:
-	var dir := DirAccess.open(path)
-	if not dir:
-		printt("An error occurred when trying to access the path:", path)
+	if not FileAccess.file_exists(mod_hook_pack_path):
+		# Clear cache if the hook pack does not exist
+		_ModLoaderCache.remove_data("hooks")
+		error = zip_writer.open(mod_hook_pack_path)
+	else:
+		# If there is a pack already append to it
+		error = zip_writer.open(mod_hook_pack_path, ZIPPacker.APPEND_ADDINZIP)
+	if not error == OK:
+		ModLoaderLog.error("Error(%s) writing to zip file at path: %s" % [error, mod_hook_pack_path], LOG_NAME)
 		return
 
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		if path.begins_with("res://addons") or path.begins_with("res://mods-unpacked"):
-			file_name = dir.get_next()
+	var cache := _ModLoaderCache.get_data("hooks")
+	var script_paths_with_hook: Array = [] if cache.is_empty() else cache.script_paths
+	var new_hooks_created := false
+
+	# Get all scripts that need processing
+	ModLoaderLog.debug("Scripts requiring hooks: %s" % [ModLoaderStore.hooked_script_paths.keys()], LOG_NAME)
+	for path in ModLoaderStore.hooked_script_paths.keys():
+		if path in script_paths_with_hook:
 			continue
 
-		if dir.current_is_dir():
-			transform_scripts_recursive(callback, zip_writer, dir.get_current_dir() + file_name + "/")
-			file_name = dir.get_next()
-			continue
+		var processed_source_code := hook_pre_processor.process_script(path)
 
-		if file_name.get_extension() != "gd":
-			file_name = dir.get_next()
-			continue
-
-		var processed: String = callback.call(dir.get_current_dir() + file_name)
-		zip_writer.start_file(path.trim_prefix("res://").path_join(file_name))
-		zip_writer.write_file(processed.to_utf8_buffer())
+		zip_writer.start_file(path.trim_prefix("res://"))
+		zip_writer.write_file(processed_source_code.to_utf8_buffer())
 		zip_writer.close_file()
 
-		file_name = dir.get_next()
+		ModLoaderLog.debug("Hooks created for script: %s" % path, LOG_NAME)
+		new_hooks_created = true
+		script_paths_with_hook.push_back(path)
+
+	if new_hooks_created:
+		_ModLoaderCache.update_data("hooks", {"script_paths": script_paths_with_hook})
+		_ModLoaderCache.save_to_file()
+		ModLoader.new_hooks_created.emit()
+
+	zip_writer.close()

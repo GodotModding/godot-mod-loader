@@ -22,6 +22,9 @@ const DEBUG_ENABLE_STORING_FILEPATHS := false
 # This is where mod ZIPs are unpacked to
 const UNPACKED_DIR := "res://mods-unpacked/"
 
+# Default name for the mod hook pack
+const MOD_HOOK_PACK_NAME := "mod-hooks.zip"
+
 # Set to true to require using "--enable-mods" to enable them
 const REQUIRE_CMD_LINE := false
 
@@ -30,17 +33,21 @@ const LOG_NAME = "ModLoader:Store"
 # Vars
 # =============================================================================
 
-# Example:
-# var callable_stack := {
-# 	"res://game/Game.gd": {
-# 		"_ready": {
-# 			"before": [],
-# 			"after": []
-# 		}
-# 	}
-# }
+
 var any_mod_hooked := false
+
+# Example:
+# var modding_hooks := {
+# 	1917482423: [Callable, Callable],
+#	3108290668: [Callable],
+# }
 var modding_hooks := {}
+
+# Example:
+# var hooked_script_paths := {
+# 	"res://game/game.gd": null,
+# }
+var hooked_script_paths := {}
 
 # Order for mods to be loaded in, set by `get_load_order`
 var mod_load_order := []
@@ -142,6 +149,11 @@ var ml_options := {
 	# Can be used in the editor to load mods from your Steam workshop directory
 	override_path_to_workshop = "",
 
+	# Override for the path where the modding hook resource pack is located.
+	# Requires an absolute path.
+	override_path_to_hook_pack = "", # Default if unspecified: "OS.get_executable_path().get_base_dir()" -- get with _ModLoaderPath.get_path_to_hook_pack()
+	override_hook_pack_name = "", # Default if unspecified: "mod-hooks.zip"
+
 	# If true, using deprecated funcs will trigger a warning, instead of a fatal
 	# error. This can be helpful when developing mods that depend on a mod that
 	# hasn't been updated to fix the deprecated issues yet
@@ -155,6 +167,11 @@ var ml_options := {
 	load_from_steam_workshop = false,
 	# Indicates whether to load mods from the "mods" folder located at the game's install directory, or the overridden mods path.
 	load_from_local = true,
+
+	# Can be used to overwrite the default scene that is displayed if a game restart is required.
+	restart_notification_scene_path = "res://addons/mod_loader/restart_notification.tscn",
+	# Can be used to disable the mod loader's restart logic.
+	disable_restart = false,
 }
 
 
@@ -175,7 +192,7 @@ func _update_ml_options_from_options_resource() -> void:
 	var ml_options_path := "res://addons/mod_loader/options/options.tres"
 
 	# Get user options for ModLoader
-	if not _ModLoaderFile.file_exists(ml_options_path):
+	if not _ModLoaderFile.file_exists(ml_options_path) and not ResourceLoader.exists(ml_options_path):
 		ModLoaderLog.fatal(str("A critical file is missing: ", ml_options_path), LOG_NAME)
 
 	var options_resource: ModLoaderCurrentOptions = load(ml_options_path)

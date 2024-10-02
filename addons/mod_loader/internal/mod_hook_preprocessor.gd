@@ -1,4 +1,11 @@
-extends Object
+class_name _ModLoaderModHookPreProcessor
+extends RefCounted
+
+
+# This class is used to process the source code from a script at a given path.
+# Currently all of the included functions are internal and should only be used by the mod loader itself.
+
+const LOG_NAME := "ModLoader:ModHookPreProcessor"
 
 const REQUIRE_EXPLICIT_ADDITION := false
 const METHOD_PREFIX := "vanilla_"
@@ -30,8 +37,12 @@ func process_begin() -> void:
 
 
 func process_script(path: String) -> String:
+	var start_time := Time.get_ticks_msec()
+	ModLoaderLog.debug("Start processing script at path: %s" % path, LOG_NAME)
 	var current_script := load(path) as GDScript
+
 	var source_code := current_script.source_code
+
 	var source_code_additions := ""
 
 	# We need to stop all vanilla methods from forming inheritance chains,
@@ -109,8 +120,9 @@ func process_script(path: String) -> String:
 	if source_code_additions != "":
 		source_code = "%s\n%s\n%s" % [source_code, MOD_LOADER_HOOKS_START_STRING, source_code_additions]
 
-	return source_code
+	ModLoaderLog.debug("Finished processing script at path: %s in %s ms" % [path, Time.get_ticks_msec() - start_time], LOG_NAME)
 
+	return source_code
 
 
 static func get_function_arg_name_string(args: Array) -> String:
@@ -253,10 +265,10 @@ static func get_mod_loader_hook(
 
 	return """
 {%STATIC%}func {%METHOD_NAME%}({%METHOD_PARAMS%}){%RETURN_TYPE_STRING%}:
-	if ModLoaderStore.any_mod_hooked:
+	if ModLoaderStore.get("any_mod_hooked") and ModLoaderStore.any_mod_hooked:
 		ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_BEFORE%})
 	{%METHOD_RETURN_VAR%}{%METHOD_PREFIX%}_{%METHOD_NAME%}({%METHOD_ARGS%})
-	if ModLoaderStore.any_mod_hooked:
+	if ModLoaderStore.get("any_mod_hooked") and ModLoaderStore.any_mod_hooked:
 		ModLoaderMod.call_hooks({%SELF%}, [{%METHOD_ARGS%}], {%HOOK_ID_AFTER%})
 	{%METHOD_RETURN%}""".format({
 		"%METHOD_PREFIX%": method_prefix,

@@ -31,7 +31,7 @@ static func add_data(key: String, data: Dictionary) -> Dictionary:
 # Get data from a specific key
 static func get_data(key: String) -> Dictionary:
 	if not ModLoaderStore.cache.has(key):
-		ModLoaderLog.error("key: \"%s\" not found in \"ModLoaderStore.cache\"" % key, LOG_NAME)
+		ModLoaderLog.info("key: \"%s\" not found in \"ModLoaderStore.cache\"" % key, LOG_NAME)
 		return {}
 
 	return ModLoaderStore.cache[key]
