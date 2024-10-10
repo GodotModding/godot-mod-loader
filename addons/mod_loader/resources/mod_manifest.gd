@@ -149,9 +149,13 @@ func _init(manifest: Dictionary) -> void:
 			["load_before", "incompatibilities"])
 	):
 		return
-	if not is_steam_workshop_id_valid(mod_id, steam_workshop_id):
+		
+
+# validates the workshop id separately from the rest since it needs the ModData
+func validate_workshop_id(mod_data: ModData) -> void:
+	if not is_steam_workshop_id_valid(get_mod_id(), mod_data, steam_workshop_id):
 		# Attempt to update the steam_workshop_id with the correct one
-		if not _try_overriding_steam_workshop_id(mod_id):
+		if not _try_overriding_steam_workshop_id(get_mod_id(), mod_data):
 			return
 
 
@@ -479,8 +483,7 @@ static func is_string_length_valid(mod_id: String, field: String, string: String
 	return true
 
 
-static func is_steam_workshop_id_valid(mod_id: String, steam_workshop_id_to_validate: String, is_silent := false) -> bool:
-	var mod_data := ModLoaderMod.get_mod_data(mod_id)
+static func is_steam_workshop_id_valid(mod_id: String, mod_data: ModData, steam_workshop_id_to_validate: String, is_silent := false) -> bool:
 	var mod_source := mod_data.get_mod_source()
 	var steam_workshop_id_from_path := ""
 
@@ -503,8 +506,7 @@ static func is_steam_workshop_id_valid(mod_id: String, steam_workshop_id_to_vali
 	return true
 
 
-func _try_overriding_steam_workshop_id(mod_id: String) -> bool:
-	var mod_data := ModLoaderMod.get_mod_data(mod_id)
+func _try_overriding_steam_workshop_id(mod_id: String, mod_data: ModData) -> bool:
 	var mod_source := mod_data.get_mod_source()
 	var steam_workshop_id_from_path := ""
 

@@ -6,11 +6,15 @@ const LOG_NAME := "ModLoader:ThirdParty:Steam"
 # Methods related to Steam and the Steam Workshop
 
 
-# Load mod ZIPs from Steam workshop folders. Uses 2 loops: One for each
-# workshop item's folder, with another inside that which loops over the ZIPs
-# inside each workshop item's folder
-static func load_steam_workshop_zips() -> Dictionary:
-	var zip_data := {}
+# Load mod ZIPs from Steam workshop folders.
+# folder structure of a workshop item
+# <workshop folder>/<steam app id>/<workshop item id>/<mod>.zip
+static func find_steam_workshop_zips() -> Array[String]:
+	printt("Steam available:", Engine.has_singleton("Steam"))
+
+	# TODO: use new diraccess methods + filter
+	# TODO: test
+	var zip_paths := []
 	var workshop_folder_path := _get_path_to_workshop()
 
 	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
@@ -18,34 +22,32 @@ static func load_steam_workshop_zips() -> Dictionary:
 	var workshop_dir := DirAccess.open(workshop_folder_path)
 	if workshop_dir == null:
 		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, DirAccess.get_open_error()], LOG_NAME)
-		return {}
+		return []
 	var workshop_dir_listdir_error := workshop_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not workshop_dir_listdir_error == OK:
 		ModLoaderLog.error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
-		return {}
+		return []
 
 	# Loop 1: Workshop folders
 	while true:
 		# Get the next workshop item folder
 		var item_dir := workshop_dir.get_next()
-		var item_path := workshop_dir.get_current_dir() + "/" + item_dir
-
-		ModLoaderLog.info("Checking workshop item path: \"%s\"" % item_path, LOG_NAME)
-
-		# Stop loading mods when there's no more folders
 		if item_dir == '':
 			break
+
+		var item_path := workshop_dir.get_current_dir() + "/" + item_dir
+		ModLoaderLog.info("Checking workshop item path: \"%s\"" % item_path, LOG_NAME)
 
 		# Only check directories
 		if not workshop_dir.current_is_dir():
 			continue
 
 		# Loop 2: ZIPs inside the workshop folders
-		zip_data.merge(_ModLoaderFile.load_zips_in_folder(ProjectSettings.globalize_path(item_path)))
+		zip_paths.append_array(_ModLoaderFile.get_zip_paths_in(ProjectSettings.globalize_path(item_path)))
 
 	workshop_dir.list_dir_end()
 
-	return zip_data
+	return zip_paths
 
 
 # Get the path to the Steam workshop folder. Only works for Steam games, as it

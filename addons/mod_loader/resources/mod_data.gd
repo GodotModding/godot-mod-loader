@@ -7,11 +7,6 @@ extends Resource
 
 const LOG_NAME := "ModLoader:ModData"
 
-# Controls how manifest.json data is logged for each mod
-# true  = Full JSON contents (floods the log)
-# false = Single line (default)
-const USE_EXTENDED_DEBUGLOG := false
-
 # These 2 files are always required by mods.
 # [i]mod_main.gd[/i] = The main init file for the mod
 # [i]manifest.json[/i] = Meta data for the mod, including its dependencies
@@ -67,6 +62,29 @@ var source: int
 var file_paths: PackedStringArray = []
 
 
+func _init(mod_id: String, zip_path := "") -> void:
+	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
+	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(mod_id)
+
+	if not zip_path.is_empty():
+		zip_name = _ModLoaderPath.get_file_name_from_path(zip_path)
+		zip_path = zip_path
+		source = get_mod_source()
+	dir_path = local_mod_path
+	dir_name = mod_id
+	var mod_overwrites_path := get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
+	is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
+	is_locked = true if mod_id in ModLoaderStore.ml_options.locked_mods else false
+
+	# Get the mod file paths
+	# Note: This was needed in the original version of this script, but it's
+	# not needed anymore. It can be useful when debugging, but it's also an expensive
+	# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
+	# which has ~1,000 files). That's why it's disabled by default
+	if ModLoaderStore.DEBUG_ENABLE_STORING_FILEPATHS:
+		file_paths = _ModLoaderPath.get_flat_view_dict(local_mod_path)
+
+
 # Load meta data from a mod's manifest.json file
 func load_manifest() -> void:
 	if not _has_required_files():
@@ -78,20 +96,24 @@ func load_manifest() -> void:
 	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
 	var manifest_dict := _ModLoaderFile.get_json_as_dict(manifest_path)
 
-	if USE_EXTENDED_DEBUGLOG:
-		ModLoaderLog.debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
-	else:
-		ModLoaderLog.debug(str("%s loaded manifest data -> " % dir_name, manifest_dict), LOG_NAME)
-
 	var mod_manifest := ModManifest.new(manifest_dict)
-
-	is_loadable = _has_manifest(mod_manifest)
-	if not is_loadable:
-		return
-	is_loadable = _is_mod_dir_name_same_as_id(mod_manifest)
-	if not is_loadable:
-		return
 	manifest = mod_manifest
+	validate_manifest_loadability()
+
+
+func apply_manifest(mod_manifest: ModManifest) -> void:
+	manifest = mod_manifest
+	validate_manifest_loadability()
+	manifest.validate_workshop_id(self)
+
+
+func validate_manifest_loadability() -> bool:
+	is_loadable = _has_manifest(manifest)
+	if not is_loadable:
+		return false
+	
+	is_loadable = _is_mod_dir_name_same_as_id(manifest)
+	return is_loadable
 
 
 # Load each mod config json from the mods config directory.
@@ -146,7 +168,7 @@ func _has_required_files() -> bool:
 	for required_file in required_mod_files:
 		var file_path := get_required_mod_file_path(required_mod_files[required_file])
 
-		if !_ModLoaderFile.file_exists(file_path):
+		if not _ModLoaderFile.file_exists(file_path):
 			ModLoaderLog.fatal("ERROR - %s is missing a required file: %s" % [dir_name, file_path], LOG_NAME)
 			is_loadable = false
 	return is_loadable
