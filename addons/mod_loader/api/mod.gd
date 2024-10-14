@@ -73,8 +73,12 @@ static func add_translation(resource_path: String) -> void:
 		return
 
 	var translation_object: Translation = load(resource_path)
-	TranslationServer.add_translation(translation_object)
-	ModLoaderLog.info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
+	if translation_object:
+		TranslationServer.add_translation(translation_object)
+		ModLoaderLog.info("Added Translation from Resource -> %s" % resource_path, LOG_NAME)
+	else:
+		ModLoaderLog.fatal("Failed to load translation at path: %s" % [resource_path], LOG_NAME)
+	
 
 ## [i]Note: This function requires Godot 4.3 or higher.[/i][br]
 ##[br]
