@@ -25,7 +25,8 @@ signal logged(entry: ModLoaderLog.ModLoaderLogEntry)
 ## Emitted if the [member ModData.current_config] of any mod changed.
 ## Use the [member ModConfig.mod_id] of the [ModConfig] to check if the config of your mod has changed.
 signal current_config_changed(config: ModConfig)
-
+## Emitted when new mod hooks are created. A game restart is required to load them.
+signal new_hooks_created
 
 const LOG_NAME := "ModLoader"
 
@@ -34,6 +35,17 @@ const LOG_NAME := "ModLoader"
 # =============================================================================
 
 func _init() -> void:
+	# Only load the hook pack if not in the editor
+	# We can't use it in the editor - see https://github.com/godotengine/godot/issues/19815
+	# Mod devs can use the Dev Tool to generate hooks in the editor.
+	if not OS.has_feature("editor") and FileAccess.file_exists(_ModLoaderPath.get_path_to_hook_pack()):
+		# Load mod hooks
+		var load_hooks_pack_success := ProjectSettings.load_resource_pack(_ModLoaderPath.get_path_to_hook_pack())
+		if not load_hooks_pack_success:
+			ModLoaderLog.error("Failed loading hooks pack from: %s" % _ModLoaderPath.get_path_to_hook_pack(), LOG_NAME)
+		else:
+			ModLoaderLog.debug("Successfully loaded hooks pack from: %s" % _ModLoaderPath.get_path_to_hook_pack(), LOG_NAME)
+
 	# Ensure the ModLoaderStore and ModLoader autoloads are in the correct position.
 	_check_autoload_positions()
 
@@ -61,6 +73,8 @@ func _init() -> void:
 
 	ModLoaderStore.is_initializing = false
 
+	new_hooks_created.connect(_on_new_hooks_created)
+
 
 func _ready():
 	# Create the default user profile if it doesn't exist already
@@ -71,10 +85,20 @@ func _ready():
 	# Update the mod_list for each user profile
 	var _success_update_mod_lists := ModLoaderUserProfile._update_mod_lists()
 
+	# Hooks must be generated after all autoloads are available.
+	# Variables initialized with an autoload property otherwise causes errors.
+	if not OS.has_feature("editor") and ModLoaderStore.any_mod_hooked:
+		# Generate mod hooks
+		_ModLoaderModHookPacker.start()
+
 
 func _exit_tree() -> void:
 	# Save the cache stored in ModLoaderStore to the cache file.
 	_ModLoaderCache.save_to_file()
+
+
+func are_mods_disabled() -> bool:
+	return false
 
 
 func _load_mods() -> void:
@@ -370,3 +394,12 @@ func _disable_mod(mod: ModData) -> void:
 	_ModLoaderScriptExtension.remove_all_extensions_of_mod(mod)
 
 	remove_child(mod_main_instance)
+
+
+func _on_new_hooks_created() -> void:
+	if ModLoaderStore.ml_options.disable_restart:
+		ModLoaderLog.debug("Mod Loader handled restart is disabled.", LOG_NAME)
+		return
+	ModLoaderLog.debug("Instancing restart notification scene from path: %s" % [ModLoaderStore.ml_options.restart_notification_scene_path], LOG_NAME)
+	var restart_notification_scene = load(ModLoaderStore.ml_options.restart_notification_scene_path).instantiate()
+	add_child(restart_notification_scene)

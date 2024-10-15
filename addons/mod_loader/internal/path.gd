@@ -192,6 +192,20 @@ static func get_path_to_mod_config_file(mod_id: String, config_name: String) -> 
 	return mod_config_dir.path_join(config_name + ".json")
 
 
+# Get the path to the mod hook pack
+static func get_path_to_hook_pack() -> String:
+	if ModLoaderStore.ml_options.override_path_to_hook_pack.is_empty():
+		if ModLoaderStore.ml_options.override_hook_pack_name.is_empty():
+			return OS.get_executable_path().get_base_dir().path_join(ModLoaderStore.MOD_HOOK_PACK_NAME)
+		else:
+			return OS.get_executable_path().get_base_dir().path_join(ModLoaderStore.ml_options.override_hook_pack_name)
+	else:
+		if ModLoaderStore.ml_options.override_hook_pack_name.is_empty():
+			return ModLoaderStore.ml_options.override_path_to_hook_pack.path_join(ModLoaderStore.MOD_HOOK_PACK_NAME)
+		else:
+			return ModLoaderStore.ml_options.override_path_to_hook_pack.path_join(ModLoaderStore.ml_options.override_hook_pack_name)
+
+
 # Returns the mod directory name ("some-mod") from a given path (e.g. "res://mods-unpacked/some-mod/extensions/extension.gd")
 static func get_mod_dir(path: String) -> String:
 	var initial := ModLoaderStore.UNPACKED_DIR
