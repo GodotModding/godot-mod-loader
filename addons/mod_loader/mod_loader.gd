@@ -63,11 +63,6 @@ func _init() -> void:
 
 
 func _ready():
-	# Create the default user profile if it doesn't exist already
-	# This should always be present unless the JSON file was manually edited
-	if not ModLoaderStore.user_profiles.has("default"):
-		var _success_user_profile_create := ModLoaderUserProfile.create_profile("default")
-
 	# Update the mod_list for each user profile
 	var _success_update_mod_lists := ModLoaderUserProfile._update_mod_lists()
 
@@ -104,7 +99,7 @@ func _load_mods() -> void:
 		ModLoaderLog.info("No mods were setup", LOG_NAME)
 
 	# Update active state of mods based on the current user profile
-	ModLoaderUserProfile._update_disabled_mods()
+	ModLoaderUserProfile._update_deactivated_mods()
 
 	# Loop over all loaded mods via their entry in mod_data. Verify that they
 	# have all the required files (REQUIRED_MOD_FILES), load their meta data
@@ -113,10 +108,29 @@ func _load_mods() -> void:
 	for dir_name in ModLoaderStore.mod_data:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		mod.load_manifest()
+
+	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
+
+	# Create the default user profile if it doesn't already exist.
+	# This should only occur on the first run of the game or if the JSON file was manually edited.
+	if not ModLoaderStore.user_profiles.has("default"):
+		var _success_user_profile_create := ModLoaderUserProfile.create_profile("default")
+	
+	# Create a user profile with all mods deactivated if the option is enabled.
+	if (
+		ModLoaderStore.ml_options.create_deactivated_mods_profile and
+		not ModLoaderStore.user_profiles.has(ModLoaderStore.ml_options.deactivated_mods_profile_name)
+	): 
+		if ModLoaderUserProfile.create_profile(ModLoaderStore.ml_options.deactivated_mods_profile_name):
+			ModLoaderUserProfile.disable_all_mods()
+
+	# Load Mod Configs
+	for dir_name in ModLoaderStore.mod_data:
+		var mod: ModData = ModLoaderStore.mod_data[dir_name]
 		if mod.manifest.get("config_schema") and not mod.manifest.config_schema.is_empty():
 			mod.load_configs()
 
-	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
+	ModLoaderLog.success("DONE: Loaded all mod configs", LOG_NAME)
 
 	# Check for mods with load_before. If a mod is listed in load_before,
 	# add the current mod to the dependencies of the the mod specified
@@ -278,10 +292,6 @@ func _setup_mods() -> int:
 		):
 			continue
 
-		if ModLoaderStore.ml_options.disabled_mods.has(mod_dir_name):
-			ModLoaderLog.info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
-			continue
-
 		# Initialize the mod data for each mod if there is no existing mod data for that mod.
 		if not ModLoaderStore.mod_data.has(mod_dir_name):
 			_init_mod_data(mod_dir_name)
@@ -309,6 +319,7 @@ func _init_mod_data(mod_id: String, zip_path := "") -> void:
 	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
 	mod.is_locked = true if mod_id in ModLoaderStore.ml_options.locked_mods else false
+	mod.is_active = true if not ModLoaderStore.ml_options.deactivated_mods.has(mod_id) else false
 
 	ModLoaderStore.mod_data[mod_id] = mod
 
