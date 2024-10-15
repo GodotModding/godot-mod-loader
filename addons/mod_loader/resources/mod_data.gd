@@ -47,7 +47,7 @@ var dir_path := ""
 var is_loadable := true
 ## True if overwrites.gd exists
 var is_overwrite := false
-## True if mod can't be disabled or enabled in a user profile
+# True if mod can't be deactivated or enabled in a user profile
 var is_locked := false
 ## Flag indicating whether the mod should be loaded
 var is_active := true
@@ -121,6 +121,10 @@ func _load_config(config_file_path: String) -> void:
 
 	# Add the config to the configs dictionary
 	configs[mod_config.name] = mod_config
+
+	# Set it as the current_config if there is none
+	if not current_config:
+		current_config = mod_config
 
 
 # Update the mod_list of the current user profile

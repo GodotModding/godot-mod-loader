@@ -107,11 +107,11 @@ var ml_options := {
 	enable_mods = true,
 	log_level = ModLoaderLog.VERBOSITY_LEVEL.DEBUG,
 
-	# Mods that can't be disabled or enabled in a user profile (contains mod IDs as strings)
+	# Mods that can't be deactivated or enabled in a user profile (contains mod IDs as strings)
 	locked_mods = [],
 
-	# Array of disabled mods (contains mod IDs as strings)
-	disabled_mods = [],
+	# Array of deactivated mods (contains mod IDs as strings)
+	deactivated_mods = [],
 
 	# If this flag is set to true, the ModLoaderStore and ModLoader Autoloads don't have to be the first Autoloads.
 	# The ModLoaderStore Autoload still needs to be placed before the ModLoader Autoload.
