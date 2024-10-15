@@ -45,6 +45,50 @@ static func _get_json_string_as_dict(string: String) -> Dictionary:
 	return test_json_conv.data
 
 
+# Scans a zip file for disallowed content.
+# Returns true if disallowed content is found, false otherwise.
+static func scan_zip(zip_path: String) -> bool:
+	var reader := ZIPReader.new()
+	var err := reader.open(zip_path)
+	var files: PackedStringArray
+	var contains_disallowed_content := false
+
+	# Check for errors during ZIP file opening
+	if not err == OK:
+		return false
+
+	files = reader.get_files()
+
+	# Iterate through each file in the ZIP archive
+	for file in files:
+		var file_data: PackedByteArray
+		var file_string: String
+		var file_extension := file.get_extension()
+
+		# Read the content of the file if it's a script or scene file
+		if file_extension == "gd" or file_extension == "tscn":
+			file_data = reader.read_file(file)
+			file_string = file_data.get_string_from_utf8()
+
+		if file_extension == "gd":
+			# Check for disallowed script strings
+			for disallowed_script_string in ModLoaderStore.ml_options.disallowed_strings_in_script_files:
+				if file_string.contains("%s" % disallowed_script_string):
+					ModLoaderLog.warning("Script with string \"%s\" detected!" % disallowed_script_string, LOG_NAME)
+					contains_disallowed_content = true
+
+		if file_extension == "tscn":
+			# Check for disallowed scene strings
+			for disallowed_scene_string in ModLoaderStore.ml_options.disallowed_strings_in_scene_files:
+				if file_string.contains(disallowed_scene_string):
+					ModLoaderLog.warning("Scene with string \"%s\" detected!" % disallowed_scene_string, LOG_NAME)
+					contains_disallowed_content = true
+
+	reader.close()
+
+	return contains_disallowed_content
+
+
 # Load the mod ZIP from the provided directory
 static func load_zips_in_folder(folder_path: String) -> Dictionary:
 	var URL_MOD_STRUCTURE_DOCS := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Structure"
@@ -59,7 +103,7 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 	if not mod_dir_open_error == OK:
 		ModLoaderLog.info("Can't open mod folder %s (Error: %s)" % [folder_path, mod_dir_open_error], LOG_NAME)
 		return {}
-	var mod_dir_listdir_error := mod_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
+	var mod_dir_listdir_error := mod_dir.list_dir_begin()
 	if not mod_dir_listdir_error == OK:
 		ModLoaderLog.error("Can't read mod folder %s (Error: %s)" % [folder_path, mod_dir_listdir_error], LOG_NAME)
 		return {}
@@ -85,6 +129,13 @@ static func load_zips_in_folder(folder_path: String) -> Dictionary:
 
 		var mod_zip_path := folder_path.path_join(mod_zip_file_name)
 		var mod_zip_global_path := ProjectSettings.globalize_path(mod_zip_path)
+
+		if ModLoaderStore.ml_options.enable_mod_scan:
+			var contains_disallowed_content := scan_zip(mod_zip_path)
+			if contains_disallowed_content:
+				ModLoaderLog.warning("disallowed mod content detected - skipped mod from path \"%s\"" % mod_zip_path, LOG_NAME)
+				continue
+
 		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_zip_global_path, false)
 
 		# Get the current directories inside UNPACKED_DIR
