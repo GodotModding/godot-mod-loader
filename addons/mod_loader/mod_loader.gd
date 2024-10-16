@@ -57,8 +57,20 @@ func _init() -> void:
 	# Load user profiles into ModLoaderStore
 	var _success_user_profile_load := ModLoaderUserProfile._load()
 
-	_load_mods()
+	if OS.has_feature("editor"):
+		var path := _ModLoaderPath.get_unpacked_mods_dir_path()
+		for mod_dir in DirAccess.get_directories_at(path):
+			var manifest_path := path.path_join(mod_dir).path_join("manifest.json")
+			var manifest_dict := _ModLoaderFile.get_json_as_dict(manifest_path)
+			_load_metadata(manifest_dict)
 
+	var mod_zip_paths := _get_mod_zip_paths()
+	for zip_path in mod_zip_paths:
+		var manifest_dict := _ModLoaderFile.get_json_as_dict_from_zip(zip_path, "manifest.json")
+		_load_metadata(manifest_dict, zip_path)
+
+	_load_mods(ModLoaderStore.mod_data)
+	_apply_mods()
 	ModLoaderStore.is_initializing = false
 
 
@@ -77,46 +89,44 @@ func _exit_tree() -> void:
 	_ModLoaderCache.save_to_file()
 
 
-func _load_mods() -> void:
+func _load_metadata(manifest_dict: Dictionary, zip_path := ""):
+	var manifest := ModManifest.new(manifest_dict)
+	var mod := ModData.new(manifest.get_mod_id(), zip_path)
+	ModLoaderStore.mod_data[manifest.get_mod_id()] = mod
+	mod.manifest = manifest
+	mod.validate_loadability()
+	if not mod.is_loadable:
+		ModLoaderStore.ml_options.disabled_mods.append(mod.manifest.get_mod_id())
+		ModLoaderLog.error("Mod %s can't be loaded due to errors: %s"
+			% [mod.manifest.get_mod_id(), mod.load_errors], LOG_NAME)
+
+
+func _load_mods(mod_data: Dictionary) -> void:
+	var mod_zip_paths: Array[String] = []
+	for mod: ModData in mod_data.values():
+		if not mod.is_loadable:
+			continue
+		if not mod.zip_path:
+			continue
+		mod_zip_paths.append(mod.zip_path)
+
+	print(mod_zip_paths)
+	var loaded_count := _load_mod_zips(mod_zip_paths)
+	ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % loaded_count, LOG_NAME)
+
+
+func _apply_mods() -> void:
 	ModLoaderStore.previous_mod_dirs = _ModLoaderPath.get_dir_paths_in_dir(_ModLoaderPath.get_unpacked_mods_dir_path())
-	# Loop over "res://mods" and add any mod zips to the unpacked virtual
-	# directory (UNPACKED_DIR)
-	var zip_data := _load_mod_zips()
-
-	if zip_data.is_empty():
-		ModLoaderLog.info("No zipped mods found", LOG_NAME)
-	else:
-		ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % zip_data.size(), LOG_NAME)
-
-	# Initializes the mod_data dictionary if zipped mods are loaded.
-	# If mods are unpacked in the "mods-unpacked" directory,
-	# mod_data is initialized in the _setup_mods() function.
-	for mod_id in zip_data.keys():
-		var zip_path: String = zip_data[mod_id]
-		_init_mod_data(mod_id, zip_path)
-
-	# Loop over UNPACKED_DIR. This triggers _init_mod_data for each mod
-	# directory, which adds their data to mod_data.
-	var setup_mods := _setup_mods()
-	if setup_mods > 0:
-		ModLoaderLog.success("DONE: Setup %s mods" % setup_mods, LOG_NAME)
-	else:
-		ModLoaderLog.info("No mods were setup", LOG_NAME)
 
 	# Update active state of mods based on the current user profile
 	ModLoaderUserProfile._update_disabled_mods()
 
-	# Loop over all loaded mods via their entry in mod_data. Verify that they
-	# have all the required files (REQUIRED_MOD_FILES), load their meta data
-	# (from their manifest.json file), and verify that the meta JSON has all
-	# required properties (REQUIRED_META_TAGS)
 	for dir_name in ModLoaderStore.mod_data:
 		var mod: ModData = ModLoaderStore.mod_data[dir_name]
-		mod.load_manifest()
 		if mod.manifest.get("config_schema") and not mod.manifest.config_schema.is_empty():
 			mod.load_configs()
 
-	ModLoaderLog.success("DONE: Loaded all meta data", LOG_NAME)
+	ModLoaderLog.success("DONE: Loaded all mod configs", LOG_NAME)
 
 	# Check for mods with load_before. If a mod is listed in load_before,
 	# add the current mod to the dependencies of the the mod specified
@@ -186,8 +196,11 @@ func _load_mods() -> void:
 
 # Internal call to reload mods
 func _reload_mods() -> void:
-	_reset_mods()
-	_load_mods()
+	pass #TODO fix
+	printerr("_reload_mods is currently disabled, sorry")
+	#_reset_mods()
+	#var mod_zip_paths := _get_mod_zip_paths()
+	#_apply_mods(mod_zip_paths)
 
 
 # Internal call that handles the resetting of all mod related data
@@ -227,98 +240,76 @@ func _check_autoload_positions() -> void:
 		var _pos_ml_core := _ModLoaderGodot.check_autoload_position("ModLoader", 1, true)
 
 
-# Add any mod zips to the unpacked virtual directory
-func _load_mod_zips() -> Dictionary:
-	var zip_data := {}
+func _get_mod_zip_paths() -> Array[String]:
+	var zip_paths: Array[String] = []
 
 	if ModLoaderStore.ml_options.load_from_local:
 		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
 		# Loop over the mod zips in the "mods" directory
-		var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
-		zip_data.merge(loaded_zip_data)
+		zip_paths.append_array(_ModLoaderFile.get_zip_paths_in(mods_folder_path))
 
 	if ModLoaderStore.ml_options.load_from_steam_workshop:
 		# If we're using Steam workshop, loop over the workshop item directories
-		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
-		zip_data.merge(loaded_workshop_zip_data)
+		zip_paths.append_array(_ModLoaderSteam.find_steam_workshop_zips())
 
-	return zip_data
+	return zip_paths
 
 
-# Loop over UNPACKED_DIR and triggers `_init_mod_data` for each mod directory,
-# which adds their data to mod_data.
-func _setup_mods() -> int:
-	# Path to the unpacked mods folder
-	var unpacked_mods_path := _ModLoaderPath.get_unpacked_mods_dir_path()
+# Add any mod zips to the unpacked virtual directory
+static func _load_mod_zips(zip_paths: Array[String]) -> int:
+	const URL_MOD_STRUCTURE_DOCS := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Structure"
+	var loaded_count := 0
 
-	var dir := DirAccess.open(unpacked_mods_path)
-	if dir == null:
-		ModLoaderLog.error("Can't open unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
-		return -1
-	if not dir.list_dir_begin() == OK:
-		ModLoaderLog.error("Can't read unpacked mods folder %s." % unpacked_mods_path, LOG_NAME)
-		return -1
+	for mod_zip_global_path in zip_paths:
+		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_zip_global_path, false)
 
-	var unpacked_mods_count := 0
-	# Get all unpacked mod dirs
-	while true:
-		# Get the next file in the directory
-		var mod_dir_name := dir.get_next()
+		# Get the current directories inside UNPACKED_DIR
+		# This array is used to determine which directory is new
+		var current_mod_dirs := _ModLoaderPath.get_dir_paths_in_dir(_ModLoaderPath.get_unpacked_mods_dir_path())
 
-		# If there is no more file
-		if mod_dir_name == "":
-			# Stop loading mod zip files
-			break
+		# Create a backup to reference when the next mod is loaded
+		var current_mod_dirs_backup := current_mod_dirs.duplicate()
 
-		if (
-			# Only check directories
-			not dir.current_is_dir()
-			# Ignore self, parent and hidden directories
-			or mod_dir_name.begins_with(".")
-		):
+		# Remove all directory paths that existed before, leaving only the one added last
+		for previous_mod_dir in ModLoaderStore.previous_mod_dirs:
+			current_mod_dirs.erase(previous_mod_dir)
+
+		# If the mod zip is not structured correctly, it may not be in the UNPACKED_DIR.
+		if current_mod_dirs.is_empty():
+			ModLoaderLog.fatal(
+				"The mod zip at path \"%s\" does not have the correct file structure. For more information, please visit \"%s\"."
+				% [mod_zip_global_path, URL_MOD_STRUCTURE_DOCS],
+				LOG_NAME
+			)
 			continue
 
-		if ModLoaderStore.ml_options.disabled_mods.has(mod_dir_name):
-			ModLoaderLog.info("Skipped setting up mod: \"%s\"" % mod_dir_name, LOG_NAME)
+
+		# Update previous_mod_dirs in ModLoaderStore to use for the next mod
+		ModLoaderStore.previous_mod_dirs = current_mod_dirs_backup
+
+		# Notifies developer of an issue with Godot, where using `load_resource_pack`
+		# in the editor WIPES the entire virtual res:// directory the first time you
+		# use it. This means that unpacked mods are no longer accessible, because they
+		# no longer exist in the file system. So this warning basically says
+		# "don't use ZIPs with unpacked mods!"
+		# https://github.com/godotengine/godot/issues/19815
+		# https://github.com/godotengine/godot/issues/16798
+		if OS.has_feature("editor") and not ModLoaderStore.has_shown_editor_zips_warning:
+			ModLoaderLog.warning(str(
+				"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. ",
+				"If you have any unpacked mods in ", _ModLoaderPath.get_unpacked_mods_dir_path(), ", they will not be loaded. ",
+				"Please unpack your mod ZIPs instead, and add them to ", _ModLoaderPath.get_unpacked_mods_dir_path()), LOG_NAME)
+			ModLoaderStore.has_shown_editor_zips_warning = true
+
+		# Report the loading status
+		var mod_zip_file_name := mod_zip_global_path.get_file()
+		if not is_mod_loaded_successfully:
+			ModLoaderLog.error("%s failed to load." % mod_zip_file_name, LOG_NAME)
 			continue
 
-		# Initialize the mod data for each mod if there is no existing mod data for that mod.
-		if not ModLoaderStore.mod_data.has(mod_dir_name):
-			_init_mod_data(mod_dir_name)
-
-		unpacked_mods_count += 1
-
-	dir.list_dir_end()
-	return unpacked_mods_count
-
-
-# Add a mod's data to mod_data.
-# The mod_folder_path is just the folder name that was added to UNPACKED_DIR,
-# which depends on the name used in a given mod ZIP (eg "mods-unpacked/Folder-Name")
-func _init_mod_data(mod_id: String, zip_path := "") -> void:
-	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
-	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(mod_id)
-
-	var mod := ModData.new()
-	if not zip_path.is_empty():
-		mod.zip_name = _ModLoaderPath.get_file_name_from_path(zip_path)
-		mod.zip_path = zip_path
-		mod.source = mod.get_mod_source()
-	mod.dir_path = local_mod_path
-	mod.dir_name = mod_id
-	var mod_overwrites_path := mod.get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
-	mod.is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
-	mod.is_locked = true if mod_id in ModLoaderStore.ml_options.locked_mods else false
-
-	ModLoaderStore.mod_data[mod_id] = mod
-
-	# Get the mod file paths
-	# Note: This was needed in the original version of this script, but it's
-	# not needed anymore. It can be useful when debugging, but it's also an expensive
-	# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
-	# which has ~1,000 files). That's why it's disabled by default
-	if ModLoaderStore.DEBUG_ENABLE_STORING_FILEPATHS:
-		mod.file_paths = _ModLoaderPath.get_flat_view_dict(local_mod_path)
+		ModLoaderLog.success("%s loaded." % mod_zip_file_name, LOG_NAME)
+		loaded_count += 1
+	return loaded_count
 
 
 # Instance every mod and add it as a node to the Mod Loader.

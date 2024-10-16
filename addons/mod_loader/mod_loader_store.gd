@@ -30,6 +30,18 @@ const LOG_NAME = "ModLoader:Store"
 # Vars
 # =============================================================================
 
+# Example:
+# var callable_stack := {
+# 	"res://game/Game.gd": {
+# 		"_ready": {
+# 			"before": [],
+# 			"after": []
+# 		}
+# 	}
+# }
+var any_mod_hooked := false
+var modding_hooks := {}
+
 # Order for mods to be loaded in, set by `get_load_order`
 var mod_load_order := []
 
@@ -119,6 +131,8 @@ var ml_options := {
 
 	# Application's Steam ID, used if workshop is enabled
 	steam_id = 0,
+	# Application's version following semver
+	semantic_version = "0.0.0",
 
 	# Overrides for the path mods/configs/workshop folders are loaded from.
 	# Only applied if custom settings are provided, either via the options.tres

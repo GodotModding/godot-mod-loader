@@ -208,7 +208,7 @@ static func _update_disabled_mods() -> void:
 	for mod_id in current_user_profile.mod_list:
 		var mod_list_entry: Dictionary = current_user_profile.mod_list[mod_id]
 		if ModLoaderStore.mod_data.has(mod_id):
-			ModLoaderStore.mod_data[mod_id].is_active = mod_list_entry.is_active
+			ModLoaderStore.mod_data[mod_id].set_mod_state(mod_list_entry.is_active, true)
 
 	ModLoaderLog.debug(
 		"Updated the active state of all mods, based on the current user profile \"%s\""
@@ -329,30 +329,25 @@ static func _generate_mod_list_entry(mod_id: String, is_active: bool) -> Diction
 
 
 # Handles the activation or deactivation of a mod in a user profile.
-static func _set_mod_state(mod_id: String, profile_name: String, activate: bool) -> bool:
+static func _set_mod_state(mod_id: String, profile_name: String, should_activate: bool, force := false) -> bool:
 	# Verify whether the mod_id is present in the profile's mod_list.
 	if not _is_mod_id_in_mod_list(mod_id, profile_name):
 		return false
 
-	# Check if it is a locked mod
-	if ModLoaderStore.mod_data.has(mod_id) and ModLoaderStore.mod_data[mod_id].is_locked:
-		ModLoaderLog.error(
-			"Unable to disable mod \"%s\" as it is marked as locked. Locked mods: %s"
-			% [mod_id, ModLoaderStore.ml_options.locked_mods],
-		LOG_NAME)
+	# Handle mod state
+	# Set state in the ModData
+	var was_toggled: bool = ModLoaderStore.mod_data[mod_id].set_mod_state(should_activate, force)
+	if not was_toggled:
 		return false
 
-	# Handle mod state
 	# Set state for user profile
-	ModLoaderStore.user_profiles[profile_name].mod_list[mod_id].is_active = activate
-	# Set state in the ModData
-	ModLoaderStore.mod_data[mod_id].is_active = activate
+	ModLoaderStore.user_profiles[profile_name].mod_list[mod_id].is_active = should_activate
 
 	# Save profiles to the user profiles JSON file
 	var is_save_success := _save()
 
 	if is_save_success:
-		ModLoaderLog.debug("Mod activation state changed: mod_id=%s activate=%s profile_name=%s" % [mod_id, activate, profile_name], LOG_NAME)
+		ModLoaderLog.debug("Mod activation state changed: mod_id=%s should_activate=%s profile_name=%s" % [mod_id, should_activate, profile_name], LOG_NAME)
 
 	return is_save_success
 

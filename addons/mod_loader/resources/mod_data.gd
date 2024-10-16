@@ -7,11 +7,6 @@ extends Resource
 
 const LOG_NAME := "ModLoader:ModData"
 
-# Controls how manifest.json data is logged for each mod
-# true  = Full JSON contents (floods the log)
-# false = Single line (default)
-const USE_EXTENDED_DEBUGLOG := false
-
 # These 2 files are always required by mods.
 # [i]mod_main.gd[/i] = The main init file for the mod
 # [i]manifest.json[/i] = Meta data for the mod, including its dependencies
@@ -66,6 +61,33 @@ var source: int
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PackedStringArray = []
 
+var load_errors: Array[String] = []
+var load_warnings: Array[String] = []
+
+
+func _init(mod_id: String, _zip_path := "") -> void:
+	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
+	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(mod_id)
+
+	if not _zip_path.is_empty():
+		zip_name = _ModLoaderPath.get_file_name_from_path(_zip_path)
+		zip_path = _zip_path
+		source = get_mod_source()
+	dir_path = local_mod_path
+	dir_name = mod_id
+
+	var mod_overwrites_path := get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
+	is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
+	is_locked = mod_id in ModLoaderStore.ml_options.locked_mods
+
+	# Get the mod file paths
+	# Note: This was needed in the original version of this script, but it's
+	# not needed anymore. It can be useful when debugging, but it's also an expensive
+	# operation if a mod has a large number of files (eg. Brotato's Invasion mod,
+	# which has ~1,000 files). That's why it's disabled by default
+	if ModLoaderStore.DEBUG_ENABLE_STORING_FILEPATHS:
+		file_paths = _ModLoaderPath.get_flat_view_dict(local_mod_path)
+
 
 # Load meta data from a mod's manifest.json file
 func load_manifest() -> void:
@@ -78,20 +100,53 @@ func load_manifest() -> void:
 	var manifest_path := get_required_mod_file_path(required_mod_files.MANIFEST)
 	var manifest_dict := _ModLoaderFile.get_json_as_dict(manifest_path)
 
-	if USE_EXTENDED_DEBUGLOG:
-		ModLoaderLog.debug_json_print("%s loaded manifest data -> " % dir_name, manifest_dict, LOG_NAME)
-	else:
-		ModLoaderLog.debug(str("%s loaded manifest data -> " % dir_name, manifest_dict), LOG_NAME)
-
 	var mod_manifest := ModManifest.new(manifest_dict)
-
-	is_loadable = _has_manifest(mod_manifest)
-	if not is_loadable:
-		return
-	is_loadable = _is_mod_dir_name_same_as_id(mod_manifest)
-	if not is_loadable:
-		return
 	manifest = mod_manifest
+	validate_manifest_loadability()
+
+
+func validate_loadability() -> void:
+	var is_manifest_loadable := validate_manifest_loadability()
+	if not is_manifest_loadable:
+		return
+	manifest.validate_workshop_id(self)
+	validate_game_version_compatibility(ModLoaderStore.ml_options.semantic_version)
+
+	is_loadable = load_errors.is_empty()
+
+
+func validate_game_version_compatibility(game_semver: String) -> void:
+	var game_major := int(game_semver.get_slice(".", 0))
+	var game_minor := int(game_semver.get_slice(".", 1))
+
+	var valid_major := false
+	var valid_minor := false
+	for version in manifest.compatible_game_version:
+		var compat_major := int(version.get_slice(".", 0))
+		var compat_minor := int(version.get_slice(".", 1))
+		if compat_major < game_major:
+			continue
+		valid_major = true
+
+		if compat_minor < game_minor:
+			continue
+		valid_minor = true
+
+	if not valid_major:
+		load_errors.append("This mod is incompatible with the current game version.")
+	if not valid_minor:
+		load_warnings.append("This mod may not be compatible with the current game version. Enable at your own risk.")
+
+
+func validate_manifest_loadability() -> bool:
+	if not _has_manifest(manifest):
+		load_errors.append("This mod could not be loaded due to a manifest error. Contact the mod developer.")
+		return false
+
+	if not _is_mod_dir_name_same_as_id(manifest):
+		load_errors.append("This mod could not be loaded due to a structural error. Contact the mod developer.")
+		return false
+	return true
 
 
 # Load each mod config json from the mods config directory.
@@ -132,6 +187,33 @@ func _set_current_config(new_current_config: ModConfig) -> void:
 		ModLoader.current_config_changed.emit(new_current_config)
 
 
+func set_mod_state(should_activate: bool, force := false) -> bool:
+	if is_locked and should_activate != is_active:
+		ModLoaderLog.error(
+			"Unable to toggle mod \"%s\" since it is marked as locked. Locked mods: %s"
+			% [manifest.get_mod_id(), ModLoaderStore.ml_options.locked_mods], LOG_NAME)
+		return false
+
+	if should_activate and not is_loadable:
+		ModLoaderLog.error(
+			"Unable to activate mod \"%s\" since it has the following load errors: %s"
+			% [manifest.get_mod_id(), ", ".join(load_errors)], LOG_NAME)
+		return false
+
+	if should_activate and load_warnings.size() > 0:
+		if not force:
+			ModLoaderLog.warning(
+				"Rejecting to activate mod \"%s\" since it has the following load warnings: %s"
+				% [manifest.get_mod_id(), ", ".join(load_warnings)], LOG_NAME)
+			return false
+		ModLoaderLog.info(
+			"Forced to activate mod \"%s\" despite the following load warnings: %s"
+			% [manifest.get_mod_id(), ", ".join(load_warnings)], LOG_NAME)
+
+	is_active = should_activate
+	return true
+
+
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]
 func _is_mod_dir_name_same_as_id(mod_manifest: ModManifest) -> bool:
 	var manifest_id := mod_manifest.get_mod_id()
@@ -146,7 +228,7 @@ func _has_required_files() -> bool:
 	for required_file in required_mod_files:
 		var file_path := get_required_mod_file_path(required_mod_files[required_file])
 
-		if !_ModLoaderFile.file_exists(file_path):
+		if not _ModLoaderFile.file_exists(file_path):
 			ModLoaderLog.fatal("ERROR - %s is missing a required file: %s" % [dir_name, file_path], LOG_NAME)
 			is_loadable = false
 	return is_loadable

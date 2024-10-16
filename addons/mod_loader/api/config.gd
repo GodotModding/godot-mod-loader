@@ -125,7 +125,7 @@ static func delete_config(config: ModConfig) -> bool:
 
 	# Remove the config from ModData
 	ModLoaderStore.mod_data[config.mod_id].configs.erase(config.name)
-	
+
 	return true
 
 
@@ -213,7 +213,7 @@ static func _traverse_schema(schema_prop: Dictionary, prop_key_array: Array) -> 
 		schema_prop = schema_prop.properties
 
 	schema_prop = _traverse_schema(schema_prop, prop_key_array)
-	
+
 	return schema_prop
 
 
@@ -379,7 +379,7 @@ static func refresh_config_data(config: ModConfig) -> ModConfig:
 	var new_config_data := _ModLoaderFile.get_json_as_dict(config.save_path)
 	# Update the data property of the ModConfig object with the refreshed data
 	config.data = new_config_data
-	
+
 	return config
 
 
