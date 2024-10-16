@@ -184,7 +184,7 @@ func _set_current_config(new_current_config: ModConfig) -> void:
 		ModLoader.current_config_changed.emit(new_current_config)
 
 
-func set_mod_state(should_activate: bool, force: bool) -> bool:
+func set_mod_state(should_activate: bool, force := false) -> bool:
 	if is_locked and should_activate != is_active:
 		ModLoaderLog.error(
 			"Unable to toggle mod \"%s\" since it is marked as locked. Locked mods: %s"

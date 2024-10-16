@@ -68,7 +68,6 @@ func _init() -> void:
 		for zip_path in mod_zip_paths:
 			var manifest_dict := _ModLoaderFile.get_json_as_dict_from_zip(zip_path, "manifest.json")
 			_load_metadata(manifest_dict)
-
 	_load_mods(mod_zip_paths)
 	_apply_mods()
 	ModLoaderStore.is_initializing = false
