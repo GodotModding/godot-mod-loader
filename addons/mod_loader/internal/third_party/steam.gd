@@ -10,22 +10,19 @@ const LOG_NAME := "ModLoader:ThirdParty:Steam"
 # folder structure of a workshop item
 # <workshop folder>/<steam app id>/<workshop item id>/<mod>.zip
 static func find_steam_workshop_zips() -> Array[String]:
-	printt("Steam available:", Engine.has_singleton("Steam"))
-
 	# TODO: use new diraccess methods + filter
-	# TODO: test
-	var zip_paths := []
+	var zip_paths: Array[String] = []
 	var workshop_folder_path := _get_path_to_workshop()
 
 	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 
 	var workshop_dir := DirAccess.open(workshop_folder_path)
 	if workshop_dir == null:
-		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, DirAccess.get_open_error()], LOG_NAME)
+		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, error_string(DirAccess.get_open_error())], LOG_NAME)
 		return []
 	var workshop_dir_listdir_error := workshop_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not workshop_dir_listdir_error == OK:
-		ModLoaderLog.error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, workshop_dir_listdir_error], LOG_NAME)
+		ModLoaderLog.error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, error_string(workshop_dir_listdir_error)], LOG_NAME)
 		return []
 
 	# Loop 1: Workshop folders

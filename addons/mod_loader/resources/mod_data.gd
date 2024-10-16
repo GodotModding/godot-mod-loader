@@ -65,13 +65,13 @@ var load_errors: Array[String] = []
 var load_warnings: Array[String] = []
 
 
-func _init(mod_id: String, zip_path := "") -> void:
+func _init(mod_id: String, _zip_path := "") -> void:
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
 	var local_mod_path := _ModLoaderPath.get_unpacked_mods_dir_path().path_join(mod_id)
 
-	if not zip_path.is_empty():
-		zip_name = _ModLoaderPath.get_file_name_from_path(zip_path)
-		zip_path = zip_path
+	if not _zip_path.is_empty():
+		zip_name = _ModLoaderPath.get_file_name_from_path(_zip_path)
+		zip_path = _zip_path
 		source = get_mod_source()
 	dir_path = local_mod_path
 	dir_name = mod_id
@@ -110,7 +110,7 @@ func validate_loadability() -> void:
 	if not is_manifest_loadable:
 		return
 	manifest.validate_workshop_id(self)
-	validate_game_version_compatibility(ModLoaderGameConstants.semantic_version)
+	validate_game_version_compatibility(ModLoaderStore.ml_options.semantic_version)
 
 	is_loadable = load_errors.is_empty()
 
@@ -123,11 +123,14 @@ func validate_game_version_compatibility(game_semver: String) -> void:
 	var valid_minor := false
 	for version in manifest.compatible_game_version:
 		var compat_major := int(version.get_slice(".", 0))
-		if compat_major >= game_major:
-			valid_major = true
 		var compat_minor := int(version.get_slice(".", 1))
-		if compat_minor >= game_minor:
-			valid_minor = true
+		if compat_major < game_major:
+			continue
+		valid_major = true
+
+		if compat_minor < game_minor:
+			continue
+		valid_minor = true
 
 	if not valid_major:
 		load_errors.append("This mod is incompatible with the current game version.")

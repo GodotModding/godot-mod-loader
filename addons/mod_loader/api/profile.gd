@@ -208,7 +208,7 @@ static func _update_disabled_mods() -> void:
 	for mod_id in current_user_profile.mod_list:
 		var mod_list_entry: Dictionary = current_user_profile.mod_list[mod_id]
 		if ModLoaderStore.mod_data.has(mod_id):
-			ModLoaderStore.mod_data[mod_id].set_mod_state(mod_list_entry.is_active)
+			ModLoaderStore.mod_data[mod_id].set_mod_state(mod_list_entry.is_active, true)
 
 	ModLoaderLog.debug(
 		"Updated the active state of all mods, based on the current user profile \"%s\""

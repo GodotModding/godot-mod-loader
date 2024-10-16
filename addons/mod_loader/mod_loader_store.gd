@@ -131,6 +131,8 @@ var ml_options := {
 
 	# Application's Steam ID, used if workshop is enabled
 	steam_id = 0,
+	# Application's version following semver
+	semantic_version = "0.0.0",
 
 	# Overrides for the path mods/configs/workshop folders are loaded from.
 	# Only applied if custom settings are provided, either via the options.tres

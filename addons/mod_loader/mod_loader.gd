@@ -57,18 +57,19 @@ func _init() -> void:
 	# Load user profiles into ModLoaderStore
 	var _success_user_profile_load := ModLoaderUserProfile._load()
 
-	var mod_zip_paths := _get_mod_zip_paths()
 	if OS.has_feature("editor"):
 		var path := _ModLoaderPath.get_unpacked_mods_dir_path()
 		for mod_dir in DirAccess.get_directories_at(path):
 			var manifest_path := path.path_join(mod_dir).path_join("manifest.json")
 			var manifest_dict := _ModLoaderFile.get_json_as_dict(manifest_path)
 			_load_metadata(manifest_dict)
-	else:
-		for zip_path in mod_zip_paths:
-			var manifest_dict := _ModLoaderFile.get_json_as_dict_from_zip(zip_path, "manifest.json")
-			_load_metadata(manifest_dict)
-	_load_mods(mod_zip_paths)
+
+	var mod_zip_paths := _get_mod_zip_paths()
+	for zip_path in mod_zip_paths:
+		var manifest_dict := _ModLoaderFile.get_json_as_dict_from_zip(zip_path, "manifest.json")
+		_load_metadata(manifest_dict, zip_path)
+
+	_load_mods(ModLoaderStore.mod_data)
 	_apply_mods()
 	ModLoaderStore.is_initializing = false
 
@@ -96,16 +97,22 @@ func _load_metadata(manifest_dict: Dictionary, zip_path := ""):
 	mod.validate_loadability()
 	if not mod.is_loadable:
 		ModLoaderStore.ml_options.disabled_mods.append(mod.manifest.get_mod_id())
-		ModLoaderLog.error("Mod %s can't be loaded due to load errors: %s"
-		% [mod.manifest.get_mod_id(), mod.load_errors], LOG_NAME)
+		ModLoaderLog.error("Mod %s can't be loaded due to errors: %s"
+			% [mod.manifest.get_mod_id(), mod.load_errors], LOG_NAME)
 
 
-func _load_mods(mod_zip_paths: Array[String]) -> void:
-	if mod_zip_paths.is_empty():
-		ModLoaderLog.info("No zipped mods provided", LOG_NAME)
-		return
-	var zip_data := _load_mod_zips(mod_zip_paths)
-	ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % zip_data.size(), LOG_NAME)
+func _load_mods(mod_data: Dictionary) -> void:
+	var mod_zip_paths: Array[String] = []
+	for mod: ModData in mod_data.values():
+		if not mod.is_loadable:
+			continue
+		if not mod.zip_path:
+			continue
+		mod_zip_paths.append(mod.zip_path)
+
+	print(mod_zip_paths)
+	var loaded_count := _load_mod_zips(mod_zip_paths)
+	ModLoaderLog.success("DONE: Loaded %s mod files into the virtual filesystem" % loaded_count, LOG_NAME)
 
 
 func _apply_mods() -> void:
@@ -249,9 +256,9 @@ func _get_mod_zip_paths() -> Array[String]:
 
 
 # Add any mod zips to the unpacked virtual directory
-static func _load_mod_zips(zip_paths: Array[String]) -> Dictionary:
+static func _load_mod_zips(zip_paths: Array[String]) -> int:
 	const URL_MOD_STRUCTURE_DOCS := "https://github.com/GodotModding/godot-mod-loader/wiki/Mod-Structure"
-	var zip_data := {}
+	var loaded_count := 0
 
 	for mod_zip_global_path in zip_paths:
 		var is_mod_loaded_successfully := ProjectSettings.load_resource_pack(mod_zip_global_path, false)
@@ -276,8 +283,6 @@ static func _load_mod_zips(zip_paths: Array[String]) -> Dictionary:
 			)
 			continue
 
-		# The key is the mod_id of the latest loaded mod, and the value is the path to the zip file
-		zip_data[current_mod_dirs[0].get_slice("/", 3)] = mod_zip_global_path
 
 		# Update previous_mod_dirs in ModLoaderStore to use for the next mod
 		ModLoaderStore.previous_mod_dirs = current_mod_dirs_backup
@@ -303,8 +308,8 @@ static func _load_mod_zips(zip_paths: Array[String]) -> Dictionary:
 			continue
 
 		ModLoaderLog.success("%s loaded." % mod_zip_file_name, LOG_NAME)
-
-	return zip_data
+		loaded_count += 1
+	return loaded_count
 
 
 # Instance every mod and add it as a node to the Mod Loader.

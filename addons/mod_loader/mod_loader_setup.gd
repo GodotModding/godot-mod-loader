@@ -70,11 +70,6 @@ const new_global_classes := [
 		"class": "ModLoaderLog",
 		"language": "GDScript",
 		"path": "res://addons/mod_loader/api/log.gd"
-	}, {
-		"base": "Object",
-		"class": "ModLoaderGameConstants",
-		"language": "GDScript",
-		"path": "res://addons/mod_loader/game_constants.gd"
 	}
 ]
 
