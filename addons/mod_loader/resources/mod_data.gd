@@ -61,6 +61,9 @@ var source: int
 # only set if DEBUG_ENABLE_STORING_FILEPATHS is enabled
 var file_paths: PackedStringArray = []
 
+var load_errors: Array[String] = []
+var load_warnings: Array[String] = []
+
 
 func _init(mod_id: String, zip_path := "") -> void:
 	# Path to the mod in UNPACKED_DIR (eg "res://mods-unpacked/My-Mod")
@@ -72,9 +75,10 @@ func _init(mod_id: String, zip_path := "") -> void:
 		source = get_mod_source()
 	dir_path = local_mod_path
 	dir_name = mod_id
+
 	var mod_overwrites_path := get_optional_mod_file_path(ModData.optional_mod_files.OVERWRITES)
 	is_overwrite = _ModLoaderFile.file_exists(mod_overwrites_path)
-	is_locked = true if mod_id in ModLoaderStore.ml_options.locked_mods else false
+	is_locked = mod_id in ModLoaderStore.ml_options.locked_mods
 
 	# Get the mod file paths
 	# Note: This was needed in the original version of this script, but it's
@@ -101,19 +105,45 @@ func load_manifest() -> void:
 	validate_manifest_loadability()
 
 
-func apply_manifest(mod_manifest: ModManifest) -> void:
-	manifest = mod_manifest
-	validate_manifest_loadability()
+func validate_loadability() -> void:
+	var is_manifest_loadable := validate_manifest_loadability()
+	if not is_manifest_loadable:
+		return
 	manifest.validate_workshop_id(self)
+	validate_game_version_compatibility(ModLoaderGameConstants.semantic_version)
+
+	is_loadable = load_errors.is_empty()
+
+
+func validate_game_version_compatibility(game_semver: String) -> void:
+	var game_major := int(game_semver.get_slice(".", 0))
+	var game_minor := int(game_semver.get_slice(".", 1))
+
+	var valid_major := false
+	var valid_minor := false
+	for version in manifest.compatible_game_version:
+		var compat_major := int(version.get_slice(".", 0))
+		if compat_major >= game_major:
+			valid_major = true
+		var compat_minor := int(version.get_slice(".", 1))
+		if compat_minor >= game_minor:
+			valid_minor = true
+
+	if not valid_major:
+		load_errors.append("This mod is incompatible with the current game version.")
+	if not valid_minor:
+		load_warnings.append("This mod may not be compatible with the current game version. Enable at your own risk.")
 
 
 func validate_manifest_loadability() -> bool:
-	is_loadable = _has_manifest(manifest)
-	if not is_loadable:
+	if not _has_manifest(manifest):
+		load_errors.append("This mod could not be loaded due to a manifest error. Contact the mod developer.")
 		return false
-	
-	is_loadable = _is_mod_dir_name_same_as_id(manifest)
-	return is_loadable
+
+	if not _is_mod_dir_name_same_as_id(manifest):
+		load_errors.append("This mod could not be loaded due to a structural error. Contact the mod developer.")
+		return false
+	return true
 
 
 # Load each mod config json from the mods config directory.
@@ -152,6 +182,33 @@ func _set_current_config(new_current_config: ModConfig) -> void:
 	# We can't emit the signal if the ModLoader is not initialized yet
 	if ModLoader:
 		ModLoader.current_config_changed.emit(new_current_config)
+
+
+func set_mod_state(should_activate: bool, force: bool) -> bool:
+	if is_locked and should_activate != is_active:
+		ModLoaderLog.error(
+			"Unable to toggle mod \"%s\" since it is marked as locked. Locked mods: %s"
+			% [manifest.get_mod_id(), ModLoaderStore.ml_options.locked_mods], LOG_NAME)
+		return false
+
+	if should_activate and not is_loadable:
+		ModLoaderLog.error(
+			"Unable to activate mod \"%s\" since it has the following load errors: %s"
+			% [manifest.get_mod_id(), ", ".join(load_errors)], LOG_NAME)
+		return false
+
+	if should_activate and load_warnings.size() > 0:
+		if not force:
+			ModLoaderLog.warning(
+				"Rejecting to activate mod \"%s\" since it has the following load warnings: %s"
+				% [manifest.get_mod_id(), ", ".join(load_warnings)], LOG_NAME)
+			return false
+		ModLoaderLog.info(
+			"Forced to activate mod \"%s\" despite the following load warnings: %s"
+			% [manifest.get_mod_id(), ", ".join(load_warnings)], LOG_NAME)
+
+	is_active = should_activate
+	return true
 
 
 # Validates if [member dir_name] matches [method ModManifest.get_mod_id]

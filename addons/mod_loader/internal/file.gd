@@ -203,7 +203,7 @@ static func dir_exists(path: String) -> bool:
 
 # Internal util functions
 # =============================================================================
-# This are duplicates of the functions in mod_loader_utils.gd to prevent
+# These are duplicates of the functions in mod_loader_utils.gd to prevent
 # a cyclic reference error.
 
 # This is a dummy func. It is exclusively used to show notes in the code that

@@ -149,7 +149,7 @@ func _init(manifest: Dictionary) -> void:
 			["load_before", "incompatibilities"])
 	):
 		return
-		
+
 
 # validates the workshop id separately from the rest since it needs the ModData
 func validate_workshop_id(mod_data: ModData) -> void:
