@@ -31,9 +31,6 @@ The Mod Loader currently supports Godot 3.5 and later, as well as Godot 4.1 and 
 ## Development  
 The latest work-in-progress build for Godot 3 is available on the [development branch](https://github.com/GodotModding/godot-mod-loader/tree/development). For Godot 4, visit the [4.x branch](https://github.com/GodotModding/godot-mod-loader/tree/4.x).
 
-## Keep in touche
-For more details and updates join us on [our Discord](https://discord.godotmodding.com).
-
 ## Compatibility
 The Mod Loader supports the following platforms:
 - Windows
@@ -41,6 +38,9 @@ The Mod Loader supports the following platforms:
 - Linux
 - Android
 - iOS
+
+## Keep in touche
+For more details and updates join us on [our Discord](https://discord.godotmodding.com).
 
 ## Games Made Moddable by This Project
 - [Brotato](https://store.steampowered.com/app/1942280/Brotato/) by 
