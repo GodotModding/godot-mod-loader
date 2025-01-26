@@ -31,6 +31,9 @@ The Mod Loader currently supports Godot 3.5 and later, as well as Godot 4.1 and 
 ## Development  
 The latest work-in-progress build for Godot 3 is available on the [development branch](https://github.com/GodotModding/godot-mod-loader/tree/development). For Godot 4, visit the [4.x branch](https://github.com/GodotModding/godot-mod-loader/tree/4.x).
 
+## Releases
+You can find the latest release versions and detailed installation instructions on the [Releases Page](https://github.com/GodotModding/godot-mod-loader/releases).
+
 ## Compatibility
 The Mod Loader supports the following platforms:
 - Windows
