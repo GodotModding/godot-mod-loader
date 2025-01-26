@@ -26,7 +26,7 @@ You can find detailed documentation, for game and mod developers, on the [Wiki](
    *A list of all available API Methods.*
 
 ## Godot Version  
-The Mod Loader supports both Godot 3 and Godot 4.  
+The Mod Loader currently supports Godot 3.5 and later, as well as Godot 4.1 and later. Feel free to [open an issue](https://github.com/GodotModding/godot-mod-loader/issues/new) if you need support for a different version.
 
 ## Development  
 The latest work-in-progress build for Godot 3 is available on the [development branch](https://github.com/GodotModding/godot-mod-loader/tree/development). For Godot 4, visit the [4.x branch](https://github.com/GodotModding/godot-mod-loader/tree/4.x).
