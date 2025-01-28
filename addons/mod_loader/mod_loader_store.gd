@@ -101,64 +101,12 @@ var user_profiles :=  {}
 # ModLoader cache is stored in user://mod_loader_cache.json
 var cache := {}
 
-# These variables handle various options, which can be changed either via
+# Various options, which can be changed either via
 # Godot's GUI (with the options.tres resource file), or via CLI args.
 # Usage: `ModLoaderStore.ml_options.KEY`
 # See: res://addons/mod_loader/options/options.tres
 # See: res://addons/mod_loader/resources/options_profile.gd
-var ml_options := {
-	enable_mods = true,
-	log_level = ModLoaderLog.VERBOSITY_LEVEL.DEBUG,
-
-	# Mods that can't be disabled or enabled in a user profile (contains mod IDs as strings)
-	locked_mods = [],
-
-	# Array of disabled mods (contains mod IDs as strings)
-	disabled_mods = [],
-
-	# If this flag is set to true, the ModLoaderStore and ModLoader Autoloads don't have to be the first Autoloads.
-	# The ModLoaderStore Autoload still needs to be placed before the ModLoader Autoload.
-	allow_modloader_autoloads_anywhere = false,
-
-	# Application's Steam ID, used if workshop is enabled
-	steam_id = 0,
-	# Application's version following semver
-	semantic_version = "0.0.0",
-
-	# Overrides for the path mods/configs/workshop folders are loaded from.
-	# Only applied if custom settings are provided, either via the options.tres
-	# resource, or via CLI args. Note that CLI args can be tested in the editor
-	# via: Project Settings > Display> Editor > Main Run Args
-	override_path_to_mods = "",    # Default if unspecified: "res://mods"    -- get with _ModLoaderPath.get_path_to_mods()
-	override_path_to_configs = "", # Default if unspecified: "res://configs" -- get with _ModLoaderPath.get_path_to_configs()
-
-	# Can be used in the editor to load mods from your Steam workshop directory
-	override_path_to_workshop = "",
-
-	# Override for the path where the modding hook resource pack is located.
-	# Requires an absolute path.
-	override_path_to_hook_pack = "", # Default if unspecified: "OS.get_executable_path().get_base_dir()" -- get with _ModLoaderPath.get_path_to_hook_pack()
-	override_hook_pack_name = "", # Default if unspecified: "mod-hooks.zip"
-
-	# If true, using deprecated funcs will trigger a warning, instead of a fatal
-	# error. This can be helpful when developing mods that depend on a mod that
-	# hasn't been updated to fix the deprecated issues yet
-	ignore_deprecated_errors = false,
-
-	# Array of mods that should be ignored when logging messages (contains mod IDs as strings)
-	ignored_mod_names_in_log = [],
-
-	# Mod Sources
-	# Indicates whether to load mods from the Steam Workshop directory, or the overridden workshop path.
-	load_from_steam_workshop = false,
-	# Indicates whether to load mods from the "mods" folder located at the game's install directory, or the overridden mods path.
-	load_from_local = true,
-
-	# Can be used to overwrite the default scene that is displayed if a game restart is required.
-	restart_notification_scene_path = "res://addons/mod_loader/restart_notification.tscn",
-	# Can be used to disable the mod loader's restart logic.
-	disable_restart = false,
-}
+var ml_options: ModLoaderOptionsProfile
 
 
 # Methods
@@ -169,20 +117,6 @@ func _init():
 	_update_ml_options_from_cli_args()
 	# ModLoaderStore is passed as argument so the cache data can be loaded on _init()
 	_ModLoaderCache.init_cache(self)
-
-
-func set_option(option_name: String, new_value: Variant) -> void:
-	ml_options[option_name] = new_value
-
-	match option_name:
-		"log_level":
-			ModLoaderLog.verbosity = new_value
-		"ignored_mod_names_in_log":
-			ModLoaderLog.ignored_mods = new_value
-
-
-func get_option(option_name: String) -> Variant:
-	return ml_options[option_name]
 
 
 # Update ModLoader's options, via the custom options resource
@@ -209,8 +143,7 @@ func _update_ml_options_from_options_resource() -> void:
 				"Please edit your options at %s. " % ml_options_path
 			), LOG_NAME)
 		# Update from the options in the resource
-		for key in ml_options:
-			set_option(key, current_options[key])
+		ml_options = current_options
 
 	# Get options overrides by feature tags
 	# An override is saved as Dictionary[String: ModLoaderOptionsProfile]
@@ -239,8 +172,7 @@ func _update_ml_options_from_options_resource() -> void:
 			continue
 
 		# Update from the options in the resource
-		for key in ml_options:
-			set_option(key, override_options[key])
+		ml_options = override_options
 
 
 func _exit_tree() -> void:
