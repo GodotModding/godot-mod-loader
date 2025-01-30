@@ -61,3 +61,8 @@ extends Resource
 @export_dir var restart_notification_scene_path := "res://addons/mod_loader/restart_notification.tscn"
 ## Can be used to disable the mod loader's restart logic. Use the [signal ModLoader.new_hooks_created] to implement your own restart logic.
 @export var disable_restart := false
+
+@export_group("Mod Validation")
+## Activate this option to disable validation of the game version specified in [member semantic_version]  
+## and the mod's [member ModManifest.compatible_game_version].  
+@export var disable_game_version_validation := false
