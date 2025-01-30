@@ -51,15 +51,15 @@ func process_begin() -> void:
 	hashmap.clear()
 
 
-func process_script_verbose(path: String, enable_hook_check := false) -> String:
+func process_script_verbose(path: String, enable_hook_check := false, method_mask: Array[String] = []) -> String:
 	var start_time := Time.get_ticks_msec()
 	ModLoaderLog.debug("Start processing script at path: %s" % path, LOG_NAME)
-	var processed := process_script(path, enable_hook_check)
+	var processed := process_script(path, enable_hook_check, method_mask)
 	ModLoaderLog.debug("Finished processing script at path: %s in %s ms" % [path, Time.get_ticks_msec() - start_time], LOG_NAME)
 	return processed
 
 
-func process_script(path: String, enable_hook_check := false) -> String:
+func process_script(path: String, enable_hook_check := false, method_mask: Array[String] = []) -> String:
 	var current_script := load(path) as GDScript
 
 	var source_code := current_script.source_code
@@ -76,6 +76,13 @@ func process_script(path: String, enable_hook_check := false) -> String:
 	var moddable_methods := current_script.get_script_method_list().filter(
 		is_func_moddable.bind(source_code, getters_setters)
 	)
+
+	# If a mask is provided, only methods with their name in the mask will be converted.
+	if not method_mask.is_empty():
+		moddable_methods = moddable_methods.filter(
+			func (method):
+				return method.name in method_mask
+		)
 
 	var methods_hooked := {}
 

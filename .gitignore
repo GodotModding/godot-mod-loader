@@ -1,7 +1,8 @@
 
+.godot
 # IDEs
 .idea
 .vscode
 
 # mac thing
-**/.DS_Store
+.DS_Store
