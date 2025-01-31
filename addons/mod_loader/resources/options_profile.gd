@@ -1,5 +1,7 @@
 class_name ModLoaderOptionsProfile
 extends Resource
+##
+## Class to define and store Mod Loader Options.
 
 
 ## Can be used to disable mods for specific plaforms by using feature overrides
@@ -13,6 +15,8 @@ extends Resource
 
 
 @export_group("Logging")
+## Sets the logging verbosity level.
+## Refer to [enum ModLoaderLog.VERBOSITY_LEVEL] for more details.
 @export var log_level := ModLoaderLog.VERBOSITY_LEVEL.DEBUG
 ## Stops the mod loader from logging any deprecation related errors.
 @export var ignore_deprecated_errors: bool = false
@@ -42,6 +46,7 @@ extends Resource
 ## Path to a folder containing mods [br]
 ## Mod zips should be directly in this folder
 @export_dir var override_path_to_mods = ""
+## Use this option to override the default path where configs are stored.
 @export_dir var override_path_to_configs = ""
 ## Path to a folder containing workshop items.[br]
 ## Mods zips are placed in another folder, usually[br]
