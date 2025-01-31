@@ -114,7 +114,13 @@ func validate(manifest: Dictionary, path: String) -> bool:
 	steam_workshop_id = ModLoaderUtils.get_string_from_dict(godot_details, "steam_workshop_id")
 
 	if not ModLoaderStore.ml_options.disable_game_version_validation:
-		_is_game_version_compatible(mod_id)
+		if ModLoaderStore.ml_options.custom_game_version_validation:
+			if ModLoaderStore.ml_options.custom_game_version_validation_callable:
+				ModLoaderStore.ml_options.custom_game_version_validation_callable.call(self)
+			else:
+				ModLoaderLog.error("No custom game version validation callable detected. Please provide a valid validation callable.", LOG_NAME)
+		else:
+			_is_game_version_compatible(mod_id)
 
 	is_mod_id_array_valid(mod_id, dependencies, "dependency")
 	is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility")

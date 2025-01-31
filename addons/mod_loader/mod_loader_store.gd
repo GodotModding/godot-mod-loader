@@ -177,6 +177,9 @@ func _update_ml_options_from_options_resource() -> void:
 		# Update from the options in the resource
 		ml_options = override_options
 
+		if not ml_options.customize_script_path.is_empty():
+			ml_options.customize_script_instance = load(ml_options.customize_script_path).new(self)
+
 
 func _exit_tree() -> void:
 	# Save the cache to the cache file.

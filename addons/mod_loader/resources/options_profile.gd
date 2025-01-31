@@ -6,7 +6,7 @@ extends Resource
 @export var enable_mods: bool = true
 ## List of mod ids that can't be turned on or off
 @export var locked_mods: Array[String] = []
-
+## List of mods that will not be loaded
 @export var disabled_mods: Array[String] = []
 ## Disables the requirement for the mod loader autoloads to be first
 @export var allow_modloader_autoloads_anywhere: bool = false
@@ -63,6 +63,49 @@ extends Resource
 @export var disable_restart := false
 
 @export_group("Mod Validation")
-## Activate this option to disable validation of the game version specified in [member semantic_version]  
-## and the mod's [member ModManifest.compatible_game_version].  
+## Activate this option to disable validation of the game version specified in [member semantic_version]
+## and the mod's [member ModManifest.compatible_game_version].
 @export var disable_game_version_validation := false
+## Activate this option to use a custom game version validation, use the [member customize_script_path]
+## to specify a script to customize the Mod Loader Options. In this script you have to set [member custom_game_version_validation_callable]
+## with a custom validation [Callable].
+##
+##[codeblock]
+##extends RefCounted
+##
+##
+##func _init(mod_loader_store: ModLoaderStore) -> void:
+##   mod_loader_store.ml_options.custom_game_version_validation_callable = custom_is_game_version_compatible
+##
+##
+##func custom_is_game_version_compatible(manifest: ModManifest) -> bool:
+##   print("! ☞ﾟヮﾟ)☞ CUSTOM VALIDATION HERE ☜ﾟヮﾟ☜) !")
+##
+##   var mod_id := manifest.get_mod_id()
+##
+##   for version in manifest.compatible_game_version:
+##      if not version == "pizza":
+##         manifest.validation_messages_warning.push_back(
+##            "The mod \"%s\" may not be compatible with the current game version.
+##            Enable at your own risk. (current game version: %s, mod compatible with game versions: %s)" %
+##            [mod_id, MyGlobalVars.MyGameVersion, manifest.compatible_game_version]
+##         )
+##         return false
+##
+##   return true
+##[/codeblock]
+##
+## Using the customization script allows you to place your custom code outside of the addon directory to simplify mod loader updates.
+##
+@export var custom_game_version_validation := false
+## This is the callable that is called during [ModManifest] validation.
+## See the example at [member disable_game_version_validation] to learn how to set this.
+var custom_game_version_validation_callable: Callable
+## Use this to specify a script to customize mod loader options.
+## Can be used to set custom options properties.
+## The customize_script is initialized with the [ModLoaderStore] as the first and only argument.
+## See [member disable_game_version_validation] for an example on how to use it.
+@export_file var customize_script_path: String
+
+## This is where the instance of [member customize_script_path] is stored.
+var customize_script_instance: RefCounted
