@@ -34,6 +34,8 @@ const MOD_LOADER_DEV_TOOL_URL := "https://github.com/GodotModding/godot-mod-tool
 
 var any_mod_hooked := false
 
+# Stores arrays of hook callables that will be applied to a function,
+# associated by a hash of the function name and script path
 # Example:
 # var modding_hooks := {
 # 	1917482423: [Callable, Callable],
@@ -41,9 +43,10 @@ var any_mod_hooked := false
 # }
 var modding_hooks := {}
 
+# Stores script paths and method names to be processed for hooks
 # Example:
 # var hooked_script_paths := {
-# 	"res://game/game.gd": true,
+# 	"res://game/game.gd": ["_ready", "do_something"],
 # }
 var hooked_script_paths := {}
 

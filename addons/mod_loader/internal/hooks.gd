@@ -20,7 +20,9 @@ static func add_hook(mod_callable: Callable, script_path: String, method_name: S
 	)
 
 	if not ModLoaderStore.hooked_script_paths.has(script_path):
-		ModLoaderStore.hooked_script_paths[script_path] = true
+		ModLoaderStore.hooked_script_paths[script_path] = [method_name]
+	elif not ModLoaderStore.hooked_script_paths[script_path].has(method_name):
+		ModLoaderStore.hooked_script_paths[script_path].append(method_name)
 
 
 static func call_hooks(vanilla_method: Callable, args: Array, hook_hash: int) -> Variant:
