@@ -100,7 +100,7 @@ static func install_script_hooks(vanilla_script_path: String, hook_script_path: 
 
 		var closest_vanilla: String = vanilla_methods.front()
 		if closest_vanilla.similarity(hook.name) > 0.8:
-			ModLoaderLog.debug(
+			ModLoaderLog.hint(
 				'Did you mean "%s" instead of "%s"?'
 				% [closest_vanilla, hook.name], LOG_NAME
 			)

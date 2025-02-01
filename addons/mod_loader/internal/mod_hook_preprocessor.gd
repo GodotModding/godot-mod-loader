@@ -332,10 +332,10 @@ func edit_vanilla_method(
 	return text
 
 
-func fix_method_super(method_name: String, func_body: RegExMatch, text: String) -> String:	
+func fix_method_super(method_name: String, func_body: RegExMatch, text: String) -> String:
 	if engine_version_hex < ENGINE_VERSION_HEX_4_2_2:
 		return fix_method_super_before_4_2_2(method_name, func_body, text)
-	
+
 	return regex_super_call.sub(
 		text, "super.%s" % method_name,
 		true, func_body.get_start(), func_body.get_end()
@@ -344,18 +344,18 @@ func fix_method_super(method_name: String, func_body: RegExMatch, text: String) 
 
 # https://github.com/godotengine/godot/pull/86052
 # Quote:
-# When the end argument of RegEx.sub was used, 
+# When the end argument of RegEx.sub was used,
 # it would truncate the Subject String before even doing the substitution.
 func fix_method_super_before_4_2_2(method_name: String, func_body: RegExMatch, text: String) -> String:
 	var text_after_func_body_end := text.substr(func_body.get_end())
-	
+
 	text = regex_super_call.sub(
 		text, "super.%s" % method_name,
 		true, func_body.get_start(), func_body.get_end()
 	)
-	
+
 	text = text + text_after_func_body_end
-	
+
 	return text
 
 
