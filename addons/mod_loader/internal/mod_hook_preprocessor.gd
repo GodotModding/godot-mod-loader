@@ -401,7 +401,7 @@ static func build_mod_hook_string(
 
 	return """
 {STATIC}func {METHOD_NAME}({METHOD_PARAMS}){RETURN_TYPE_STRING}:
-	{HOOK_CHECK}{RETURN}{AWAIT}_ModLoaderHooks.call_hooks{ASYNC}({METHOD_PREFIX}_{METHOD_NAME}, [{METHOD_ARGS}], {HOOK_ID}){HOOK_CHECK_ELSE}
+	{HOOK_CHECK}{RETURN}{AWAIT}_ModLoaderHooks.call_hooks{ASYNC}({METHOD_PREFIX}{METHOD_NAME}, [{METHOD_ARGS}], {HOOK_ID}){HOOK_CHECK_ELSE}
 """.format({
 		"METHOD_PREFIX": method_prefix,
 		"METHOD_NAME": method_name,
@@ -552,7 +552,7 @@ static func get_hook_check_else_string(
 	method_name: String,
 	method_arg_string_names_only: String
 ) -> String:
-	return "\n\telse:\n\t\t{RETURN}{AWAIT}{METHOD_PREFIX}_{METHOD_NAME}({METHOD_ARGS})".format(
+	return "\n\telse:\n\t\t{RETURN}{AWAIT}{METHOD_PREFIX}{METHOD_NAME}({METHOD_ARGS})".format(
 			{
 				"RETURN": return_string,
 				"AWAIT": await_string,
