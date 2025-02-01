@@ -50,7 +50,7 @@ var script_paths_hooked := {}
 func process_begin() -> void:
 	hashmap.clear()
 
-
+## Calls [method process_script] with additional logging
 func process_script_verbose(path: String, enable_hook_check := false, method_mask: Array[String] = []) -> String:
 	var start_time := Time.get_ticks_msec()
 	ModLoaderLog.debug("Start processing script at path: %s" % path, LOG_NAME)
@@ -59,6 +59,9 @@ func process_script_verbose(path: String, enable_hook_check := false, method_mas
 	return processed
 
 
+## [param path]: File path to the script to be processed.[br]
+## [param enable_hook_check]: Adds a check that ModLoaderStore.any_mod_hooked is [code]true[/code] to the processed method, reducing hash checks.[br]
+## [param method_mask]: If provided, only methods in this [Array] will be processed.[br]
 func process_script(path: String, enable_hook_check := false, method_mask: Array[String] = []) -> String:
 	var current_script := load(path) as GDScript
 	var source_code := current_script.source_code
@@ -94,7 +97,7 @@ func process_script(path: String, enable_hook_check := false, method_mask: Array
 			continue
 
 		# If a mask is provided, only methods with their name in the mask will be converted.
-		# Can't be pre-filtered since it removes prefixed methods required by the previous check.
+		# Can't be filtered before the loop since it removes prefixed methods required by the previous check.
 		if not method_mask.is_empty():
 			if not method.name in method_mask:
 				continue
@@ -398,10 +401,9 @@ static func build_mod_hook_string(
 			return_string, await_string, method_prefix, method_name, method_arg_string_names_only
 		) if enable_hook_check else ""
 
-
 	return """
 {STATIC}func {METHOD_NAME}({METHOD_PARAMS}){RETURN_TYPE_STRING}:
-	{HOOK_CHECK}{RETURN}{AWAIT}_ModLoaderHooks.call_hooks{ASYNC}({METHOD_PREFIX}_{METHOD_NAME}, [{METHOD_ARGS}], {HOOK_ID}){HOOK_CHECK_ELSE}
+	{HOOK_CHECK}{RETURN}{AWAIT}_ModLoaderHooks.call_hooks{ASYNC}({METHOD_PREFIX}{METHOD_NAME}, [{METHOD_ARGS}], {HOOK_ID}){HOOK_CHECK_ELSE}
 """.format({
 		"METHOD_PREFIX": method_prefix,
 		"METHOD_NAME": method_name,
@@ -552,7 +554,7 @@ static func get_hook_check_else_string(
 	method_name: String,
 	method_arg_string_names_only: String
 ) -> String:
-	return "\n\telse:\n\t\t{RETURN}{AWAIT}{METHOD_PREFIX}_{METHOD_NAME}({METHOD_ARGS})".format(
+	return "\n\telse:\n\t\t{RETURN}{AWAIT}{METHOD_PREFIX}{METHOD_NAME}({METHOD_ARGS})".format(
 			{
 				"RETURN": return_string,
 				"AWAIT": await_string,
