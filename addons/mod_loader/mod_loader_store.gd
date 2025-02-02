@@ -178,7 +178,7 @@ func _update_ml_options_from_options_resource() -> void:
 		ml_options = override_options
 
 		if not ml_options.customize_script_path.is_empty():
-			ml_options.customize_script_instance = load(ml_options.customize_script_path).new(self)
+			ml_options.customize_script_instance = load(ml_options.customize_script_path).new(ml_options)
 
 
 func _exit_tree() -> void:
