@@ -19,10 +19,10 @@ enum VERSION_VALIDATION {
 	##extends RefCounted
 	##
 	##
-	##func _init(mod_loader_store: ModLoaderStore) -> void:
+	##func _init(ml_options: ModLoaderOptionsProfile) -> void:
 	##   # Setting the custom_game_version_validation_callable here.
 	##   # Use `OS.has_feature(feature_tag)` to apply different validations for different feature tags.
-	##   mod_loader_store.ml_options.custom_game_version_validation_callable = custom_is_game_version_compatible
+	##   ml_options.custom_game_version_validation_callable = custom_is_game_version_compatible
 	##
 	##
 	##func custom_is_game_version_compatible(manifest: ModManifest) -> bool:
@@ -55,7 +55,12 @@ enum VERSION_VALIDATION {
 @export var disabled_mods: Array[String] = []
 ## Disables the requirement for the mod loader autoloads to be first
 @export var allow_modloader_autoloads_anywhere: bool = false
-
+## This script is loaded after [member ModLoaderStore.ml_options] has been initialized.
+## It is initialized with [member ModLoaderStore.ml_options] as an argument. Use it to apply any settings
+## that cannot be configured through the editor UI.
+## See [enum VERSION_VALIDATION] [code]CUSTOM[/code] or
+## [code]res://addons/mod_loader/options/example_customize_script.gd[/code] for an example.
+@export_file var customize_script_path: String
 
 @export_group("Logging")
 ## Sets the logging verbosity level.
@@ -117,11 +122,6 @@ enum VERSION_VALIDATION {
 ## This is the callable that is called during [ModManifest] validation.
 ## See the example at [enum VERSION_VALIDATION] [code]CUSTOM[/code] to learn how to set this.
 var custom_game_version_validation_callable: Callable
-## Use this to specify a script to customize mod loader options.
-## Can be used to set custom options properties.
-## The customize_script is initialized with the [ModLoaderStore] as the first and only argument.
-## See [enum VERSION_VALIDATION] [code]CUSTOM[/code] for an example on how to use it.
-@export_file var customize_script_path: String
 
 ## This is where the instance of [member customize_script_path] is stored.
 var customize_script_instance: RefCounted
