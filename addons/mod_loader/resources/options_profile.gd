@@ -4,45 +4,48 @@ extends Resource
 ## Class to define and store Mod Loader Options.
 
 
-## Settings for the game version validation.
+## Settings for game version validation.
 enum VERSION_VALIDATION {
-	## The default semver version validation
+	## Uses the default semantic versioning (semver) validation.
 	DEFAULT,
-	## Activate this option to disable validation of the game version specified in [member semantic_version]
+
+	## Disables validation of the game version specified in [member semantic_version]
 	## and the mod's [member ModManifest.compatible_game_version].
 	DISABLED,
-	## Activate this option to use a custom game version validation, use the [member customize_script_path]
-	## to specify a script to customize the Mod Loader Options. In this script you have to set [member custom_game_version_validation_callable]
-	## with a custom validation [Callable].
+
+	## Enables custom game version validation.
+	## Use [member customize_script_path] to specify a script that customizes the Mod Loader options.
+	## In this script, you must set [member custom_game_version_validation_callable]
+	## to a custom validation [Callable].
 	##
-	##[codeblock]
-	##extends RefCounted
+	## Example:
+	## [codeblock]
+	## extends RefCounted
 	##
+	## func _init(ml_options: ModLoaderOptionsProfile) -> void:
+	##    # Assign a custom validation function.
+	##    # Use `OS.has_feature(feature_tag)` to apply different validations for different platforms.
+	##    ml_options.custom_game_version_validation_callable = custom_is_game_version_compatible
 	##
-	##func _init(ml_options: ModLoaderOptionsProfile) -> void:
-	##   # Setting the custom_game_version_validation_callable here.
-	##   # Use `OS.has_feature(feature_tag)` to apply different validations for different feature tags.
-	##   ml_options.custom_game_version_validation_callable = custom_is_game_version_compatible
+	## func custom_is_game_version_compatible(manifest: ModManifest) -> bool:
+	##    print("! ☞ﾟヮﾟ)☞ CUSTOM VALIDATION HERE ☜ﾟヮﾟ☜) !")
 	##
+	##    var mod_id := manifest.get_mod_id()
 	##
-	##func custom_is_game_version_compatible(manifest: ModManifest) -> bool:
-	##   print("! ☞ﾟヮﾟ)☞ CUSTOM VALIDATION HERE ☜ﾟヮﾟ☜) !")
+	##    for version in manifest.compatible_game_version:
+	##        if not version == "pizza":
+	##            manifest.validation_messages_warning.push_back(
+	##                "The mod \"%s\" may not be compatible with the current game version.
+	##                Enable at your own risk. (current game version: %s, mod compatible with game versions: %s)" %
+	##                [mod_id, MyGlobalVars.MyGameVersion, manifest.compatible_game_version]
+	##            )
+	##            return false
 	##
-	##   var mod_id := manifest.get_mod_id()
+	##    return true
+	## [/codeblock]
 	##
-	##   for version in manifest.compatible_game_version:
-	##      if not version == "pizza":
-	##         manifest.validation_messages_warning.push_back(
-	##            "The mod \"%s\" may not be compatible with the current game version.
-	##            Enable at your own risk. (current game version: %s, mod compatible with game versions: %s)" %
-	##            [mod_id, MyGlobalVars.MyGameVersion, manifest.compatible_game_version]
-	##         )
-	##         return false
-	##
-	##   return true
-	##[/codeblock]
-	##
-	## Using the customization script allows you to place your custom code outside of the addon directory to simplify mod loader updates.
+	## Using a customization script allows you to keep your custom code outside the addon directory,
+	## making it easier to update the mod loader without affecting your modifications.
 	##
 	CUSTOM,
 }
@@ -56,10 +59,11 @@ enum VERSION_VALIDATION {
 ## Disables the requirement for the mod loader autoloads to be first
 @export var allow_modloader_autoloads_anywhere: bool = false
 ## This script is loaded after [member ModLoaderStore.ml_options] has been initialized.
-## It is initialized with [member ModLoaderStore.ml_options] as an argument. Use it to apply any settings
-## that cannot be configured through the editor UI.
-## See [enum VERSION_VALIDATION] [code]CUSTOM[/code] or
-## [code]res://addons/mod_loader/options/example_customize_script.gd[/code] for an example.
+## It is instantiated with [member ModLoaderStore.ml_options] as an argument.
+## Use this script to apply settings that cannot be configured through the editor UI.
+##
+## For an example, see [enum VERSION_VALIDATION] [code]CUSTOM[/code] or
+## [code]res://addons/mod_loader/options/example_customize_script.gd[/code].
 @export_file var customize_script_path: String
 
 @export_group("Logging")
@@ -116,12 +120,15 @@ enum VERSION_VALIDATION {
 @export var disable_restart := false
 
 @export_group("Mod Validation")
-## Settings for validation of the game version specified in [member semantic_version]
+## Defines how the game version should be validated.
+## This setting controls validation for the game version specified in [member semantic_version]
 ## and the mod's [member ModManifest.compatible_game_version].
-@export var game_version_validation:= VERSION_VALIDATION.DEFAULT
-## This is the callable that is called during [ModManifest] validation.
-## See the example at [enum VERSION_VALIDATION] [code]CUSTOM[/code] to learn how to set this.
+@export var game_version_validation := VERSION_VALIDATION.DEFAULT
+
+## Callable that is executed during [ModManifest] validation
+## if [member game_version_validation] is set to [enum VERSION_VALIDATION] [code]CUSTOM[/code].
+## See the example under [enum VERSION_VALIDATION] [code]CUSTOM[/code] to learn how to set this up.
 var custom_game_version_validation_callable: Callable
 
-## This is where the instance of [member customize_script_path] is stored.
+## Stores the instance of the script specified in [member customize_script_path].
 var customize_script_instance: RefCounted
