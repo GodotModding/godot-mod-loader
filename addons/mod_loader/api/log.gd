@@ -125,10 +125,10 @@ class ModLoaderLogEntry:
 
 
 ## Logs the error in red and a stack trace. Prefixed FATAL-ERROR.[br]
-## [br]
+## Always logged.[br]
 ## ===[br]
-## [b]Note:[/b][br]
-## [i]Stops execution in the editor[/i][br]
+## [b]Note:[color=bug "Breakpoint"][/color][/b][br]
+## Stops execution in the editor, use this when something really needs to be fixed.[br]
 ## ===[br]
 ## [br]
 ## [b]Parameters:[/b][br]
@@ -142,11 +142,7 @@ static func fatal(message: String, mod_name: String, only_once := false) -> void
 
 
 ## Logs the message and pushes an error. Prefixed ERROR.[br]
-## [br]
-## ===[br]
-## [b]Note:[/b][br]
-## Always logged[br]
-## ===[br]
+## Always logged.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## [param message] ([String]): The message to be logged as an error.[br]
@@ -159,11 +155,7 @@ static func error(message: String, mod_name: String, only_once := false) -> void
 
 
 ## Logs the message and pushes a warning. Prefixed WARNING.[br]
-## [br]
-## ===[br]
-## [b]Note:[/b][br]
-## [i]Note: Logged with verbosity level at or above warning (-v or --log-warning).[/i][br]
-## ===[br]
+## Logged with verbosity level at or above warning ([code]-v[/code] or [code]--log-warning[/code]).[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## [param message] ([String]): The message to be logged as a warning.[br]
@@ -176,10 +168,7 @@ static func warning(message: String, mod_name: String, only_once := false) -> vo
 
 
 ## Logs the message. Prefixed INFO.[br]
-## ===[br]
-## [b]Note:[/b][br]
-## [i]Note: Logged with verbosity level at or above info (-vv or --log-info).[/i][br]
-## ===[br]
+## Logged with verbosity level at or above info ([code]-vv[/code] or [code]--log-info[/code]).[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## [param message] ([String]): The message to be logged as an information.[br]
@@ -192,10 +181,7 @@ static func info(message: String, mod_name: String, only_once := false) -> void:
 
 
 ## Logs the message. Prefixed SUCCESS.[br]
-## ===[br]
-## [b]Note:[/b][br]
-## [i]Note: Logged with verbosity level at or above info (-vv or --log-info).[/i][br]
-## ===[br]
+## Logged with verbosity level at or above info ([code]-vv[/code] or [code]--log-info[/code]).[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## [param message] ([String]): The message to be logged as a success.[br]
@@ -208,10 +194,7 @@ static func success(message: String, mod_name: String, only_once := false) -> vo
 
 
 ## Logs the message. Prefixed DEBUG.[br]
-## ===[br]
-## [b]Note:[/b][br]
-## [i]Note: Logged with verbosity level at or above debug (-vvv or --log-debug).[/i][br]
-## ===[br]
+## Logged with verbosity level at or above debug ([code]-vvv[/code] or [code]--log-debug[/code]).[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## [param message] ([String]): The message to be logged as a debug.[br]
@@ -224,9 +207,11 @@ static func debug(message: String, mod_name: String, only_once := false) -> void
 
 
 ## Logs the message. Prefixed HINT and highligted.[br]
-## [br]
-## [i]Note: Logged with verbosity level at or above debug (-vvv) and in the editor only. Not written to mod loader log.[/i][br]
+## Logged with verbosity level at or above debug ([code]-vvv[/code] or [code]--log-debug[/code]) and in the editor only. Not written to mod loader log.[br]
+## ===[br]
+## [b]Note:[/b][br]
 ## Use this to help other developers debug issues by giving them error-specific hints.[br]
+## ===[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## [param message] ([String]): The message to be logged as a debug.[br]
@@ -239,10 +224,7 @@ static func hint(message: String, mod_name: String, only_once := false) -> void:
 
 
 ## Logs the message formatted with [method JSON.print]. Prefixed DEBUG.[br]
-## ===[br]
-## [b]Note:[/b][br]
-## [i]Note: Logged with verbosity level at or above debug (-vvv or --log-debug).[/i][br]
-## ===[br]
+## Logged with verbosity level at or above debug ([code]-vvv[/code] or [code]--log-debug[/code]).[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## [param message] ([String]): The message to be logged as a debug.[br]
