@@ -4,4 +4,4 @@
 .vscode
 
 # mac thing
-**/.DS_Store
+.DS_Store

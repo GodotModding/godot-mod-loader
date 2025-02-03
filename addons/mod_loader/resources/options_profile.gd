@@ -21,6 +21,7 @@ extends Resource
 ## [code]ModLoader:Dependency[/code] - ignore the exact name [br]
 ## [code]ModLoader:*[/code] - ignore all beginning with this name [br]
 @export var ignored_mod_names_in_log: Array[String] = []
+@export var hint_color := Color("#70bafa")
 
 @export_group("Game Data")
 ## Steam app id, can be found in the steam page url
