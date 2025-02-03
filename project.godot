@@ -1,0 +1,37 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Godot Mod Loader"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.3")
+config/icon="res://icon.png"
+
+[autoload]
+
+ModLoaderStore="*res://addons/mod_loader/mod_loader_store.gd"
+ModLoader="*res://addons/mod_loader/mod_loader.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray()
+
+[godots]
+
+version_hint=""
+
+[gui]
+
+common/drop_mouse_on_gui_input_disabled=true
+
+[physics]
+
+common/enable_pause_aware_picking=true
