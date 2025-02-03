@@ -22,11 +22,13 @@ const LOG_NAME := "ModLoader:Mod"
 ## Example: [code]"MOD/extensions/singletons/utils.gd"[/code][br]
 ## Inside the extender script, include [code]extends {target}[/code] where [code]{target}[/code] is the vanilla path.[br]
 ## Example: [code]extends "res://singletons/utils.gd"[/code].[br]
-##
-## [b]Note:[/b] Your extender script doesn't have to follow the same directory path as the vanilla file,
+## ===[br]
+## [b]Note:[/b][br]
+## Your extender script doesn't have to follow the same directory path as the vanilla file,
 ## but it's good practice to do so.[br]
-##
-## [br][b]Parameters:[/b][br]
+## ===[br]
+## [br]
+## [b]Parameters:[/b][br]
 ## - [param child_script_path] ([String]): The path to the mod's extender script.[br]
 ##
 ## [br][b]Returns:[/b] [code]void[/code][br]
@@ -193,8 +195,11 @@ static func add_hook(mod_callable: Callable, script_path: String, method_name: S
 ##
 ## Format: [code]{ "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }[/code][br]
 ##
-## [b]Note:[/b] You can find these easily in the project.godot file under `_global_script_classes`
+## ===[br]
+## [b]Tip:[/b][color=tip][/color][br]
+## You can find these easily in the project.godot file under `_global_script_classes`[br]
 ## (but you should only include classes belonging to your mod)[br]
+## ===[br]
 ##
 ## [br][b]Parameters:[/b][br]
 ## - [param new_global_classes] ([Array]): An array of class definitions to be registered.[br]
@@ -205,11 +210,13 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 	var _savecustom_error: int = ProjectSettings.save_custom(_ModLoaderPath.get_override_path())
 
 
-## Adds a translation file.
+## Adds a translation file.[br]
 ## [br]
-## [br]
-## [i]Note: The translation file should have been created in Godot already,
-## such as when importing a CSV file. The translation file should be in the format  [code]mytranslation.en.translation[/code].[/i][br]
+## ===[br]
+## [b]Note:[/b][br]
+## The [code].translation[/code] file should have been created by the Godot editor already, usually when importing a CSV file.
+## The translation file should named [code]name.langcode.translation[/code] -> [code]mytranslation.en.translation[/code].[br]
+## ===[br]
 ##
 ## [br][b]Parameters:[/b][br]
 ## - [param resource_path] ([String]): The path to the translation resource file.[br]
@@ -229,7 +236,10 @@ static func add_translation(resource_path: String) -> void:
 
 
 
-## [i]Note: This function requires Godot 4.3 or higher.[/i][br]
+## ===[br]
+## [b]Note:[/b][color=abstract "Version"][/color][br]
+## This function requires Godot 4.3 or higher.[br]
+## ===[br]
 ## [br]
 ## Refreshes a specific scene by marking it for refresh.[br]
 ## [br]

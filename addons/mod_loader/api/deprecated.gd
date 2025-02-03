@@ -27,7 +27,10 @@ static func deprecated_changed(old_method: String, new_method: String, since_ver
 
 
 ## Marks a method that has been entirely removed, with no replacement.[br]
-## Note: This should rarely be needed but is included for completeness.[br]
+## ===[br]
+## [b]Note:[/b][br]
+## This should rarely be needed but is included for completeness.[br]
+## ===[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## - [code]old_method[/code] ([String]): The name of the removed method.[br]
