@@ -43,6 +43,8 @@ static var verbosity: VERBOSITY_LEVEL = VERBOSITY_LEVEL.DEBUG
 ## Array of mods that should be ignored when logging messages (contains mod IDs as strings)
 static var ignored_mods: Array[String] = []
 
+## Highlighting color for hint type log messages
+static var hint_color := Color("#70bafa")
 
 ## This Sub-Class represents a log entry in ModLoader.
 class ModLoaderLogEntry:
