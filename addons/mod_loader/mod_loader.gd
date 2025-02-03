@@ -121,8 +121,8 @@ func _init() -> void:
 				# https://github.com/godotengine/godot/issues/16798
 				if is_in_editor:
 					ModLoaderLog.hint(
-						"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory.
-						If you have any unpacked mods in %s, they will not be loaded.Please unpack your mod ZIPs instead, and add them to %s" %
+						"Loading any resource packs (.zip/.pck) with `load_resource_pack` will WIPE the entire virtual res:// directory. " +
+						"If you have any unpacked mods in %s, they will not be loaded.Please unpack your mod ZIPs instead, and add them to %s" %
 						[_ModLoaderPath.get_unpacked_mods_dir_path(), _ModLoaderPath.get_unpacked_mods_dir_path()], LOG_NAME, true
 					)
 
