@@ -431,7 +431,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 				_write_to_log_file(log_entry.get_entry())
 		"hint":
 			if OS.has_feature("editor") and verbosity >= VERBOSITY_LEVEL.DEBUG:
-				print_rich("[color=#70bafa]%s[/color]" % (log_entry.get_prefix() + message))
+				print_rich("[color=%s]%s[/color]" % [hint_color.to_html(false), log_entry.get_prefix() + message])
 
 
 static func _is_mod_name_ignored(mod_name: String) -> bool:
