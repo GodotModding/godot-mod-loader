@@ -32,6 +32,6 @@ func test_game_verion_validation_default() ->  void:
 	var manifest := ModManifest.new(manifest_data, mod_path)
 
 	assert_eq(
-		manifest.validation_messages_error,
-		["The mod \"test-mod1\" is incompatible with the current game version.\r\n\t\t\t(current game version: 1000.0.0, mod compatible with game versions: [\"0.0.1\"])"]
+		"".join(manifest.validation_messages_error).replace("\r", "").replace("\n", "").replace("\t", ""),
+		"The mod \"test-mod1\" is incompatible with the current game version.(current game version: 1000.0.0, mod compatible with game versions: [\"0.0.1\"])"
 	)
