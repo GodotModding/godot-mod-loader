@@ -123,11 +123,10 @@ func _init():
 
 
 # Update ModLoader's options, via the custom options resource
-func _update_ml_options_from_options_resource() -> void:
-	# Path to the options resource
-	# See: res://addons/mod_loader/resources/options_current.gd
-	var ml_options_path := "res://addons/mod_loader/options/options.tres"
-
+#
+# Parameters:
+# - ml_options_path: Path to the options resource. See: res://addons/mod_loader/resources/options_current.gd
+func _update_ml_options_from_options_resource(ml_options_path := "res://addons/mod_loader/options/options.tres") -> void:
 	# Get user options for ModLoader
 	if not _ModLoaderFile.file_exists(ml_options_path) and not ResourceLoader.exists(ml_options_path):
 		ModLoaderLog.fatal(str("A critical file is missing: ", ml_options_path), LOG_NAME)
