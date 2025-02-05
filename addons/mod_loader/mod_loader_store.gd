@@ -176,8 +176,8 @@ func _update_ml_options_from_options_resource(ml_options_path := "res://addons/m
 		# Update from the options in the resource
 		ml_options = override_options
 
-		if not ml_options.customize_script_path.is_empty():
-			ml_options.customize_script_instance = load(ml_options.customize_script_path).new(ml_options)
+	if not ml_options.customize_script_path.is_empty():
+		ml_options.customize_script_instance = load(ml_options.customize_script_path).new(ml_options)
 
 
 func _exit_tree() -> void:
