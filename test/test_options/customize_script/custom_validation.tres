@@ -1,14 +1,14 @@
 [gd_resource type="Resource" script_class="ModLoaderOptionsProfile" load_steps=2 format=3 uid="uid://dky5648t3gmp2"]
 
-[ext_resource type="Script" path="res://addons/mod_loader/resources/options_profile.gd" id="1_rvpj7"]
+[ext_resource type="Script" path="res://addons/mod_loader/resources/options_profile.gd" id="1_3rpjy"]
 
 [resource]
-script = ExtResource("1_rvpj7")
+script = ExtResource("1_3rpjy")
 enable_mods = true
 locked_mods = Array[String]([])
 disabled_mods = Array[String]([])
 allow_modloader_autoloads_anywhere = false
-customize_script_path = "res://test_customize_script/customize_script.gd"
+customize_script_path = "res://test_options/customize_script/customize_script.gd"
 log_level = 3
 ignore_deprecated_errors = false
 ignored_mod_names_in_log = Array[String]([])
