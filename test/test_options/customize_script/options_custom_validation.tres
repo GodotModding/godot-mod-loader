@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ModLoaderCurrentOptions" load_steps=3 format=3 uid="uid://d08kklljebrnh"]
 
-[ext_resource type="Resource" uid="uid://dky5648t3gmp2" path="res://test_customize_script/custom_validation.tres" id="1_w2j12"]
+[ext_resource type="Resource" uid="uid://dky5648t3gmp2" path="res://test_options/customize_script/custom_validation.tres" id="1_w2j12"]
 [ext_resource type="Script" path="res://addons/mod_loader/resources/options_current.gd" id="3_rqlgo"]
 
 [resource]
