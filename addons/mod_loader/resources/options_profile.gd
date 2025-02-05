@@ -2,6 +2,8 @@ class_name ModLoaderOptionsProfile
 extends Resource
 ##
 ## Class to define and store Mod Loader Options.
+##
+## @tutorial(Example Customization Script): https://example.com
 
 
 ## Settings for game version validation.
@@ -17,36 +19,12 @@ enum VERSION_VALIDATION {
 	## Use [member customize_script_path] to specify a script that customizes the Mod Loader options.
 	## In this script, you must set [member custom_game_version_validation_callable]
 	## to a custom validation [Callable].
-	##
-	## Example:
-	## [codeblock]
-	## extends RefCounted
-	##
-	## func _init(ml_options: ModLoaderOptionsProfile) -> void:
-	##    # Assign a custom validation function.
-	##    # Use `OS.has_feature(feature_tag)` to apply different validations for different platforms.
-	##    ml_options.custom_game_version_validation_callable = custom_is_game_version_compatible
-	##
-	## func custom_is_game_version_compatible(manifest: ModManifest) -> bool:
-	##    print("! ☞ﾟヮﾟ)☞ CUSTOM VALIDATION HERE ☜ﾟヮﾟ☜) !")
-	##
-	##    var mod_id := manifest.get_mod_id()
-	##
-	##    for version in manifest.compatible_game_version:
-	##        if not version == "pizza":
-	##            manifest.validation_messages_warning.push_back(
-	##                "The mod \"%s\" may not be compatible with the current game version.
-	##                Enable at your own risk. (current game version: %s, mod compatible with game versions: %s)" %
-	##                [mod_id, MyGlobalVars.MyGameVersion, manifest.compatible_game_version]
-	##            )
-	##            return false
-	##
-	##    return true
-	## [/codeblock]
-	##
+	## [br]
+	## ===[br]
+	## [b]Note:[color=note "Easier Mod Loader Updates"][/color][/b][br]
 	## Using a customization script allows you to keep your custom code outside the addon directory,
-	## making it easier to update the mod loader without affecting your modifications.
-	##
+	## making it easier to update the mod loader without affecting your modifications. [br]
+	## ===[br]
 	CUSTOM,
 }
 
