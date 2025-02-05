@@ -22,7 +22,7 @@ enum VERSION_VALIDATION {
 	## [br]
 	## ===[br]
 	## [b]Note:[color=note "Easier Mod Loader Updates"][/color][/b][br]
-	## Using a customization script allows you to keep your custom code outside the addon directory,
+	## Using a custom script allows you to keep your code outside the addons directory,
 	## making it easier to update the mod loader without affecting your modifications. [br]
 	## ===[br]
 	CUSTOM,
