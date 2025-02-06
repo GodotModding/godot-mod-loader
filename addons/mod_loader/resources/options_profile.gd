@@ -3,7 +3,7 @@ extends Resource
 ##
 ## Class to define and store Mod Loader Options.
 ##
-## @tutorial(Example Customization Script): https://example.com
+## @tutorial(Example Customization Script): https://wiki.godotmodding.com/guides/integration/mod_loader_options/#game-version-validation
 
 
 ## Settings for game version validation.
