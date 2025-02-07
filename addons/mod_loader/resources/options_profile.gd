@@ -74,6 +74,12 @@ enum VERSION_VALIDATION {
 @export var load_from_steam_workshop: bool = false
 ## Indicates whether to load mods from the "mods" folder located at the game's install directory, or the overridden mods path.
 @export var load_from_local: bool = true
+## Indicates whether to load mods from  [code]"res://mods-unpacked"[/code] in the exported game.[br]
+## ===[br]
+## [b]Note:[color=note "Load from unpacked in the editor"][/color][/b][br]
+## In the editor, mods inside [code]"res://mods-unpacked"[/code] are always loaded. Use [member enable_mods] to disable mod loading completely.[br]
+## ===[br]
+@export var load_from_unpacked: bool = true
 ## Path to a folder containing mods [br]
 ## Mod zips should be directly in this folder
 @export_dir var override_path_to_mods = ""
