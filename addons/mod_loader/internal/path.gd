@@ -194,7 +194,11 @@ static func get_mod_paths_from_all_sources() -> Array[String]:
 	var mod_paths: Array[String] = []
 
 	var mod_dirs := get_dir_paths_in_dir(get_unpacked_mods_dir_path())
-	mod_paths.append_array(mod_dirs)
+
+	if ModLoaderStore.has_feature.editor or ModLoaderStore.ml_options.load_from_unpacked:
+		mod_paths.append_array(mod_dirs)
+	else:
+		ModLoaderLog.info("Loading mods from \"res://mods-unpacked\" is disabled.", LOG_NAME)
 
 	if ModLoaderStore.ml_options.load_from_local:
 		var mods_dir := get_path_to_mods()

@@ -111,6 +111,9 @@ var cache := {}
 # See: res://addons/mod_loader/resources/options_profile.gd
 var ml_options: ModLoaderOptionsProfile
 
+var has_feature := {
+	"editor" = OS.has_feature("editor")
+}
 
 # Methods
 # =============================================================================
