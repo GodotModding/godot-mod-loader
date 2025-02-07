@@ -80,7 +80,7 @@ func _init() -> void:
 	for mod_path in mod_paths:
 		var is_zip := _ModLoaderPath.is_zip(mod_path)
 
-		if not is_in_editor and not ModLoaderStore.ml_options.load_from_unpacked:
+		if not is_zip and not is_in_editor and not ModLoaderStore.ml_options.load_from_unpacked:
 			ModLoaderLog.debug("The mod from path \"%s\" is not loaded because loading from mods-unpacked has been disabled in the options." % mod_path, LOG_NAME)
 			continue
 
