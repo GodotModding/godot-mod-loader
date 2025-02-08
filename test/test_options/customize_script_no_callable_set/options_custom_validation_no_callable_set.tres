@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ModLoaderCurrentOptions" load_steps=3 format=3 uid="uid://c25j7kt7y8ora"]
+
+[ext_resource type="Resource" uid="uid://1gab2n8lgi60" path="res://test_options/customize_script_no_callable_set/custom_validation_no_callable_set.tres" id="1_xrqi6"]
+[ext_resource type="Script" path="res://addons/mod_loader/resources/options_current.gd" id="2_4o6bw"]
+
+[resource]
+script = ExtResource("2_4o6bw")
+current_options = ExtResource("1_xrqi6")
+feature_override_options = {}

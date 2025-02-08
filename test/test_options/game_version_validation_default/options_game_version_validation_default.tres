@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ModLoaderCurrentOptions" load_steps=3 format=3 uid="uid://emmn66l0e1n0"]
+
+[ext_resource type="Resource" uid="uid://bnc6gslxpnx3y" path="res://test_options/game_version_validation_default/game_version_validation_default.tres" id="1_ey6sk"]
+[ext_resource type="Script" path="res://addons/mod_loader/resources/options_current.gd" id="2_0ultl"]
+
+[resource]
+script = ExtResource("2_0ultl")
+current_options = ExtResource("1_ey6sk")
+feature_override_options = {}

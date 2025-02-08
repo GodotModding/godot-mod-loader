@@ -111,6 +111,9 @@ var cache := {}
 # See: res://addons/mod_loader/resources/options_profile.gd
 var ml_options: ModLoaderOptionsProfile
 
+var has_feature := {
+	"editor" = OS.has_feature("editor")
+}
 
 # Methods
 # =============================================================================
@@ -129,11 +132,10 @@ func _exit_tree() -> void:
 
 
 # Update ModLoader's options, via the custom options resource
-func _update_ml_options_from_options_resource() -> void:
-	# Path to the options resource
-	# See: res://addons/mod_loader/resources/options_current.gd
-	var ml_options_path := "res://addons/mod_loader/options/options.tres"
-
+#
+# Parameters:
+# - ml_options_path: Path to the options resource. See: res://addons/mod_loader/resources/options_current.gd
+func _update_ml_options_from_options_resource(ml_options_path := "res://addons/mod_loader/options/options.tres") -> void:
 	# Get user options for ModLoader
 	if not _ModLoaderFile.file_exists(ml_options_path) and not ResourceLoader.exists(ml_options_path):
 		ModLoaderLog.fatal(str("A critical file is missing: ", ml_options_path), LOG_NAME)
@@ -182,6 +184,9 @@ func _update_ml_options_from_options_resource() -> void:
 
 		# Update from the options in the resource
 		ml_options = override_options
+
+	if not ml_options.customize_script_path.is_empty():
+		ml_options.customize_script_instance = load(ml_options.customize_script_path).new(ml_options)
 
 
 # Update ModLoader's options, via CLI args
