@@ -2,7 +2,7 @@
 
 # GDScript Mod Loader
 
-<img alt="Godot Modding Logo" src="https://github.com/KANAjetzt/godot-mod-loader/assets/41547570/44df4f33-883e-4c1d-baac-06f87b0656f4" width="256" />
+<img alt="Godot Modding Logo" src="icon.png" width="256" />
 
 </div>
 
