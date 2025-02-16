@@ -13,6 +13,13 @@ const LOG_NAME := "ModLoader:Mod"
 
 
 ## Installs a script extension that extends a vanilla script.[br]
+## [br]
+## [b]Parameters:[/b][br]
+## - [param child_script_path] ([String]): The path to the mod's extender script.[br]
+## [br]
+## [b]Returns:[/b][br]
+## - No return value[br]
+## [br]
 ## This is the preferred way of modifying a vanilla [Script][br]
 ## Since Godot 4, extensions can cause issues with scripts that use [code]class_name[/code]
 ## and should be avoided if present.[br]
@@ -28,10 +35,6 @@ const LOG_NAME := "ModLoader:Mod"
 ## but it's good practice to do so.[br]
 ## ===[br]
 ## [br]
-## [b]Parameters:[/b][br]
-## - [param child_script_path] ([String]): The path to the mod's extender script.[br]
-##
-## [br][b]Returns:[/b] [code]void[/code][br]
 static func install_script_extension(child_script_path: String) -> void:
 	var mod_id: String = _ModLoaderPath.get_mod_dir(child_script_path)
 	var mod_data: ModData = get_mod_data(mod_id)
@@ -50,11 +53,20 @@ static func install_script_extension(child_script_path: String) -> void:
 
 
 ## Adds all methods from a file as hooks. [br]
-## The file needs to extend [Object] [br]
+## [br]
+## [b]Parameters:[/b][br]
+## - [param vanilla_script_path] ([String]): The path to the script which will be hooked.[br]
+## - [param hook_script_path] ([String]): The path to the script containing hooks.[br]
+## [br]
+## [b]Returns:[/b][br]
+## - No return value[br]
+## [br]
+## The file needs to extend [Object].[br]
 ## The methods in the file need to have the exact same name as the vanilla method
 ## they intend to hook, all mismatches will be ignored. [br]
 ## See: [method add_hook]
-##
+## [br]
+## [b]Examples:[/b][br]
 ## [codeblock]
 ## ModLoaderMod.install_script_hooks(
 ##     "res://tools/utilities.gd",
@@ -109,11 +121,8 @@ static func install_script_hooks(vanilla_script_path: String, hook_script_path: 
 
 
 ## Adds a hook, a custom mod function, to a vanilla method.[br]
-## Opposed to script extensions, hooks can be applied to scripts that use
-## [code]class_name[/code] without issues.[br]
-## If possible, prefer [method install_script_extension].[br]
-##
-## [br][b]Parameters:[/b][br]
+## [br]
+## [b]Parameters:[/b][br]
 ## - [param mod_callable] ([Callable]): The function that will executed when
 ##   the vanilla method is executed. When writing a mod callable, make sure
 ##   that it [i]always[/i] receives a [ModLoaderHookChain] object as first argument,
@@ -122,11 +131,15 @@ static func install_script_hooks(vanilla_script_path: String, hook_script_path: 
 ##   vanilla method is called. [br]
 ## - [param script_path] ([String]): Path to the vanilla script that holds the method.[br]
 ## - [param method_name] ([String]): The method the hook will be applied to.[br]
-##
-## [br][b]Returns:[/b] [code]void[/code][br][br]
-##
-## [b]Examples:[/b]
-##
+## [br]
+## [b]Returns:[/b][br][br]
+## - No return value[br]
+## [br]
+## Opposed to script extensions, hooks can be applied to scripts that use
+## [code]class_name[/code] without issues.[br]
+## If possible, prefer [method install_script_extension].[br]
+## [br]
+## [b]Examples:[/b][br]
 ## [br]
 ## Given the following vanilla script [code]main.gd[/code]
 ## [codeblock]
@@ -192,19 +205,20 @@ static func add_hook(mod_callable: Callable, script_path: String, method_name: S
 
 
 ## Registers an array of classes to the global scope since Godot only does that in the editor.[br]
-##
+## [br]
+## [b]Parameters:[/b][br]
+## - [param new_global_classes] ([Array]): An array of class definitions to be registered.[br]
+## [br]
+## [b]Returns:[/b][br]
+## - No return value[br]
+## [br]
 ## Format: [code]{ "base": "ParentClass", "class": "ClassName", "language": "GDScript", "path": "res://path/class_name.gd" }[/code][br]
-##
+## [br]
 ## ===[br]
 ## [b]Tip:[/b][color=tip][/color][br]
 ## You can find these easily in the project.godot file under `_global_script_classes`[br]
 ## (but you should only include classes belonging to your mod)[br]
 ## ===[br]
-##
-## [br][b]Parameters:[/b][br]
-## - [param new_global_classes] ([Array]): An array of class definitions to be registered.[br]
-##
-## [br][b]Returns:[/b] [code]void[/code][br]
 static func register_global_classes_from_array(new_global_classes: Array) -> void:
 	ModLoaderUtils.register_global_classes_from_array(new_global_classes)
 	var _savecustom_error: int = ProjectSettings.save_custom(_ModLoaderPath.get_override_path())
@@ -212,16 +226,16 @@ static func register_global_classes_from_array(new_global_classes: Array) -> voi
 
 ## Adds a translation file.[br]
 ## [br]
+## [b]Parameters:[/b][br]
+## - [param resource_path] ([String]): The path to the translation resource file.[br]
+## [b]Returns:[/b][br]
+## - No return value[br]
+## [br]
 ## ===[br]
 ## [b]Note:[/b][br]
 ## The [code].translation[/code] file should have been created by the Godot editor already, usually when importing a CSV file.
 ## The translation file should named [code]name.langcode.translation[/code] -> [code]mytranslation.en.translation[/code].[br]
 ## ===[br]
-##
-## [br][b]Parameters:[/b][br]
-## - [param resource_path] ([String]): The path to the translation resource file.[br]
-##
-## [br][b]Returns:[/b] [code]void[/code][br]
 static func add_translation(resource_path: String) -> void:
 	if not _ModLoaderFile.file_exists(resource_path):
 		ModLoaderLog.fatal("Tried to load a position resource from a file that doesn't exist. The invalid path was: %s" % [resource_path], LOG_NAME)
@@ -236,12 +250,18 @@ static func add_translation(resource_path: String) -> void:
 
 
 
+## Marks the given scene for to be refreshed. It will be refreshed at the correct point in time later.[br]
+## [br]
+## [b]Parameters:[/b][br]
+## - [param scene_path] ([String]): The path to the scene file to be refreshed.
+## [br]
+## [b]Returns:[/b][br]
+## - No return value[br]
+## [br]
 ## ===[br]
 ## [b]Note:[/b][color=abstract "Version"][/color][br]
 ## This function requires Godot 4.3 or higher.[br]
 ## ===[br]
-## [br]
-## Refreshes a specific scene by marking it for refresh.[br]
 ## [br]
 ## This function is useful if a script extension is not automatically applied.
 ## This situation can occur when a script is attached to a preloaded scene.
@@ -249,10 +269,6 @@ static func add_translation(resource_path: String) -> void:
 ## try to identify the scene to which it is attached and use this method to refresh it.
 ## This will reload already loaded scenes and apply the script extension.
 ## [br]
-## [br][b]Parameters:[/b][br]
-## - [param scene_path] ([String]): The path to the scene file to be refreshed.
-## [br]
-## [br][b]Returns:[/b] [code]void[/code][br]
 static func refresh_scene(scene_path: String) -> void:
 	if scene_path in ModLoaderStore.scenes_to_refresh:
 		return
@@ -262,13 +278,15 @@ static func refresh_scene(scene_path: String) -> void:
 
 
 ## Extends a specific scene by providing a callable function to modify it.
-## The callable receives an instance of the "vanilla_scene" as the first parameter.[br]
-##
-## [br][b]Parameters:[/b][br]
+## [br]
+## [b]Parameters:[/b][br]
 ## - [param scene_vanilla_path] ([String]): The path to the vanilla scene file.[br]
 ## - [param edit_callable] ([Callable]): The callable function to modify the scene.[br]
-##
-## [br][b]Returns:[/b] [code]void[/code][br]
+## [br]
+## [b]Returns:[/b][br]
+## - No return value[br]
+## [br]
+## The callable receives an instance of the "vanilla_scene" as the first parameter.[br]
 static func extend_scene(scene_vanilla_path: String, edit_callable: Callable) -> void:
 	if not ModLoaderStore.scenes_to_modify.has(scene_vanilla_path):
 		ModLoaderStore.scenes_to_modify[scene_vanilla_path] = []
@@ -277,11 +295,11 @@ static func extend_scene(scene_vanilla_path: String, edit_callable: Callable) ->
 
 
 ## Gets the [ModData] from the provided namespace.[br]
-##
-## [br][b]Parameters:[/b][br]
+## [br]
+## [b]Parameters:[/b][br]
 ## - [param mod_id] ([String]): The ID of the mod.[br]
-##
-## [br][b]Returns:[/b][br]
+## [br]
+## [b]Returns:[/b][br]
 ## - [ModData]: The [ModData] associated with the provided [code]mod_id[/code], or null if the [code]mod_id[/code] is invalid.[br]
 static func get_mod_data(mod_id: String) -> ModData:
 	if not ModLoaderStore.mod_data.has(mod_id):
@@ -292,27 +310,27 @@ static func get_mod_data(mod_id: String) -> ModData:
 
 
 ## Gets the [ModData] of all loaded Mods as [Dictionary].[br]
-##
-## [br][b]Returns:[/b][br]
+## [br]
+## [b]Returns:[/b][br]
 ## - [Dictionary]: A dictionary containing the [ModData] of all loaded mods.[br]
 static func get_mod_data_all() -> Dictionary:
 	return ModLoaderStore.mod_data
 
 
 ## Returns the path to the directory where unpacked mods are stored.[br]
-##
-## [br][b]Returns:[/b][br]
+## [br]
+## [b]Returns:[/b][br]
 ## - [String]: The path to the unpacked mods directory.[br]
 static func get_unpacked_dir() -> String:
 	return _ModLoaderPath.get_unpacked_mods_dir_path()
 
 
 ## Returns true if the mod with the given [code]mod_id[/code] was successfully loaded.[br]
-##
-## [br][b]Parameters:[/b][br]
+## [br]
+## [b]Parameters:[/b][br]
 ## - [param mod_id] ([String]): The ID of the mod.[br]
-##
-## [br][b]Returns:[/b][br]
+## [br]
+## [b]Returns:[/b][br]
 ## - [bool]: true if the mod is loaded, false otherwise.[br]
 static func is_mod_loaded(mod_id: String) -> bool:
 	if ModLoaderStore.is_initializing:

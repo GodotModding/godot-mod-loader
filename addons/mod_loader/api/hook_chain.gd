@@ -24,12 +24,14 @@ func _init(reference_object: Object, callbacks: Array) -> void:
 
 
 ## Will execute the next mod hook callable or vanilla method and return the result.[br]
-## Make sure to call this method [i][color=orange]once[/color][/i] somewhere in the [param mod_callable] you pass to [method ModLoaderMod.add_hook]. [br]
-##
+## [br]
 ## [br][b]Parameters:[/b][br]
 ## - [param args] ([Array]): An array of all arguments passed into the vanilla function. [br]
-##
-## [br][b]Returns:[/b] [Variant][br][br]
+## [br]
+## [br][b]Returns:[/b][br]
+## - [Variant]: Return value of the next function in the chain.[br]
+## [br]
+## Make sure to call this method [i][color=orange]once[/color][/i] somewhere in the [param mod_callable] you pass to [method ModLoaderMod.add_hook]. [br]
 func execute_next(args := []) -> Variant:
 	var callback := _get_next_callback()
 	if not callback:
@@ -43,13 +45,15 @@ func execute_next(args := []) -> Variant:
 
 
 ## Same as [method execute_next], but asynchronous - it can be used if a method uses [code]await[/code]. [br]
-## This hook needs to be used if the vanilla method uses [code]await[/code] somewhere. [br]
-## Make sure to call this method [i][color=orange]once[/color][/i] somewhere in the [param mod_callable] you pass to [method ModLoaderMod.add_hook]. [br]
-##
+## [br]
 ## [br][b]Parameters:[/b][br]
 ## - [param args] ([Array]): An array of all arguments passed into the vanilla function. [br]
-##
-## [br][b]Returns:[/b] [Variant][br][br]
+## [br]
+## [br][b]Returns:[/b][br]
+## - [Variant]: Return value of the next function in the chain.[br]
+## [br]
+## This hook needs to be used if the vanilla method uses [code]await[/code] somewhere. [br]
+## Make sure to call this method [i][color=orange]once[/color][/i] somewhere in the [param mod_callable] you pass to [method ModLoaderMod.add_hook]. [br]
 func execute_next_async(args := []) -> Variant:
 	var callback := _get_next_callback()
 	if not callback:

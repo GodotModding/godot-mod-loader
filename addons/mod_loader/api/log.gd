@@ -80,7 +80,8 @@ class ModLoaderLogEntry:
 	## [param _type] ([String]): The log type, which indicates the verbosity level of this entry.[br]
 	## [param _time] ([String]): The readable format of the time when this log entry was created.[br]
 	##[br]
-	## [b]Returns:[/b] [code]void[/code]
+	## [b]Returns:[/b][br]
+	## - No return value[br]
 	func _init(_mod_name: String, _message: String, _type: String, _time: String) -> void:
 		mod_name = _mod_name
 		message = _message
@@ -126,17 +127,19 @@ class ModLoaderLogEntry:
 
 ## Logs the error in red and a stack trace. Prefixed FATAL-ERROR.[br]
 ## Always logged.[br]
-## ===[br]
-## [b]Note:[color=bug "Breakpoint"][/color][/b][br]
-## Stops execution in the editor, use this when something really needs to be fixed.[br]
-## ===[br]
 ## [br]
 ## [b]Parameters:[/b][br]
 ## [param message] ([String]): The message to be logged as an error.[br]
 ## [param mod_name] ([String]): The name of the mod or ModLoader class associated with this log entry.[br]
 ## [param only_once] ([bool]): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.[br]
 ## [br]
-## [b]Returns:[/b] [code]void[/code]
+## [b]Returns:[/b][br]
+## - No return value[br]
+## [br]
+## ===[br]
+## [b]Note:[color=bug "Breakpoint"][/color][/b][br]
+## Stops execution in the editor, use this when something really needs to be fixed.[br]
+## ===[br]
 static func fatal(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "fatal-error", only_once)
 
@@ -149,7 +152,8 @@ static func fatal(message: String, mod_name: String, only_once := false) -> void
 ## [param mod_name] ([String]): The name of the mod or ModLoader class associated with this log entry.[br]
 ## [param only_once] ([bool]): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.[br]
 ## [br]
-## [b]Returns:[/b] [code]void[/code]
+## [b]Returns:[/b][br]
+## - No return value[br]
 static func error(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "error", only_once)
 
@@ -162,7 +166,8 @@ static func error(message: String, mod_name: String, only_once := false) -> void
 ## [param mod_name] ([String]): The name of the mod or ModLoader class associated with this log entry.[br]
 ## [param only_once] ([bool]): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.[br]
 ## [br]
-## [b]Returns:[/b] [code]void[/code]
+## [b]Returns:[/b][br]
+## - No return value[br]
 static func warning(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "warning", only_once)
 
@@ -175,7 +180,8 @@ static func warning(message: String, mod_name: String, only_once := false) -> vo
 ## [param mod_name] ([String]): The name of the mod or ModLoader class associated with this log entry.[br]
 ## [param only_once] ([bool]): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.[br]
 ## [br]
-## [b]Returns:[/b] [code]void[/code]
+## [b]Returns:[/b][br]
+## - No return value[br]
 static func info(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "info", only_once)
 
@@ -188,7 +194,8 @@ static func info(message: String, mod_name: String, only_once := false) -> void:
 ## [param mod_name] ([String]): The name of the mod or ModLoader class associated with this log entry.[br]
 ## [param only_once] ([bool]): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.[br]
 ## [br]
-## [b]Returns:[/b] [code]void[/code]
+## [b]Returns:[/b][br]
+## - No return value[br]
 static func success(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "success", only_once)
 
@@ -201,7 +208,8 @@ static func success(message: String, mod_name: String, only_once := false) -> vo
 ## [param mod_name] ([String]): The name of the mod or ModLoader class associated with this log entry.[br]
 ## [param only_once] ([bool]): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.[br]
 ## [br]
-## [b]Returns:[/b] [code]void[/code]
+## [b]Returns:[/b][br]
+## - No return value[br]
 static func debug(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "debug", only_once)
 
@@ -218,7 +226,8 @@ static func debug(message: String, mod_name: String, only_once := false) -> void
 ## [param mod_name] ([String]): The name of the mod or ModLoader class associated with this log entry.[br]
 ## [param only_once] ([bool]): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.[br]
 ## [br]
-## [b]Returns:[/b] [code]void[/code]
+## [b]Returns:[/b][br]
+## - No return value[br]
 static func hint(message: String, mod_name: String, only_once := false) -> void:
 	_log(message, mod_name, "hint", only_once)
 
@@ -231,8 +240,9 @@ static func hint(message: String, mod_name: String, only_once := false) -> void:
 ## [param json_printable] (Variant): The variable to be formatted and printed using [method JSON.print].[br]
 ## [param mod_name] ([String]): The name of the mod or ModLoader class associated with this log entry.[br]
 ## [param only_once] ([bool]): (Optional) If true, the log entry will only be logged once, even if called multiple times. Default is false.[br]
-##
-## [b]Returns:[/b] [code]void[/code]
+## [br]
+## [b]Returns:[/b][br]
+## - No return value[br]
 static func debug_json_print(message: String, json_printable, mod_name: String, only_once := false) -> void:
 	message = "%s\n%s" % [message, JSON.stringify(json_printable, "  ")]
 	_log(message, mod_name, "debug", only_once)

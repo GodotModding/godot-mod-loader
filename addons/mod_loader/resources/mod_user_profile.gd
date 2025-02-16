@@ -1,6 +1,5 @@
 class_name ModUserProfile
 extends Resource
-##
 ## This Class is used to represent a User Profile for the ModLoader.
 
 

@@ -17,10 +17,11 @@ const FILE_PATH_USER_PROFILES := "user://mod_user_profiles.json"
 ## Enables a mod - it will be loaded on the next game start[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]mod_id[/code] ([String]): The ID of the mod to enable.[br]
-## - [code]user_profile[/code] ([ModUserProfile]): (Optional) The user profile to enable the mod for. Default is the current user profile.[br]
+## - [param mod_id] ([String]): The ID of the mod to enable.[br]
+## - [param user_profile] ([ModUserProfile]): (Optional) The user profile to enable the mod for. Default is the current user profile.[br]
 ## [br]
-## [b]Returns:[/b] [bool]
+## [b]Returns:[/b][br] 
+## - [bool]: True on success.
 static func enable_mod(mod_id: String, user_profile:= ModLoaderStore.current_user_profile) -> bool:
 	return _set_mod_state(mod_id, user_profile.name, true)
 
@@ -28,10 +29,11 @@ static func enable_mod(mod_id: String, user_profile:= ModLoaderStore.current_use
 ## Forces a mod to enable, ensuring it loads at the next game start, regardless of load warnings.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]mod_id[/code] ([String]): The ID of the mod to enable.[br]
-## - [code]user_profile[/code] ([ModUserProfile]): (Optional) The user profile for which the mod will be enabled. Defaults to the current user profile.[br]
+## - [param mod_id] ([String]): The ID of the mod to enable.[br]
+## - [param user_profile] ([ModUserProfile]): (Optional) The user profile for which the mod will be enabled. Defaults to the current user profile.[br]
 ## [br]
-## [b]Returns:[/b] [bool]: True if the mod is successfully set to enable, False otherwise.
+## [b]Returns:[/b][br] 
+## - [bool]: True on success.
 static func force_enable_mod(mod_id: String, user_profile:= ModLoaderStore.current_user_profile) -> bool:
 	return _set_mod_state(mod_id, user_profile.name, true, true)
 
@@ -39,10 +41,11 @@ static func force_enable_mod(mod_id: String, user_profile:= ModLoaderStore.curre
 ## Disables a mod - it will not be loaded on the next game start[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]mod_id[/code] ([String]): The ID of the mod to disable.[br]
-## - [code]user_profile[/code] ([ModUserProfile]): (Optional) The user profile to disable the mod for. Default is the current user profile.[br]
+## - [param mod_id] ([String]): The ID of the mod to disable.[br]
+## - [param user_profile] ([ModUserProfile]): (Optional) The user profile to disable the mod for. Default is the current user profile.[br]
 ## [br]
-## [b]Returns:[/b] [bool]
+## [b]Returns:[/b][br] 
+## - [bool]: True on success.
 static func disable_mod(mod_id: String, user_profile := ModLoaderStore.current_user_profile) -> bool:
 	return _set_mod_state(mod_id, user_profile.name, false)
 
@@ -50,11 +53,12 @@ static func disable_mod(mod_id: String, user_profile := ModLoaderStore.current_u
 ## Sets the current config for a mod in a user profile's mod_list.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]mod_id[/code] ([String]): The ID of the mod.[br]
-## - [code]mod_config[/code] ([ModConfig]): The mod config to set as the current config.[br]
-## - [code]user_profile[/code] ([ModUserProfile]): (Optional) The user profile to update. Default is the current user profile.[br]
+## - [param mod_id] ([String]): The ID of the mod.[br]
+## - [param mod_config] ([ModConfig]): The mod config to set as the current config.[br]
+## - [param user_profile] ([ModUserProfile]): (Optional) The user profile to update. Default is the current user profile.[br]
 ## [br]
-## [b]Returns:[/b] [bool]
+## [b]Returns:[/b][br] 
+## - [bool]: True on success.
 static func set_mod_current_config(mod_id: String, mod_config: ModConfig, user_profile := ModLoaderStore.current_user_profile) -> bool:
 	# Verify whether the mod_id is present in the profile's mod_list.
 	if not _is_mod_id_in_mod_list(mod_id, user_profile.name):
@@ -75,9 +79,10 @@ static func set_mod_current_config(mod_id: String, mod_config: ModConfig, user_p
 ## Creates a new user profile with the given name, using the currently loaded mods as the mod list.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]profile_name[/code] ([String]): The name of the new user profile (must be unique).[br]
+## - [param profile_name] ([String]): The name of the new user profile (must be unique).[br]
 ## [br]
-## [b]Returns:[/b] [bool]
+## [b]Returns:[/b][br] 
+## - [bool]: True on success.
 static func create_profile(profile_name: String) -> bool:
 	# Verify that the profile name is not already in use
 	if ModLoaderStore.user_profiles.has(profile_name):
@@ -110,9 +115,10 @@ static func create_profile(profile_name: String) -> bool:
 ## Sets the current user profile to the given user profile.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]user_profile[/code] ([ModUserProfile]): The user profile to set as the current profile.[br]
+## - [param user_profile] ([ModUserProfile]): The user profile to set as the current profile.[br]
 ## [br]
-## [b]Returns:[/b] [bool]
+## [b]Returns:[/b][br] 
+## - [bool]: True on success.
 static func set_profile(user_profile: ModUserProfile) -> bool:
 	# Check if the profile name is unique
 	if not ModLoaderStore.user_profiles.has(user_profile.name):
@@ -134,9 +140,10 @@ static func set_profile(user_profile: ModUserProfile) -> bool:
 ## Deletes the given user profile.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]user_profile[/code] ([ModUserProfile]): The user profile to delete.[br]
+## - [param user_profile] ([ModUserProfile]): The user profile to delete.[br]
 ## [br]
-## [b]Returns:[/b] [bool]
+## [b]Returns:[/b][br] 
+## - [bool]: True on success.
 static func delete_profile(user_profile: ModUserProfile) -> bool:
 	# If the current_profile is about to get deleted log an error
 	if ModLoaderStore.current_user_profile.name == user_profile.name:
@@ -168,7 +175,8 @@ static func delete_profile(user_profile: ModUserProfile) -> bool:
 
 ## Returns the current user profile.[br]
 ## [br]
-## [b]Returns:[/b] [ModUserProfile]
+## [b]Returns:[/b][br] 
+## - [ModUserProfile]: The current profile or [code]null[/code] if not set.
 static func get_current() -> ModUserProfile:
 	return ModLoaderStore.current_user_profile
 
@@ -176,9 +184,10 @@ static func get_current() -> ModUserProfile:
 ## Returns the user profile with the given name.[br]
 ## [br]
 ## [b]Parameters:[/b][br]
-## - [code]profile_name[/code] ([String]): The name of the user profile to retrieve.[br]
+## - [param profile_name] ([String]): The name of the user profile to retrieve.[br]
 ## [br]
-## [b]Returns:[/b] [ModUserProfile] or [code]null[/code] if not found
+## [b]Returns:[/b][br] 
+## - [ModUserProfile]: The profile or [code]null[/code] if not found
 static func get_profile(profile_name: String) -> ModUserProfile:
 	if not ModLoaderStore.user_profiles.has(profile_name):
 		ModLoaderLog.error("User profile with name \"%s\" not found." % profile_name, LOG_NAME)
@@ -189,7 +198,8 @@ static func get_profile(profile_name: String) -> ModUserProfile:
 
 ## Returns an array containing all user profiles stored in ModLoaderStore.[br]
 ## [br]
-## [b]Returns:[/b] [Array] of [ModUserProfile] Objects
+## [b]Returns:[/b][br] 
+## - [Array]: A list of [ModUserProfile] Objects
 static func get_all_as_array() -> Array:
 	var user_profiles := []
 
@@ -199,9 +209,13 @@ static func get_all_as_array() -> Array:
 	return user_profiles
 
 
-# Returns true if the Mod User Profiles are initialized.
-# On the first execution of the game, user profiles might not yet be created.
-# Use this method to check if everything is ready to interact with the ModLoaderUserProfile API.
+## Returns true if the Mod User Profiles are initialized.
+## [br]
+## [b]Returns:[/b][br] 
+## - [bool]: True if profiles are ready.
+## [br]
+## On the first execution of the game, user profiles might not yet be created.
+## Use this method to check if everything is ready to interact with the ModLoaderUserProfile API.
 static func is_initialized() -> bool:
 	return _ModLoaderFile.file_exists(FILE_PATH_USER_PROFILES)
 

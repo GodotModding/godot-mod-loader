@@ -16,4 +16,5 @@ addons/mod_loader/mod_loader_setup.gd   export-ignore
 
 # Used during docs generation, but not relevant for addon users 
 project.godot							export-ignore
+main.tscn								export-ignore
 icon.png								export-ignore
