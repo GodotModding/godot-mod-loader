@@ -60,7 +60,7 @@ func process_script_verbose(path: String, enable_hook_check := false, method_mas
 
 
 ## [param path]: File path to the script to be processed.[br]
-## [param enable_hook_check]: Adds a check that ModLoaderStore.any_mod_hooked is [code]true[/code] to the processed method, reducing hash checks.[br]
+## [param enable_hook_check]: Adds a check that _ModLoaderHooks.any_mod_hooked is [code]true[/code] to the processed method, reducing hash checks.[br]
 ## [param method_mask]: If provided, only methods in this [Array] will be processed.[br]
 func process_script(path: String, enable_hook_check := false, method_mask: Array[String] = []) -> String:
 	var current_script := load(path) as GDScript
@@ -396,7 +396,7 @@ static func build_mod_hook_string(
 	var static_string := "static " if is_static else ""
 	var await_string := "await " if is_async else ""
 	var async_string := "_async" if is_async else ""
-	var hook_check := "if ModLoaderStore.any_mod_hooked:\n\t\t" if enable_hook_check else ""
+	var hook_check := "if _ModLoaderHooks.any_mod_hooked:\n\t\t" if enable_hook_check else ""
 	var hook_check_else := get_hook_check_else_string(
 			return_string, await_string, method_prefix, method_name, method_arg_string_names_only
 		) if enable_hook_check else ""

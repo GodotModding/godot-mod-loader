@@ -1,3 +1,4 @@
+@tool
 class_name _ModLoaderHooks
 extends Object
 
@@ -7,10 +8,13 @@ extends Object
 
 const LOG_NAME := "ModLoader:Hooks"
 
+static var any_mod_hooked := false
+
+
 ## Internal ModLoader method. [br]
 ## To add hooks from a mod use [method ModLoaderMod.add_hook].
 static func add_hook(mod_callable: Callable, script_path: String, method_name: String) -> void:
-	ModLoaderStore.any_mod_hooked = true
+	any_mod_hooked = true
 	var hash := get_hook_hash(script_path, method_name)
 	if not ModLoaderStore.modding_hooks.has(hash):
 		ModLoaderStore.modding_hooks[hash] = []

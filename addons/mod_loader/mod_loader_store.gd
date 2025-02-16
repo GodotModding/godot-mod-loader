@@ -32,8 +32,6 @@ const MOD_LOADER_DEV_TOOL_URL := "https://github.com/GodotModding/godot-mod-tool
 # =============================================================================
 
 
-var any_mod_hooked := false
-
 # Stores arrays of hook callables that will be applied to a function,
 # associated by a hash of the function name and script path
 # Example:
