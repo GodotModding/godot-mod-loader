@@ -8,6 +8,7 @@ extends RefCounted
 const LOG_NAME := "ModLoader:Path"
 const MOD_CONFIG_DIR_PATH := "user://mod_configs"
 const MOD_CONFIG_DIR_PATH_OLD := "user://configs"
+const USER_MODS_DIR_PATH := "user://mods"
 
 
 # Get the path to a local folder. Primarily used to get the  (packed) mods
@@ -291,3 +292,6 @@ static func handle_mod_config_path_deprecation() -> void:
 		ModLoaderLog.error("Failed to rename the config directory with error \"%s\"." % [error_string(error)], LOG_NAME)
 	else:
 		ModLoaderLog.success("Successfully renamed config directory to \"%s\"." % MOD_CONFIG_DIR_PATH, LOG_NAME)
+		
+static func get_path_to_user_mods() -> String:
+	return USER_MODS_DIR_PATH
