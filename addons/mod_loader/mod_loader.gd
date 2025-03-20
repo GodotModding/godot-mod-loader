@@ -243,6 +243,11 @@ func _load_mod_zips() -> Dictionary:
 		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
 		zip_data.merge(loaded_workshop_zip_data)
 
+	if ModLoaderStore.ml_options.user_data_mods:
+		var user_mods_folder_path := _ModLoaderPath.get_path_to_user_mods()
+		var loaded_user_zip_data := _ModLoaderFile.load_zips_in_folder(user_mods_folder_path)
+		zip_data.merge(loaded_user_zip_data)
+
 	return zip_data
 
 

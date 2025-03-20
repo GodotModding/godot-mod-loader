@@ -7,6 +7,7 @@ extends Reference
 
 const LOG_NAME := "ModLoader:Path"
 const MOD_CONFIG_DIR_PATH := "user://configs"
+const USER_MODS_DIR_PATH := "user://mods"
 
 
 # Get the path to a local folder. Primarily used to get the  (packed) mods
@@ -203,3 +204,7 @@ static func get_mod_dir(path: String) -> String:
 	var found_string: String = path.substr(start_index, end_index - start_index)
 
 	return found_string
+
+
+static func get_path_to_user_mods() -> String:
+	return USER_MODS_DIR_PATH

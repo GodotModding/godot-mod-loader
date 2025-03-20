@@ -130,6 +130,10 @@ var ml_options := {
 
 	# Array of mods that should be ignored when logging messages (contains mod IDs as strings)
 	ignored_mod_names_in_log = [],
+
+	# If true, ModLoader will load mod ZIPs from the user data directory,
+	# instead of the default location (res://mods)
+	user_data_mods = false,
 }
 
 
