@@ -210,6 +210,9 @@ static func get_mod_paths_from_all_sources() -> Array[String]:
 
 	if ModLoaderStore.ml_options.load_from_steam_workshop:
 		mod_paths.append_array(_ModLoaderSteam.find_steam_workshop_zips())
+	
+	if ModLoaderStore.ml_options.user_data_mods:
+		mod_paths.append_array(get_zip_paths_in(get_path_to_user_mods()))
 
 	return mod_paths
 
