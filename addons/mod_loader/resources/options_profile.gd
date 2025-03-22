@@ -16,3 +16,4 @@ export (String, DIR) var override_path_to_configs = ""
 export (String, DIR) var override_path_to_workshop = ""
 export (bool) var ignore_deprecated_errors = false
 export (Array, String) var ignored_mod_names_in_log = []
+export (bool) var user_data_mods = false

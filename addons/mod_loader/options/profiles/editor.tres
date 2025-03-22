@@ -15,3 +15,4 @@ override_path_to_configs = ""
 override_path_to_workshop = ""
 ignore_deprecated_errors = true
 ignored_mod_names_in_log = [  ]
+user_data_mods = false
