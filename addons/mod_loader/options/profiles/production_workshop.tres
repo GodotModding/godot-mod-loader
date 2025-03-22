@@ -17,3 +17,4 @@ ignore_deprecated_errors = false
 ignored_mod_names_in_log = []
 load_from_steam_workshop = true
 load_from_local = true
+user_data_mods = false

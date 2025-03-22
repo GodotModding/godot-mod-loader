@@ -11,3 +11,4 @@ steam_workshop_enabled = false
 override_path_to_mods = ""
 override_path_to_configs = ""
 override_path_to_workshop = ""
+user_data_mods = false

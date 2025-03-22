@@ -117,3 +117,5 @@ var custom_game_version_validation_callable: Callable
 
 ## Stores the instance of the script specified in [member customize_script_path].
 var customize_script_instance: RefCounted
+
+export 
