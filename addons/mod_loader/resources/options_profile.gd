@@ -118,6 +118,9 @@ var custom_game_version_validation_callable: Callable
 ## Stores the instance of the script specified in [member customize_script_path].
 var customize_script_instance: RefCounted
 
-@export var user_data_mods: bool = true
+## Indicates whether to load mods from the "mods" folder located in the game's user data directory (user://)
+@export var load_from_user_data_mods: bool = true
 
+## Alternative path to a folder containing mods (originally within user://). [br]
+## Mod zips should be directly in this folder
 @export_dir var override_path_to_user_data_mods := ""
