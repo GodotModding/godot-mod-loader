@@ -119,3 +119,5 @@ var custom_game_version_validation_callable: Callable
 var customize_script_instance: RefCounted
 
 @export var user_data_mods: bool = true
+
+@export_dir var override_path_to_user_data_mods := ""

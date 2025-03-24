@@ -18,3 +18,4 @@ ignored_mod_names_in_log = []
 load_from_steam_workshop = false
 load_from_local = true
 user_data_mods = false
+override_path_to_user_data_mods

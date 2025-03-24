@@ -13,3 +13,4 @@ override_path_to_mods = ""
 override_path_to_configs = ""
 override_path_to_workshop = ""
 user_data_mods = false
+override_path_to_user_data_mods = ""

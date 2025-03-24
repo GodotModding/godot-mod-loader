@@ -297,4 +297,7 @@ static func handle_mod_config_path_deprecation() -> void:
 		ModLoaderLog.success("Successfully renamed config directory to \"%s\"." % MOD_CONFIG_DIR_PATH, LOG_NAME)
 		
 static func get_path_to_user_mods() -> String:
+	if ModLoaderStore:
+		if ModLoaderStore.ml_options.override_path_to_user_data_mods:
+			return ModLoaderStore.ml_options.override_path_to_user_data_mods
 	return USER_MODS_DIR_PATH

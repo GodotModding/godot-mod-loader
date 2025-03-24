@@ -24,3 +24,4 @@ override_hook_pack_name = ""
 restart_notification_scene_path = "res://addons/mod_loader/restart_notification.tscn"
 disable_restart = false
 game_version_validation = 0
+override_path_to_user_data_mods = ""
