@@ -150,13 +150,13 @@ func handle_override_cfg() -> void:
 # Creates the project.binary file, adds it to the pck and removes the no longer needed project.binary file.
 func handle_injection() -> void:
 	# If GodotPCKExplorer executable doesn't exist, we can't continue
-		if not FileAccess.file_exists(path.pck_explorer):
-			ModLoaderSetupLog.error("GodotPCKExplorer executable isn't present, cannot continue with injection", LOG_NAME)
-			OS.alert(
-					"The GodotPCKExplorer executable isn't present under addons/mod_loader/vendor/GodotPCKExplorer, cannot inject ModLoader into pck file"
-			)
-			pck_explorer_not_found = true
-			return
+	if not FileAccess.file_exists(path.pck_explorer):
+		ModLoaderSetupLog.error("GodotPCKExplorer executable isn't present, cannot continue with injection", LOG_NAME)
+		OS.alert(
+				"The GodotPCKExplorer executable isn't present under addons/mod_loader/vendor/GodotPCKExplorer, cannot inject ModLoader into pck file"
+		)
+		pck_explorer_not_found = true
+		return
 
 	ModLoaderSetupLog.debug("Start injection", LOG_NAME)
 	# Create temp dir
