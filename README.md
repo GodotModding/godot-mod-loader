@@ -51,4 +51,5 @@ For more details and updates join us on [our Discord](https://discord.godotmoddi
 - [Dome Keeper](https://store.steampowered.com/app/1637320/Dome_Keeper/) by 
 [Bippinbits](https://store.steampowered.com/developer/bippinbits)
 - [Endoparasitic](https://store.steampowered.com/app/2124780/Endoparasitic/) by [Miziziziz](https://www.youtube.com/@Miziziziz)
+- [Parking Garage Rally Circuit](https://store.steampowered.com/app/2737300/Parking_Garage_Rally_Circuit/) by [Walaber Entertainment LLC](https://store.steampowered.com/developer/walaber)
 - [Windowkill](https://store.steampowered.com/app/2726450/Windowkill/) by [torcado](https://store.steampowered.com/developer/torcado)
