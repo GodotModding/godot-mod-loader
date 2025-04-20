@@ -19,6 +19,7 @@ var is_only_setup: bool = ModLoaderSetupUtils.is_running_with_command_line_arg("
 var is_setup_create_override_cfg: bool = ModLoaderSetupUtils.is_running_with_command_line_arg(
 	"--setup-create-override-cfg"
 )
+var pck_explorer_not_found: bool = false
 
 
 func _init() -> void:
@@ -78,6 +79,9 @@ func setup_modloader() -> void:
 		# If the --only-setup cli argument is passed, quit with exit code 0
 		is_only_setup:
 			quit(0)
+		# If GodotPCKExplorer executable doesn't exist, quit with exit code 1
+		pck_explorer_not_found:
+			quit(1)
 		# If no cli argument is passed, show message with OS.alert() and user has to restart the game
 		_:
 			OS.alert(
@@ -145,6 +149,15 @@ func handle_override_cfg() -> void:
 
 # Creates the project.binary file, adds it to the pck and removes the no longer needed project.binary file.
 func handle_injection() -> void:
+	# If GodotPCKExplorer executable doesn't exist, we can't continue
+	if not FileAccess.file_exists(path.pck_explorer):
+		ModLoaderSetupLog.error("GodotPCKExplorer executable isn't present, cannot continue with injection", LOG_NAME)
+		OS.alert(
+				"The GodotPCKExplorer executable isn't present under addons/mod_loader/vendor/GodotPCKExplorer, cannot inject ModLoader into pck file"
+		)
+		pck_explorer_not_found = true
+		return
+
 	ModLoaderSetupLog.debug("Start injection", LOG_NAME)
 	# Create temp dir
 	ModLoaderSetupLog.debug('Creating temp dir at "%s"' % path.temp_dir_path, LOG_NAME)
