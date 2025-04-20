@@ -292,6 +292,7 @@ func setup_file_data() -> void:
 		path.temp_dir_path
 		+ "/.godot/global_script_class_cache.cfg"
 	)
+
 	# can be supplied to override the exe_name
 	file_name.cli_arg_exe = ModLoaderSetupUtils.get_cmd_line_arg_value("--exe-name")
 	# can be supplied to override the pck_name
