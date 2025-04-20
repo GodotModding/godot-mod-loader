@@ -97,7 +97,7 @@ func reorder_autoloads() -> void:
 			original_autoloads[name] = value
 
 	ModLoaderSetupLog.info(
-		"Start reorder autoloads current state: %s" % JSON.stringify(original_autoloads, "\t")
+		"Start reorder autoloads current state: %s" % JSON.stringify(original_autoloads, "\t"), LOG_NAME
 	)
 
 	for autoload in original_autoloads.keys():
@@ -123,7 +123,7 @@ func reorder_autoloads() -> void:
 			new_autoloads[name] = value
 
 	ModLoaderSetupLog.info(
-		"Reorder autoloads completed - new state: %s" % JSON.stringify(new_autoloads, "\t")
+		"Reorder autoloads completed - new state: %s" % JSON.stringify(new_autoloads, "\t"), LOG_NAME
 	)
 
 
@@ -231,7 +231,7 @@ func inject(pck_version: String = get_pck_version()) -> void:
 		pck_version
 	]
 	ModLoaderSetupLog.debug(
-		"Injecting temp dir content into .pck: %s %s", [path.pck_explorer, arguments], LOG_NAME
+		"Injecting temp dir content into .pck: %s %s" % [path.pck_explorer, arguments], LOG_NAME
 	)
 	# For unknown reasons the output only displays a single "[" - so only the executed arguments are logged.
 	var _exit_code_inject := OS.execute(path.pck_explorer, arguments)
@@ -240,7 +240,7 @@ func inject(pck_version: String = get_pck_version()) -> void:
 func split_pck() -> void:
 	var arguments := ["-s", path.exe]
 	ModLoaderSetupLog.debug(
-		"Splitting .pck from .exe: %s %s", [path.pck_explorer, arguments], LOG_NAME
+		"Splitting .pck from .exe: %s %s" % [path.pck_explorer, arguments], LOG_NAME
 	)
 	# For unknown reasons the output only displays a single "[" - so only the executed arguments are logged.
 	var _exit_code_split_pck := OS.execute(path.pck_explorer, arguments)
