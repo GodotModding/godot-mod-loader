@@ -69,6 +69,13 @@ func setup_modloader() -> void:
 	if is_setup_create_override_cfg:
 		handle_override_cfg()
 	else:
+		# If GodotPCKExplorer executable doesn't exist, we can't continue
+		if not FileAccess.file_exists(path.pck_explorer):
+			ModLoaderSetupLog.error("GodotPCKExplorer executable isn't present, cannot continue with injection", LOG_NAME)
+			OS.alert(
+					"The GodotPCKExplorer executable isn't present under addons/mod_loader/vendor/GodotPCKExplorer, cannot inject ModLoader into pck file"
+			)
+			pck_explorer_not_found = true
 		handle_injection()
 
 	# ModLoader is set up. A game restart is required to apply the ProjectSettings.
@@ -78,6 +85,9 @@ func setup_modloader() -> void:
 		# If the --only-setup cli argument is passed, quit with exit code 0
 		is_only_setup:
 			quit(0)
+		# If GodotPCKExplorer executable doesn't exist, quit with exit code 1
+		pck_explorer_not_found:
+			quit(1)
 		# If no cli argument is passed, show message with OS.alert() and user has to restart the game
 		_:
 			OS.alert(
