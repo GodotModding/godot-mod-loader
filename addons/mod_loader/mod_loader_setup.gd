@@ -97,7 +97,8 @@ func reorder_autoloads() -> void:
 			original_autoloads[name] = value
 
 	ModLoaderSetupLog.info(
-		"Start reorder autoloads current state: %s" % JSON.stringify(original_autoloads, "\t")
+		"Start reorder autoloads current state: %s" % JSON.stringify(original_autoloads, "\t"),
+		LOG_NAME
 	)
 
 	for autoload in original_autoloads.keys():
@@ -123,7 +124,8 @@ func reorder_autoloads() -> void:
 			new_autoloads[name] = value
 
 	ModLoaderSetupLog.info(
-		"Reorder autoloads completed - new state: %s" % JSON.stringify(new_autoloads, "\t")
+		"Reorder autoloads completed - new state: %s" % JSON.stringify(new_autoloads, "\t"),
+		LOG_NAME
 	)
 
 
@@ -145,6 +147,10 @@ func handle_override_cfg() -> void:
 
 # Creates the project.binary file, adds it to the pck and removes the no longer needed project.binary file.
 func handle_injection() -> void:
+	var is_embedded: bool = not FileAccess.file_exists(path.pck)
+	var injection_path: String = path.exe if is_embedded else path.pck
+	var file_extension := injection_path.get_extension()
+
 	ModLoaderSetupLog.debug("Start injection", LOG_NAME)
 	# Create temp dir
 	ModLoaderSetupLog.debug('Creating temp dir at "%s"' % path.temp_dir_path, LOG_NAME)
@@ -167,83 +173,59 @@ func handle_injection() -> void:
 	DirAccess.make_dir_recursive_absolute(path.temp_dir_path.path_join(".godot"))
 	# Save the global class cache config file
 	combined_global_script_class_cache_file.save(path.temp_global_script_class_cache_path)
-	get_pck_version()
-	# Check if .pck is embedded split it from the .exe
-	if not FileAccess.file_exists(path.pck):
-		split_pck()
 
-	inject()
+	inject(injection_path, is_embedded)
 
 	# Rename vanilla
-	DirAccess.rename_absolute(
-		path.pck,
-		path.pck.trim_suffix("%s.pck" % file_name.pck).path_join("%s-vanilla.pck" % file_name.pck)
-	)
-	ModLoaderSetupLog.debug(
-		(
-			'Renamed "%s" to "%s"'
-			% [
-				path.pck,
-				path.pck.trim_suffix("%s.pck" % file_name.pck).path_join(
-					"%s-vanilla.pck" % file_name.pck
-				)
-			]
-		),
-		LOG_NAME
-	)
+	var modded_path := "%s-modded.%s" % [injection_path.get_basename(), file_extension]
+	var vanilla_path := "%s-vanilla.%s" % [injection_path.get_basename(), file_extension]
+
+	DirAccess.rename_absolute(injection_path, vanilla_path)
+	ModLoaderSetupLog.debug('Renamed "%s" to "%s"' % [injection_path, vanilla_path], LOG_NAME)
+
 	# Rename modded
-	DirAccess.rename_absolute(
-		path.game_base_dir.path_join("%s-modded.pck" % file_name.pck),
-		"%s.pck" % path.game_base_dir.path_join(file_name.pck)
-	)
-	ModLoaderSetupLog.debug(
-		(
-			'Renamed "%s" to "%s"'
-			% [
-				path.game_base_dir.path_join("%s-modded.pck" % file_name.pck),
-				"%s.pck" % path.game_base_dir.path_join(file_name.pck)
-			]
-		),
-		LOG_NAME
-	)
+	DirAccess.rename_absolute(modded_path, injection_path)
+	ModLoaderSetupLog.debug('Renamed "%s" to "%s"' % [modded_path, injection_path], LOG_NAME)
 
 	clean_up()
 
 
-func get_pck_version() -> String:
-	var engine_version_info := Engine.get_version_info()
-	# Godot 4 pck version always starts with a 2 (at least for now).
-	var pck_version := (
-		"2.%s.%s.%s"
-		% [engine_version_info.major, engine_version_info.minor, engine_version_info.patch]
-	)
-	ModLoaderSetupLog.debug("The pck version is: %s" % pck_version, LOG_NAME)
-	return pck_version
-
-
 # Add modified binary to the pck
-func inject(pck_version: String = get_pck_version()) -> void:
-	var arguments := [
-		"-pc",
-		path.pck,
-		path.temp_dir_path,
-		path.game_base_dir.path_join("%s-modded.pck" % file_name.pck),
-		pck_version
-	]
-	ModLoaderSetupLog.debug(
-		"Injecting temp dir content into .pck: %s %s", [path.pck_explorer, arguments], LOG_NAME
+func inject(injection_path: String, is_embedded := false) -> void:
+	var arguments := []
+	arguments.push_back("--headless")
+	arguments.push_back("--pck-patch=%s" % injection_path)
+	if is_embedded:
+		arguments.push_back("--embed=%s" % injection_path)
+	arguments.push_back(
+		"--patch-file=%s=%s" % [path.temp_project_binary_path, path.project_binary_path_internal]
 	)
-	# For unknown reasons the output only displays a single "[" - so only the executed arguments are logged.
-	var _exit_code_inject := OS.execute(path.pck_explorer, arguments)
-
-
-func split_pck() -> void:
-	var arguments := ["-s", path.exe]
-	ModLoaderSetupLog.debug(
-		"Splitting .pck from .exe: %s %s", [path.pck_explorer, arguments], LOG_NAME
+	arguments.push_back(
+		(
+			"--patch-file=%s=%s"
+			% [
+				path.temp_global_script_class_cache_path,
+				path.global_script_class_cache_path_internal
+			]
+		)
 	)
+	arguments.push_back(
+		(
+			"--output=%s"
+			% path.game_base_dir.path_join(
+				(
+					"%s-modded.%s"
+					% [file_name[injection_path.get_extension()], injection_path.get_extension()]
+				)
+			)
+		)
+	)
+
 	# For unknown reasons the output only displays a single "[" - so only the executed arguments are logged.
-	var _exit_code_split_pck := OS.execute(path.pck_explorer, arguments)
+	ModLoaderSetupLog.debug("Injection started: %s %s" % [path.gdre, arguments], LOG_NAME)
+	var output := []
+	var _exit_code_inject := OS.execute(path.gdre, arguments, output)
+	ModLoaderSetupLog.debug("Injection completed: %s" % output, LOG_NAME)
 
 
 # Removes the temp files
@@ -268,17 +250,15 @@ func setup_file_data() -> void:
 	path.game_base_dir = ModLoaderSetupUtils.get_local_folder_dir()
 	# C:/path/to/game/addons/mod_loader
 	path.mod_loader_dir = path.game_base_dir + "addons/mod_loader/"
-	path.pck_explorer = (
-		path.mod_loader_dir
-		+ get_pck_explorer_path()
-	)
-	# ! pck explorer doesn't like trailing `/` in a path !
+	path.gdre = path.mod_loader_dir + get_gdre_path()
 	path.temp_dir_path = path.mod_loader_dir + "setup/temp"
 	path.temp_project_binary_path = path.temp_dir_path + "/project.binary"
 	path.temp_global_script_class_cache_path = (
 		path.temp_dir_path
 		+ "/.godot/global_script_class_cache.cfg"
 	)
+	path.global_script_class_cache_path_internal = "res://.godot/global_script_class_cache.cfg"
+	path.project_binary_path_internal = "res://project.binary"
 	# can be supplied to override the exe_name
 	file_name.cli_arg_exe = ModLoaderSetupUtils.get_cmd_line_arg_value("--exe-name")
 	# can be supplied to override the pck_name
@@ -347,13 +327,11 @@ func get_combined_global_script_class_cache() -> ConfigFile:
 	return global_script_class_cache_combined
 
 
-func get_pck_explorer_path() -> String:
-	var pck_explorer_path := "vendor/GodotPCKExplorer/GodotPCKExplorer.Console"
-
+func get_gdre_path() -> String:
 	if OS.get_name() == "Windows":
-		return "%s.exe" % pck_explorer_path
+		return "vendor/GDRE/gdre_tools.exe"
 
-	return pck_explorer_path
+	return ""
 
 
 func restart() -> void:
