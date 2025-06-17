@@ -43,7 +43,11 @@ static var verbosity: VERBOSITY_LEVEL = VERBOSITY_LEVEL.DEBUG
 ## Array of mods that should be ignored when logging messages (contains mod IDs as strings)
 static var ignored_mods: Array[String] = []
 
-## Highlighting color for hint type log messages
+# TODO: use options profile here instead of hard coding
+static var warning_color := Color("#ffff00")
+static var success_color := Color("#008000")
+static var info_color := Color("#4169e1")
+static var debug_color := Color("#ffffff")
 static var hint_color := Color("#70bafa")
 
 ## This Sub-Class represents a log entry in ModLoader.
@@ -391,6 +395,12 @@ static func get_all_entries_as_string(log_entries: Array) -> Array:
 # Internal log functions
 # =============================================================================
 
+static func _print_rich(prefix: String, message: String, color: String):
+	if OS.has_feature("editor"):
+		print_rich("[color=%s][b]%s[/b][/color]%s" % [color, prefix, message])
+	else:
+		print(prefix + message)
+
 static func _log(message: String, mod_name: String, log_type: String = "info", only_once := false) -> void:
 	if _is_mod_name_ignored(mod_name):
 		return
@@ -427,20 +437,24 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 			_write_to_log_file(log_entry.get_entry())
 		"warning":
 			if verbosity >= VERBOSITY_LEVEL.WARNING:
-				print(log_entry.get_prefix() + message)
+				_print_rich(log_entry.get_prefix(), message, warning_color.to_html(false))
 				push_warning(message)
 				_write_to_log_file(log_entry.get_entry())
-		"info", "success":
+		"success":
 			if verbosity >= VERBOSITY_LEVEL.INFO:
-				print(log_entry.get_prefix() + message)
+				_print_rich(log_entry.get_prefix(), message, success_color.to_html(false))
+				_write_to_log_file(log_entry.get_entry())
+		"info":
+			if verbosity >= VERBOSITY_LEVEL.INFO:
+				_print_rich(log_entry.get_prefix(), message, info_color.to_html(false))
 				_write_to_log_file(log_entry.get_entry())
 		"debug":
 			if verbosity >= VERBOSITY_LEVEL.DEBUG:
-				print(log_entry.get_prefix() + message)
+				_print_rich(log_entry.get_prefix(), message, debug_color.to_html(false))
 				_write_to_log_file(log_entry.get_entry())
 		"hint":
 			if OS.has_feature("editor") and verbosity >= VERBOSITY_LEVEL.DEBUG:
-				print_rich("[color=%s]%s[/color]" % [hint_color.to_html(false), log_entry.get_prefix() + message])
+				_print_rich(log_entry.get_prefix(), message, hint_color.to_html(false))
 
 
 static func _is_mod_name_ignored(mod_name: String) -> bool:
