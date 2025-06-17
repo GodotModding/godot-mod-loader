@@ -55,6 +55,15 @@ enum VERSION_VALIDATION {
 ## [code]ModLoader:Dependency[/code] - ignore the exact name [br]
 ## [code]ModLoader:*[/code] - ignore all beginning with this name [br]
 @export var ignored_mod_names_in_log: Array[String] = []
+## Highlighting color for warning type log messages
+@export var warning_color := Color("#ffff00")
+## Highlighting color for success type log messages
+@export var success_color := Color("#008000")
+## Highlighting color for info type log messages
+@export var info_color := Color("#4169e1")
+## Highlighting color for debug type log messages
+@export var debug_color := Color("#ffffff")
+## Highlighting color for hint type log messages
 @export var hint_color := Color("#70bafa")
 
 @export_group("Game Data")
