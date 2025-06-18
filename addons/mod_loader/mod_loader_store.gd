@@ -230,5 +230,4 @@ func _configure_logger() -> void:
 	ModLoaderLog.warning_color = ml_options.warning_color
 	ModLoaderLog.success_color = ml_options.success_color
 	ModLoaderLog.info_color = ml_options.info_color
-	ModLoaderLog.debug_color = ml_options.debug_color
 	ModLoaderLog.hint_color = ml_options.hint_color

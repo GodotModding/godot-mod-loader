@@ -47,7 +47,6 @@ static var ignored_mods: Array[String] = []
 static var warning_color := Color("#ffde66")
 static var success_color := Color("#5d8c3f")
 static var info_color := Color("#70bafa")
-static var debug_color := Color("#00000000")
 static var hint_color := Color("#b293fa")
 
 ## This Sub-Class represents a log entry in ModLoader.
@@ -450,7 +449,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 				_write_to_log_file(log_entry.get_entry())
 		"debug":
 			if verbosity >= VERBOSITY_LEVEL.DEBUG:
-				_print_rich("", log_entry.get_prefix() + message, debug_color)
+				print(log_entry.get_prefix() + message)
 				_write_to_log_file(log_entry.get_entry())
 		"hint":
 			if OS.has_feature("editor") and verbosity >= VERBOSITY_LEVEL.DEBUG:

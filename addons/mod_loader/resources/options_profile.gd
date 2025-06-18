@@ -61,8 +61,6 @@ enum VERSION_VALIDATION {
 @export var success_color := Color("#5d8c3f")
 ## Highlighting color for info type log messages
 @export var info_color := Color("#70bafa")
-## Highlighting color for debug type log messages
-@export var debug_color := Color("#00000000")
 ## Highlighting color for hint type log messages
 @export var hint_color := Color("#b293fa")
 
