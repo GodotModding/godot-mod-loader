@@ -102,9 +102,15 @@ class ModLoaderLogEntry:
 
 	## Get the prefix string for the log entry, including the log type and mod name.[br]
 	## [br]
+	## [b]Parameters:[/b][br]
+	## [param exclude_type] ([bool]): (Optional) If true, the log type (e.g., DEBUG, WARN) will be excluded from the prefix. Default is false.[br]
+	## [br]
 	## [b]Returns:[/b] [String]
-	func get_prefix() -> String:
-		return "%s %s: " % [type.to_upper(), mod_name]
+	func get_prefix(exclude_type: bool = false) -> String:
+		return "%s%s: " % [
+			"" if exclude_type else type.to_upper() + " ",
+			mod_name
+		]
 
 
 	## Generate an MD5 hash of the log entry (prefix + message).[br]
@@ -431,7 +437,10 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 			_write_to_log_file(JSON.stringify(get_stack(), "  "))
 			assert(false, message)
 		"error":
-			printerr(log_entry.get_prefix() + message)
+			if OS.has_feature("editor"):
+				printerr(log_entry.get_prefix(true) + message)
+			else:
+				printerr(log_entry.get_prefix() + message)
 			push_error(message)
 			_write_to_log_file(log_entry.get_entry())
 		"warning":
