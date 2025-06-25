@@ -48,6 +48,8 @@ static var warning_color := Color("#ffde66")
 static var success_color := Color("#5d8c3f")
 static var info_color := Color("#70bafa")
 static var hint_color := Color("#b293fa")
+static var debug_color := Color("#d4d4d4")
+static var debug_bold := true
 
 ## This Sub-Class represents a log entry in ModLoader.
 class ModLoaderLogEntry:
@@ -400,9 +402,14 @@ static func get_all_entries_as_string(log_entries: Array) -> Array:
 # Internal log functions
 # =============================================================================
 
-static func _print_rich(prefix: String, message: String, color: Color):
+static func _print_rich(prefix: String, message: String, color: Color, bold := true):
 	if OS.has_feature("editor"):
-		print_rich("[color=%s][b]%s[/b][/color]%s" % [color.to_html(false), prefix, message])
+		var prefix_text := "[b]%s[/b]" % prefix if bold else prefix
+		print_rich("[color=%s]%s[/color]%s" % [
+			color.to_html(false),
+			prefix_text,
+			message
+		])
 	else:
 		print(prefix + message)
 
@@ -458,7 +465,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 				_write_to_log_file(log_entry.get_entry())
 		"debug":
 			if verbosity >= VERBOSITY_LEVEL.DEBUG:
-				print(log_entry.get_prefix() + message)
+				_print_rich(log_entry.get_prefix(), message, debug_color, debug_bold)
 				_write_to_log_file(log_entry.get_entry())
 		"hint":
 			if OS.has_feature("editor") and verbosity >= VERBOSITY_LEVEL.DEBUG:

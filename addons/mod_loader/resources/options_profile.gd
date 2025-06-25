@@ -63,6 +63,10 @@ enum VERSION_VALIDATION {
 @export var info_color := Color("#70bafa")
 ## Highlighting color for hint type log messages
 @export var hint_color := Color("#b293fa")
+## Highlighting color for debug type log messages
+@export var debug_color := Color("#d4d4d4")
+## Highlight debug log prefixes with bold formatting
+@export var debug_bold := true
 
 @export_group("Game Data")
 ## Steam app id, can be found in the steam page url
