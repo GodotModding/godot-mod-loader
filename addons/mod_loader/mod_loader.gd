@@ -206,13 +206,13 @@ func _init() -> void:
 
 	ModLoaderStore.is_initializing = false
 
-	new_hooks_created.connect(_ModLoaderHooks.on_new_hooks_created)
+	#new_hooks_created.connect(_ModLoaderHooks.on_new_hooks_created)
 
 
 func _ready():
 	# Hooks must be generated after all autoloads are available.
 	# Variables initialized with an autoload property cause errors otherwise.
-	if _ModLoaderHooks.any_mod_hooked:
+	if ModLoaderStore.any_mod_hooked:
 		if OS.has_feature("editor"):
 			ModLoaderLog.hint("No mod hooks .zip will be created when running from the editor.", LOG_NAME)
 			ModLoaderLog.hint("You can test mod hooks by running the preprocessor on the vanilla scripts once.", LOG_NAME)

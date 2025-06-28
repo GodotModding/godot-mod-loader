@@ -99,7 +99,7 @@ func process_script(path: String, enable_hook_check := false, method_mask: Array
 			if not method.name in method_mask:
 				continue
 
-		var type_string := get_return_type_string(method.return)
+		var type_string := get_return_type_string(method.get("return"))
 		var is_static := true if method.flags == METHOD_FLAG_STATIC + METHOD_FLAG_NORMAL else false
 
 		var func_def: RegExMatch = match_func_with_whitespace(method.name, source_code)
@@ -318,7 +318,6 @@ static func get_closing_paren_index(opening_paren_index: int, text: String) -> i
 
 	return closing_paren_index
 
-
 func edit_vanilla_method(
 	method_name: String,
 	text: String,
@@ -327,7 +326,7 @@ func edit_vanilla_method(
 	prefix := METHOD_PREFIX,
 ) -> String:
 	text = fix_method_super(method_name, func_body, text)
-	text = text.erase(func_def.get_start(), func_def.get_end() - func_def.get_start())
+	text = text.substr(func_def.get_start(), func_def.get_end() - func_def.get_start())
 	text = text.insert(func_def.get_start(), "func %s%s(" % [prefix, method_name])
 
 	return text
@@ -517,12 +516,14 @@ static func get_return_type_string(return_data: Dictionary) -> String:
 	if return_data.type == 0:
 		return ""
 	var type_base: String
-	if return_data.has("class_name") and not str(return_data.class_name).is_empty():
-		type_base = str(return_data.class_name)
+	if return_data.has("class_name") and not str(return_data.get("class_name")).is_empty():
+		type_base = str(return_data.get("class_name"))
 	else:
-		type_base = get_type_name(return_data.type)
+		type_base = get_type_name(return_data.get("type"))
 
-	var type_hint: String = "" if return_data.hint_string.is_empty() else ("[%s]" % return_data.hint_string)
+	var type_hint: String = ""
+	if not return_data.get("hint_string").is_empty():
+		type_hint = "[%s]" % return_data.get("hint_string")
 
 	return "%s%s" % [type_base, type_hint]
 

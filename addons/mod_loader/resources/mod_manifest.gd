@@ -80,15 +80,15 @@ func validate(manifest: Dictionary, path: String) -> bool:
 	var missing_fields: Array[String] = []
 
 	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest, REQUIRED_MANIFEST_KEYS_ROOT))
-	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest.extra, ["godot"]))
-	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest.extra.godot, REQUIRED_MANIFEST_KEYS_EXTRA))
+	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest.get("extra"), ["godot"]))
+	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest.get("extra").get("godot"), REQUIRED_MANIFEST_KEYS_EXTRA))
 
 	if not missing_fields.is_empty():
 		validation_messages_error.push_back("Manifest is missing required fields: %s" % str(missing_fields))
 
-	name = manifest.name
-	mod_namespace = manifest.namespace
-	version_number = manifest.version_number
+	name = manifest.get("name")
+	mod_namespace = manifest.get("namespace")
+	version_number = manifest.get("version_number")
 
 	is_name_or_namespace_valid(name)
 	is_name_or_namespace_valid(mod_namespace)
@@ -97,11 +97,11 @@ func validate(manifest: Dictionary, path: String) -> bool:
 
 	is_semver_valid(mod_id, version_number, "version_number")
 
-	description = manifest.description
-	website_url = manifest.website_url
-	dependencies = manifest.dependencies
+	description = manifest.get("description")
+	website_url = manifest.get("website_url")
+	dependencies = manifest.get("dependencies")
 
-	var godot_details: Dictionary = manifest.extra.godot
+	var godot_details: Dictionary = manifest.get("extra").get("godot")
 	authors = ModLoaderUtils.get_array_from_dict(godot_details, "authors")
 	optional_dependencies = ModLoaderUtils.get_array_from_dict(godot_details, "optional_dependencies")
 	incompatibilities = ModLoaderUtils.get_array_from_dict(godot_details, "incompatibilities")

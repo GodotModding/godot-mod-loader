@@ -99,7 +99,8 @@ static func get_json_as_dict_from_zip(zip_path: String, file_path: String, is_fu
 		for path in reader.get_files():
 			if Array(path.rsplit("/", false, 1)).back() == file_path:
 				full_path = path
-		if not full_path:
+		#if not full_path:
+		if full_path.is_empty():
 			ModLoaderLog.error("File was not found in zip at path %s" % [file_path], LOG_NAME)
 			return {}
 

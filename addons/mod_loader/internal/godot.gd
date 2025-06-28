@@ -12,9 +12,6 @@ const AUTOLOAD_CONFIG_HELP_MSG := "To configure your autoloads, go to Project > 
 const ENGINE_VERSION_HEX_4_2_2 := 0x040202
 const ENGINE_VERSION_HEX_4_2_0 := 0x040200
 
-static var engine_version_hex: int = Engine.get_version_info().hex
-
-
 # Check autoload positions:
 # Ensure 1st autoload is `ModLoaderStore`, and 2nd is `ModLoader`.
 static func check_autoload_positions() -> void:
@@ -106,11 +103,3 @@ static func get_autoload_index(autoload_name: String) -> int:
 	var autoload_index := autoloads.find(autoload_name)
 
 	return autoload_index
-
-
-static func is_version_below(version_hex: int) -> bool:
-	return engine_version_hex < version_hex
-
-
-static func is_version_above(version_hex: int) -> bool:
-	return engine_version_hex > version_hex
