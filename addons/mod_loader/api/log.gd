@@ -379,8 +379,7 @@ static func get_all_entries_as_string(log_entries: Array) -> Array:
 # =============================================================================
 
 static func _print_rich(prefix: String, message: String, color: Color, bold := true) -> void:
-	var in_editor: bool = OS.has_feature("editor") if not ModLoaderStore else ModLoaderStore.has_feature.editor
-	if in_editor:
+	if OS.has_feature("editor"):
 		var prefix_text := "[b]%s[/b]" % prefix if bold else prefix
 		print_rich("[color=%s]%s[/color]%s" % [
 			color.to_html(false),

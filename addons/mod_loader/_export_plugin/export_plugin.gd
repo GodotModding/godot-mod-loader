@@ -1,7 +1,7 @@
 extends EditorExportPlugin
 
 
-static var hook_pre_processor: _ModLoaderModHookPreProcessor
+var hook_pre_processor: _ModLoaderModHookPreProcessor
 
 func _get_name() -> String:
 	return "Godot Mod Loader Export Plugin"

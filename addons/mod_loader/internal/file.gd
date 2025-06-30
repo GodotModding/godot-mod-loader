@@ -195,11 +195,8 @@ static func file_exists_in_zip(zip_path: String, path: String) -> bool:
 	var reader := zip_reader_open(zip_path)
 	if not reader:
 		return false
-
-	if _ModLoaderGodot.is_version_below(_ModLoaderGodot.ENGINE_VERSION_HEX_4_2_0):
-		return reader.get_files().has(path.trim_prefix("res://"))
-	else:
-		return reader.file_exists(path.trim_prefix("res://"))
+		
+	return reader.get_files().has(path.trim_prefix("res://"))
 
 
 static func get_mod_dir_name_in_zip(zip_path: String) -> String:
