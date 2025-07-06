@@ -102,7 +102,8 @@ static func get_flat_view_dict(p_dir := "res://", p_match := "", p_match_is_rege
 					else:
 						var path := dir.get_current_dir() + ("/" if not first else "") + file_name
 						# grab all
-						if not p_match:
+						#if not p_match:
+						if p_match.is_empty():
 							data.append(path)
 						# grab matching strings
 						elif not p_match_is_regex and file_name.find(p_match, 0) != -1:

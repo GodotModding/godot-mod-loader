@@ -115,6 +115,9 @@ static func apply_extension(extension_path: String) -> Script:
 	child_script.reload()
 
 	var parent_script: Script = child_script.get_base_script()
+	if not parent_script:
+		ModLoaderLog.warning('"%s" does not extend or inheret from a script! Please ensure you\'re using `extend "res://path/to/script"` not `extend Node`' % extension_path, LOG_NAME)
+		
 	var parent_script_path: String = parent_script.resource_path
 
 	# We want to save scripts for resetting later

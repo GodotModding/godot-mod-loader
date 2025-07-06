@@ -48,6 +48,8 @@ var modding_hooks := {}
 # }
 var hooked_script_paths := {}
 
+var any_mod_hooked := false
+
 # Order for mods to be loaded in, set by `get_load_order`
 var mod_load_order := []
 
@@ -85,13 +87,24 @@ var saved_mod_mains := {}
 # Stores script extension paths with the key being the namespace of a mod
 var saved_extension_paths := {}
 
-var logged_messages: Dictionary:
-	set(val):
-		ModLoaderDeprecated.deprecated_changed("ModLoaderStore.logged_messages", "ModLoaderLog.logged_messages", "7.0.1")
-		ModLoaderLog.logged_messages = val
-	get:
-		ModLoaderDeprecated.deprecated_changed("ModLoaderStore.logged_messages", "ModLoaderLog.logged_messages", "7.0.1")
-		return ModLoaderLog.logged_messages
+# Keeps track of logged messages, to avoid flooding the log with duplicate notices
+# Can also be used by mods, eg. to create an in-game developer console that
+# shows messages
+var logged_messages := {
+	"all": {},
+	"by_mod": {},
+	"by_type": {
+		"fatal-error": {},
+		"error": {},
+		"warning": {},
+		"info": {},
+		"success": {},
+		"debug": {},
+	}
+}
+
+## Array of mods that should be ignored when logging messages (contains mod IDs as strings)
+var ignored_mods: Array[String] = []
 
 # Active user profile
 var current_user_profile: ModUserProfile
@@ -119,7 +132,6 @@ var has_feature := {
 func _init():
 	_update_ml_options_from_options_resource()
 	_update_ml_options_from_cli_args()
-	_configure_logger()
 	# ModLoaderStore is passed as argument so the cache data can be loaded on _init()
 	_ModLoaderCache.init_cache(self)
 
@@ -221,10 +233,3 @@ func _update_ml_options_from_cli_args() -> void:
 	var ignore_mod_names := _ModLoaderCLI.get_cmd_line_arg_value("--log-ignore")
 	if not ignore_mod_names == "":
 		ml_options.ignored_mod_names_in_log = ignore_mod_names.split(",")
-
-
-# Update static variables from the options
-func _configure_logger() -> void:
-	ModLoaderLog.verbosity = ml_options.log_level
-	ModLoaderLog.ignored_mods = ml_options.ignored_mod_names_in_log
-	ModLoaderLog.hint_color = ml_options.hint_color

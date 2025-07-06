@@ -38,6 +38,9 @@ const LOG_NAME := "ModLoader:Mod"
 static func install_script_extension(child_script_path: String) -> void:
 	var mod_id: String = _ModLoaderPath.get_mod_dir(child_script_path)
 	var mod_data: ModData = get_mod_data(mod_id)
+	if mod_data == null:
+		ModLoaderLog.warning('"%s" is not a valid mod id! Please ensure the supplied path is valid!' % mod_id, LOG_NAME)
+	
 	if not ModLoaderStore.saved_extension_paths.has(mod_data.manifest.get_mod_id()):
 		ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()] = []
 	ModLoaderStore.saved_extension_paths[mod_data.manifest.get_mod_id()].append(child_script_path)

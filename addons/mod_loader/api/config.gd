@@ -53,7 +53,8 @@ static func create_config(mod_id: String, config_name: String, config_data: Dict
 	)
 
 	# Check if the mod_config is valid
-	if not mod_config.is_valid:
+	#if not mod_config.is_valid:
+	if not mod_config.is_valid():
 		return null
 
 	# Store the mod_config in the mod's ModData
@@ -86,7 +87,8 @@ static func update_config(config: ModConfig) -> ModConfig:
 		return null
 
 	# Check if the config passed validation
-	if not config.is_valid:
+	#if not config.is_valid:
+	if not config.is_valid():
 		ModLoaderLog.error("Update for config \"%s\" failed validation with error message \"%s\"" % [config.name, error_message], LOG_NAME)
 		return null
 

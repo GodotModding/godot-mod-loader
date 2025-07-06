@@ -80,15 +80,15 @@ func validate(manifest: Dictionary, path: String) -> bool:
 	var missing_fields: Array[String] = []
 
 	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest, REQUIRED_MANIFEST_KEYS_ROOT))
-	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest.extra, ["godot"]))
-	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest.extra.godot, REQUIRED_MANIFEST_KEYS_EXTRA))
+	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest.get("extra"), ["godot"]))
+	missing_fields.append_array(ModLoaderUtils.get_missing_dict_fields(manifest.get("extra").get("godot"), REQUIRED_MANIFEST_KEYS_EXTRA))
 
 	if not missing_fields.is_empty():
 		validation_messages_error.push_back("Manifest is missing required fields: %s" % str(missing_fields))
 
-	name = manifest.name
-	mod_namespace = manifest.namespace
-	version_number = manifest.version_number
+	name = manifest.get("name")
+	mod_namespace = manifest.get("namespace")
+	version_number = manifest.get("version_number")
 
 	is_name_or_namespace_valid(name)
 	is_name_or_namespace_valid(mod_namespace)
@@ -97,11 +97,11 @@ func validate(manifest: Dictionary, path: String) -> bool:
 
 	is_semver_valid(mod_id, version_number, "version_number")
 
-	description = manifest.description
-	website_url = manifest.website_url
-	dependencies = manifest.dependencies
+	description = manifest.get("description")
+	website_url = manifest.get("website_url")
+	dependencies = manifest.get("dependencies")
 
-	var godot_details: Dictionary = manifest.extra.godot
+	var godot_details: Dictionary = manifest.get("extra").get("godot")
 	authors = ModLoaderUtils.get_array_from_dict(godot_details, "authors")
 	optional_dependencies = ModLoaderUtils.get_array_from_dict(godot_details, "optional_dependencies")
 	incompatibilities = ModLoaderUtils.get_array_from_dict(godot_details, "incompatibilities")
@@ -113,14 +113,15 @@ func validate(manifest: Dictionary, path: String) -> bool:
 	config_schema = ModLoaderUtils.get_dict_from_dict(godot_details, "config_schema")
 	steam_workshop_id = ModLoaderUtils.get_string_from_dict(godot_details, "steam_workshop_id")
 
-	if ModLoaderStore.ml_options.game_version_validation == ModLoaderOptionsProfile.VERSION_VALIDATION.DEFAULT:
-		_is_game_version_compatible(mod_id)
+	if ModLoaderStore.get("ml_options"):
+		if ModLoaderStore.ml_options.game_version_validation == ModLoaderOptionsProfile.VERSION_VALIDATION.DEFAULT:
+			_is_game_version_compatible(mod_id)
 
-	if ModLoaderStore.ml_options.game_version_validation == ModLoaderOptionsProfile.VERSION_VALIDATION.CUSTOM:
-		if ModLoaderStore.ml_options.custom_game_version_validation_callable:
-			ModLoaderStore.ml_options.custom_game_version_validation_callable.call(self)
-		else:
-			ModLoaderLog.error("No custom game version validation callable detected. Please provide a valid validation callable.", LOG_NAME)
+		if ModLoaderStore.ml_options.game_version_validation == ModLoaderOptionsProfile.VERSION_VALIDATION.CUSTOM:
+			if ModLoaderStore.ml_options.custom_game_version_validation_callable:
+				ModLoaderStore.ml_options.custom_game_version_validation_callable.call(self)
+			else:
+				ModLoaderLog.error("No custom game version validation callable detected. Please provide a valid validation callable.", LOG_NAME)
 
 	is_mod_id_array_valid(mod_id, dependencies, "dependency")
 	is_mod_id_array_valid(mod_id, incompatibilities, "incompatibility")

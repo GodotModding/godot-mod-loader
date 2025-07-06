@@ -350,7 +350,7 @@ static func _generate_mod_list_entry(mod_id: String, is_active: bool) -> Diction
 	# Set the current_config if the mod has a config schema and is active
 	if is_active and not ModLoaderConfig.get_config_schema(mod_id).is_empty():
 		var current_config: ModConfig = ModLoaderStore.mod_data[mod_id].current_config
-		if current_config and current_config.is_valid:
+		if current_config and current_config.is_valid():
 			# Set to the current_config name if valid
 			mod_list_entry.current_config = current_config.name
 		else:
