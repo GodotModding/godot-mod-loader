@@ -468,8 +468,10 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 				_print_rich(log_entry.get_prefix(), message, debug_color, debug_bold)
 				_write_to_log_file(log_entry.get_entry())
 		"hint":
-			if ModLoaderStore.has_feature.editor:
-				if verbosity >= VERBOSITY_LEVEL.DEBUG:
+			if (
+				ModLoaderStore.has_feature.editor and
+				verbosity >= VERBOSITY_LEVEL.DEBUG
+			):
 					_print_rich(log_entry.get_prefix(), message, hint_color)
 
 
