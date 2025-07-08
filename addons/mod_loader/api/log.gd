@@ -108,9 +108,9 @@ class ModLoaderLogEntry:
 	## [param exclude_type] ([bool]): (Optional) If true, the log type (e.g., DEBUG, WARN) will be excluded from the prefix. Default is false.[br]
 	## [br]
 	## [b]Returns:[/b] [String]
-	func get_prefix(exclude_type: bool = false) -> String:
+	func get_prefix(exclude_type := false) -> String:
 		return "%s%s: " % [
-			"" if exclude_type else type.to_upper() + " ",
+			"" if exclude_type else "%s " % type.to_upper(),
 			mod_name
 		]
 
@@ -402,7 +402,7 @@ static func get_all_entries_as_string(log_entries: Array) -> Array:
 # Internal log functions
 # =============================================================================
 
-static func _print_rich(prefix: String, message: String, color: Color, bold := true):
+static func _print_rich(prefix: String, message: String, color: Color, bold := true) -> void:
 	if OS.has_feature("editor"):
 		var prefix_text := "[b]%s[/b]" % prefix if bold else prefix
 		print_rich("[color=%s]%s[/color]%s" % [
@@ -444,7 +444,7 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 			_write_to_log_file(JSON.stringify(get_stack(), "  "))
 			assert(false, message)
 		"error":
-			if OS.has_feature("editor"):
+			if ModLoaderStore.has_feature.editor:
 				printerr(log_entry.get_prefix(true) + message)
 			else:
 				printerr(log_entry.get_prefix() + message)
@@ -468,8 +468,11 @@ static func _log(message: String, mod_name: String, log_type: String = "info", o
 				_print_rich(log_entry.get_prefix(), message, debug_color, debug_bold)
 				_write_to_log_file(log_entry.get_entry())
 		"hint":
-			if OS.has_feature("editor") and verbosity >= VERBOSITY_LEVEL.DEBUG:
-				_print_rich(log_entry.get_prefix(), message, hint_color)
+			if (
+				ModLoaderStore.has_feature.editor and
+				verbosity >= VERBOSITY_LEVEL.DEBUG
+			):
+					_print_rich(log_entry.get_prefix(), message, hint_color)
 
 
 static func _is_mod_name_ignored(mod_name: String) -> bool:
