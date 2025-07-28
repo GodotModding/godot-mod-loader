@@ -19,7 +19,7 @@ const new_global_classes := [
 		"base": "Node",
 		"class": "ModLoaderUtils",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/mod_loader_utils.gd"
+		"path": "res://addons/mod_loader/internal/mod_loader_utils.gd"
 	}, {
 		"base": "Resource",
 		"class": "ModManifest",
@@ -59,12 +59,12 @@ const new_global_classes := [
 		"base": "Object",
 		"class": "_ModLoaderGodot",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/api/godot.gd"
+		"path": "res://addons/mod_loader/internal/godot.gd"
 	}, {
 		"base": "Node",
 		"class": "_ModLoaderSteam",
 		"language": "GDScript",
-		"path": "res://addons/mod_loader/api/third_party/steam.gd"
+		"path": "res://addons/mod_loader/internal/third_party/steam.gd"
 	}, {
 		"base": "Node",
 		"class": "ModLoaderLog",
