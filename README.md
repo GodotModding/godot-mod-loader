@@ -55,7 +55,7 @@ The Mod Loader supports the following platforms:
 - Android
 - iOS
 
-## Keep in touche
+## Keep in Touch
 For more details and updates join us on [our Discord](https://discord.godotmodding.com).
 
 ## Games Made Moddable by This Project
