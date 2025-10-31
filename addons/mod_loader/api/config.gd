@@ -118,7 +118,7 @@ static func update_config_value(config: ModConfig, key: String, new_data) -> Mod
 		return null
 	
 	if not typeof(config_data[key]) == typeof(new_data):
-		ModLoaderLog.error("Update config value failed for \"%s\". There is a type mismatch between existing and new_data." [config.name], LOG_NAME)
+		ModLoaderLog.error("Update config value failed for \"%s\". There is a type mismatch between existing and new_data." % [config.name], LOG_NAME)
 		return null
 
 	config.data[key] = new_data
