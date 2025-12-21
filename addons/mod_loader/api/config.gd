@@ -138,7 +138,7 @@ static func delete_config(config: ModConfig) -> bool:
 # Returns:
 # - ModConfig: The duplicated ModConfig object if successful, or null otherwise.
 static func duplicate_config(config: ModConfig, config_name: String) -> ModConfig:
-	return create_config(config.mod_id, config_name, config.data)
+	return create_config(config.mod_id, config_name, config.data.duplicate(true))
 
 
 # Sets the current configuration of a mod to the specified configuration.
