@@ -23,6 +23,14 @@ static func get_string_from_dict(dict: Dictionary, key: String) -> String:
 	return dict[key]
 
 
+# Returns -1 if the key does not exist or is not type of int
+static func get_int_from_dict(dict: Dictionary, key: String) -> int:
+	if not dict.has(key):
+		return -1
+
+	return int(dict[key])
+
+
 # Returns an empty Array if the key does not exist or is not type of Array
 static func get_array_from_dict(dict: Dictionary, key: String) -> Array:
 	if not dict.has(key):
