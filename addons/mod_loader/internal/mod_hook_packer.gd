@@ -7,6 +7,7 @@ extends RefCounted
 
 const LOG_NAME := "ModLoader:ModHookPacker"
 
+static var ModLoaderSetup: Object = load("res://addons/mod_loader/mod_loader_setup.gd")
 static var ModLoaderSetupLog: Object = load("res://addons/mod_loader/setup/setup_log.gd")
 static var ModLoaderSetupUtils: Object = load("res://addons/mod_loader/setup/setup_utils.gd")
 
@@ -108,7 +109,7 @@ static func _decompile_and_load_if_needed() -> bool:
 	var game_base_dir: String = ModLoaderSetupUtils.get_local_folder_dir()
 	# C:/path/to/game/addons/mod_loader
 	var mod_loader_dir: String = game_base_dir + "addons/mod_loader/"
-	var gdre_path := mod_loader_dir + "vendor/GDRE/gdre_tools.exe"
+	var gdre_path: String = mod_loader_dir + ModLoaderSetup.get_gdre_path()
 	var decomp_dir := mod_loader_dir + "decomp/"
 	var zip_path := decomp_dir + "inject.zip"
 
