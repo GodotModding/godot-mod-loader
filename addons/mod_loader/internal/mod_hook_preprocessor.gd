@@ -60,7 +60,8 @@ func process_script_verbose(path: String, enable_hook_check := false, method_mas
 ## [param enable_hook_check]: Adds a check that _ModLoaderHooks.any_mod_hooked is [code]true[/code] to the processed method, reducing hash checks.[br]
 ## [param method_mask]: If provided, only methods in this [Array] will be processed.[br]
 func process_script(path: String, enable_hook_check := false, method_mask: Array[String] = []) -> String:
-	var current_script := load(path) as GDScript
+	# Ignoring cache in case decompiled scripts were injected
+	var current_script := ResourceLoader.load(path, "", ResourceLoader.CacheMode.CACHE_MODE_IGNORE) as GDScript
 	var source_code := current_script.source_code
 	var source_code_additions := ""
 
