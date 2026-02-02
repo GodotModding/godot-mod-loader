@@ -101,6 +101,20 @@ static func update_config(config: ModConfig) -> ModConfig:
 	return config
 
 
+# Updates an existing ModConfig object with new data and save the config file.
+#
+# Parameters:
+# - config (ModConfig): The ModConfig object to be updated.
+# - key (String): The key of the value that should be updated.
+# - new_data (Variant): The data that should be stored
+#
+# Returns:
+# - ModConfig: The updated ModConfig object if successful, or null otherwise.
+static func update_config_value(config: ModConfig, key: String, new_data) -> ModConfig:
+	config.data[key] = new_data
+	return update_config(config)
+
+
 # Deletes a ModConfig object and performs cleanup operations.
 #
 # Parameters:
