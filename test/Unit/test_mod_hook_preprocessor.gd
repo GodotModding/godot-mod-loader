@@ -102,7 +102,26 @@ func test_process_script() -> void:
 	var result_b_expected: String = load("res://test_mod_hook_preprocessor/test_script_B_processed.gd").source_code.trim_prefix("#")
 	var result_c := hook_pre_processor.process_script("res://test_mod_hook_preprocessor/test_script_C.gd", true)
 	var result_c_expected: String = load("res://test_mod_hook_preprocessor/test_script_C_processed.gd").source_code.trim_prefix("#")
+	# Same as C - only with spaces instead of tabs
+	var result_d := hook_pre_processor.process_script("res://test_mod_hook_preprocessor/test_script_D.gd", true)
+	var result_d_expected: String = load("res://test_mod_hook_preprocessor/test_script_D_processed.gd").source_code.trim_prefix("#")
 
 	assert_eq(result_a, result_a_expected)
 	assert_eq(result_b, result_b_expected)
 	assert_eq(result_c, result_c_expected)
+	assert_eq(result_d, result_d_expected)
+
+
+func test_process_script_speed() -> void:
+	var hook_pre_processor := _ModLoaderModHookPreProcessor.new()
+	hook_pre_processor.process_begin()
+
+	var start_tick := Time.get_ticks_msec()
+
+	var result = hook_pre_processor.process_script("res://test_mod_hook_preprocessor/test_script_speed.gd")
+
+	var end_tick := Time.get_ticks_msec()
+
+	print("Hook Processing took %s msec." % str(end_tick - start_tick))
+
+	assert_true((end_tick - start_tick) < 1000)
