@@ -34,6 +34,7 @@ var tags : PoolStringArray = []
 var config_schema := {}
 var description_rich := ""
 var image: StreamTexture
+var steam_workshop_id: int = -1
 
 
 # Required keys in a mod's manifest.json file
@@ -144,6 +145,10 @@ func _init(manifest: Dictionary) -> void:
 	):
 		return
 
+	if manifest.extra.has("steam"):
+		# Not validated for now
+		steam_workshop_id = ModLoaderUtils.get_int_from_dict(manifest.extra.steam, "workshop_id")
+
 
 # Mod ID used in the mod loader
 # Format: {namespace}-{name}
@@ -176,6 +181,7 @@ func get_as_dict() -> Dictionary:
 		"config_schema": config_schema,
 		"description_rich": description_rich,
 		"image": image,
+		"steam_workshop_id": steam_workshop_id
 	}
 
 
@@ -200,6 +206,9 @@ func to_json() -> String:
 				"config_schema": config_schema,
 				"description_rich": description_rich,
 				"image": image,
+			},
+			"steam": {
+				"workshop_id": steam_workshop_id
 			}
 		}
 	}, "\t")
