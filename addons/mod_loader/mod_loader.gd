@@ -232,16 +232,18 @@ func _check_autoload_positions() -> void:
 func _load_mod_zips() -> Dictionary:
 	var zip_data := {}
 
-	if not ModLoaderStore.ml_options.steam_workshop_enabled:
+	if ModLoaderStore.ml_options.steam_workshop_enabled:
+		# If we're using Steam workshop, loop over the workshop item directories
+		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
+		zip_data.merge(loaded_workshop_zip_data)
+
+	if ModLoaderStore.ml_options.load_from_local:
 		var mods_folder_path := _ModLoaderPath.get_path_to_mods()
 
 		# If we're not using Steam workshop, just loop over the mod ZIPs.
 		var loaded_zip_data := _ModLoaderFile.load_zips_in_folder(mods_folder_path)
 		zip_data.merge(loaded_zip_data)
-	else:
-		# If we're using Steam workshop, loop over the workshop item directories
-		var loaded_workshop_zip_data := _ModLoaderSteam.load_steam_workshop_zips()
-		zip_data.merge(loaded_workshop_zip_data)
+
 
 	return zip_data
 
