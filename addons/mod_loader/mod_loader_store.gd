@@ -113,6 +113,9 @@ var ml_options := {
 	# instead of the default location (res://mods)
 	steam_workshop_enabled = false,
 
+	# Indicates whether to load mods from the "mods" folder located at the game's install directory, or the overridden mods path.
+	load_from_local = true,
+
 	# Overrides for the path mods/configs/workshop folders are loaded from.
 	# Only applied if custom settings are provided, either via the options.tres
 	# resource, or via CLI args. Note that CLI args can be tested in the editor
