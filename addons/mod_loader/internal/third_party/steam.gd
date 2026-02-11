@@ -67,7 +67,10 @@ static func _get_path_to_workshop() -> String:
 
 	# Traverse up to the steamapps directory (ie. `cd ..\..\` on Windows)
 	var path_array := game_install_directory.split("/")
-	path_array.resize(path_array.size() - 3)
+	var folders_to_escape := 3
+	if OS.get_name() == "OSX":
+		folders_to_escape = 4  # on Mac additional escape from GameName.app is needed
+	path_array.resize(path_array.size() - folders_to_escape)
 
 	# Reconstruct the path, now that it has "common/GameName" removed
 	path = "/".join(path_array)
