@@ -136,8 +136,14 @@ func process_script(path: String, enable_hook_check := false, method_mask: Array
 		var is_async := is_func_async(func_body.get_string())
 		var can_return := can_return(source_code, method.name, closing_paren_index, func_body_start_index)
 		var method_arg_string_with_defaults_and_types := get_function_parameters(method.name, source_code, is_static)
-		var method_arg_string_names_only := get_function_arg_name_string(method.args)
-
+		# Workaround for Script.get_script_method_list() not working as intended for some scripts in Godot 4.1
+		var method_args_with_hints_and_defaults = Array(method_arg_string_with_defaults_and_types.split(", "))
+		var method_arg_string = ""
+		for method_arg_with_hint_and_default in method_args_with_hints_and_defaults:
+			var method_arg_with_hint = Array(method_arg_with_hint_and_default.split("=")).front()				# remove defaults
+			method_arg_string += Array(method_arg_with_hint.split(":")).front() + ", "							# remove hints
+		var method_arg_string_names_only := method_arg_string.substr(0,method_arg_string.length()-2) as String	# remove trailing comma
+		
 		var hook_id := _ModLoaderHooks.get_hook_hash(path, method.name)
 		var hook_id_data := [path, method.name, true]
 		if hashmap.has(hook_id):
