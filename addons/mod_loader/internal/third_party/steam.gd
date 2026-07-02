@@ -16,10 +16,11 @@ static func find_steam_workshop_zips() -> Array[String]:
 
 	ModLoaderLog.info("Checking workshop items, with path: \"%s\"" % workshop_folder_path, LOG_NAME)
 
-	var workshop_dir := DirAccess.open(workshop_folder_path)
-	if workshop_dir == null:
-		ModLoaderLog.error("Can't open workshop folder %s (Error: %s)" % [workshop_folder_path, error_string(DirAccess.get_open_error())], LOG_NAME)
+	if not DirAccess.dir_exists_absolute(workshop_folder_path):
+		ModLoaderLog.info("The directory for mods at path \"%s\" does not exist." % workshop_folder_path, LOG_NAME)
 		return []
+
+	var workshop_dir := DirAccess.open(workshop_folder_path)
 	var workshop_dir_listdir_error := workshop_dir.list_dir_begin() # TODOGODOT4 fill missing arguments https://github.com/godotengine/godot/pull/40547
 	if not workshop_dir_listdir_error == OK:
 		ModLoaderLog.error("Can't read workshop folder %s (Error: %s)" % [workshop_folder_path, error_string(workshop_dir_listdir_error)], LOG_NAME)
