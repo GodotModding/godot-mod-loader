@@ -63,6 +63,7 @@ func process_script(path: String, enable_hook_check := false, method_mask: Array
 	var current_script := load(path) as GDScript
 	var source_code := current_script.source_code
 	var source_code_additions := ""
+	var detected_indentation := _detect_indentation(source_code)
 
 	# We need to stop all vanilla methods from forming inheritance chains,
 	# since the generated methods will fulfill inheritance requirements
@@ -149,6 +150,7 @@ func process_script(path: String, enable_hook_check := false, method_mask: Array
 			method_arg_string_names_only,
 			method_arg_string_with_defaults_and_types,
 			type_string,
+			detected_indentation,
 			can_return,
 			is_static,
 			is_async,
@@ -381,6 +383,7 @@ static func build_mod_hook_string(
 	method_arg_string_names_only: String,
 	method_arg_string_with_defaults_and_types: String,
 	method_type: String,
+	indentation: String,
 	can_return: bool,
 	is_static: bool,
 	is_async: bool,
@@ -393,14 +396,14 @@ static func build_mod_hook_string(
 	var static_string := "static " if is_static else ""
 	var await_string := "await " if is_async else ""
 	var async_string := "_async" if is_async else ""
-	var hook_check := "if _ModLoaderHooks.any_mod_hooked:\n\t\t" if enable_hook_check else ""
+	var hook_check := "if _ModLoaderHooks.any_mod_hooked:\n{INDENT}{INDENT}".format({"INDENT": indentation}) if enable_hook_check else ""
 	var hook_check_else := get_hook_check_else_string(
-			return_string, await_string, method_prefix, method_name, method_arg_string_names_only
+			return_string, await_string, method_prefix, method_name, method_arg_string_names_only, indentation
 		) if enable_hook_check else ""
 
 	return """
 {STATIC}func {METHOD_NAME}({METHOD_PARAMS}){RETURN_TYPE_STRING}:
-	{HOOK_CHECK}{RETURN}{AWAIT}_ModLoaderHooks.call_hooks{ASYNC}({METHOD_PREFIX}{METHOD_NAME}, [{METHOD_ARGS}], {HOOK_ID}){HOOK_CHECK_ELSE}
+{INDENT}{HOOK_CHECK}{RETURN}{AWAIT}_ModLoaderHooks.call_hooks{ASYNC}({METHOD_PREFIX}{METHOD_NAME}, [{METHOD_ARGS}], {HOOK_ID}){HOOK_CHECK_ELSE}
 """.format({
 		"METHOD_PREFIX": method_prefix,
 		"METHOD_NAME": method_name,
@@ -413,7 +416,8 @@ static func build_mod_hook_string(
 		"ASYNC": async_string,
 		"HOOK_ID": hook_id,
 		"HOOK_CHECK": hook_check,
-		"HOOK_CHECK_ELSE": hook_check_else
+		"HOOK_CHECK_ELSE": hook_check_else,
+		"INDENT": indentation
 	})
 
 
@@ -549,15 +553,17 @@ static func get_hook_check_else_string(
 	await_string: String,
 	method_prefix: String,
 	method_name: String,
-	method_arg_string_names_only: String
+	method_arg_string_names_only: String,
+	indentation: String
 ) -> String:
-	return "\n\telse:\n\t\t{RETURN}{AWAIT}{METHOD_PREFIX}{METHOD_NAME}({METHOD_ARGS})".format(
+	return "\n{INDENT}else:\n{INDENT}{INDENT}{RETURN}{AWAIT}{METHOD_PREFIX}{METHOD_NAME}({METHOD_ARGS})".format(
 			{
 				"RETURN": return_string,
 				"AWAIT": await_string,
 				"METHOD_PREFIX": method_prefix,
 				"METHOD_NAME": method_name,
-				"METHOD_ARGS": method_arg_string_names_only
+				"METHOD_ARGS": method_arg_string_names_only,
+				"INDENT": indentation
 			}
 		)
 
@@ -647,3 +653,56 @@ static func get_type_name(type: Variant.Type) -> String:
 			return "PackedVector4Array"
 	push_error("Argument `type` is invalid. Use `TYPE_*` constants.")
 	return "<unknown type %s>" % type
+
+
+static func _detect_indentation(source: String) -> String:
+	var space_indents: Array[int] = []
+	var tab_indents: Array[int] = []
+	var mixed_lines := 0
+
+	for line in source.split("\n"):
+		if line.strip_edges() == "":
+			continue
+
+		var i := 0
+		var spaces := 0
+		var tabs := 0
+
+		while i < line.length():
+			var ch := line[i]
+			if ch == " ":
+				spaces += 1
+			elif ch == "\t":
+				tabs += 1
+			else:
+				break
+			i += 1
+
+		if spaces == 0 and tabs == 0:
+			continue
+
+		if spaces > 0 and tabs > 0:
+			mixed_lines += 1
+		elif spaces > 0:
+			space_indents.append(spaces)
+		elif tabs > 0:
+			tab_indents.append(tabs)
+
+	# Decide dominant indentation type
+	var use_tabs := tab_indents.size() > space_indents.size()
+
+	var indent_char := ""
+	var indent_size := 0
+
+	if use_tabs:
+		indent_char = "\t"
+		indent_size = tab_indents.min()
+	elif space_indents.size() > 0:
+		indent_char = " "
+		indent_size = space_indents.min()
+	else:
+		# Default
+		indent_char = "\t"
+		indent_size = 1
+
+	return indent_char.repeat(indent_size)
