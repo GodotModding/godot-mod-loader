@@ -327,7 +327,7 @@ func get_combined_global_script_class_cache() -> ConfigFile:
 	return global_script_class_cache_combined
 
 
-func get_gdre_path() -> String:
+static func get_gdre_path() -> String:
 	if OS.get_name() == "Windows":
 		return "vendor/GDRE/gdre_tools.exe"
 	if OS.get_name() == "Linux":
