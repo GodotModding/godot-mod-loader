@@ -68,3 +68,5 @@ For more details and updates join us on [our Discord](https://discord.godotmoddi
 - [Of Life and Land](https://store.steampowered.com/app/1733110/Of_Life_and_Land/) by [Kerzoven](https://store.steampowered.com/search/?developer=Kerzoven)
 - [Dawnfolk](https://store.steampowered.com/app/2308630/Dawnfolk/) by [Darenn Keller](https://store.steampowered.com/developer/darennkeller)
 - [The Deadseat](https://store.steampowered.com/app/3667230/The_Deadseat/) by [Curious Fox Sox](https://store.steampowered.com/search/?developer=Curious%20Fox%20Sox)
+- [Upload Labs](https://store.steampowered.com/app/3606890/Upload_Labs/) by [EnigmaDev Studios](https://store.steampowered.com/curator/45970580)
+- [Pathogenic](https://store.steampowered.com/app/3808690/Pathogenic/) by [Aberrant Labs](https://store.steampowered.com/search/?developer=Aberrant%20Labs)
