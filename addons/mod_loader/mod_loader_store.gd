@@ -200,7 +200,13 @@ func _update_ml_options_from_cli_args() -> void:
 	if cmd_line_mod_path:
 		ml_options.override_path_to_mods = cmd_line_mod_path
 		ModLoaderLog.info("The path mods are loaded from has been changed via the CLI arg `--mods-path`, to: " + cmd_line_mod_path, LOG_NAME)
-
+	# Override paths to user data mods
+	# Set via: --mod-user-path
+	# Example: --mod-user-path="C://user/mods"
+	var cmd_line_mod_user_path := _ModLoaderCLI.get_cmd_line_arg_value("--mod-user-path")
+	if cmd_line_mod_user_path:
+		ml_options.override_path_to_user_data_mods = cmd_line_mod_user_path
+		ModLoaderLog.info("The path mod user data is loaded from has been changed via the CLI arg `--mod-user-path`, to: " + cmd_line_mod_user_path, LOG_NAME)
 	# Override paths to configs
 	# Set via: --configs-path
 	# Example: --configs-path="C://path/configs"

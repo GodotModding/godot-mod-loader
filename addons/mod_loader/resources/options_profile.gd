@@ -85,6 +85,8 @@ enum VERSION_VALIDATION {
 @export var load_from_steam_workshop: bool = false
 ## Indicates whether to load mods from the "mods" folder located at the game's install directory, or the overridden mods path.
 @export var load_from_local: bool = true
+## Indicates whether to load mods from the "mods" folder located in the game's user data directory (user://)
+@export var load_from_user_data_mods: bool = true
 ## Indicates whether to load mods from  [code]"res://mods-unpacked"[/code] in the exported game.[br]
 ## ===[br]
 ## [b]Note:[color=note "Load from unpacked in the editor"][/color][/b][br]
@@ -94,6 +96,9 @@ enum VERSION_VALIDATION {
 ## Path to a folder containing mods [br]
 ## Mod zips should be directly in this folder
 @export_dir var override_path_to_mods = ""
+## Alternative path to a folder containing mods (originally within user://). [br]
+## Mod zips should be directly in this folder
+@export_dir var override_path_to_user_data_mods := ""
 ## Use this option to override the default path where configs are stored.
 @export_dir var override_path_to_configs = ""
 ## Path to a folder containing workshop items.[br]
@@ -128,3 +133,7 @@ var custom_game_version_validation_callable: Callable
 
 ## Stores the instance of the script specified in [member customize_script_path].
 var customize_script_instance: RefCounted
+
+
+
+
